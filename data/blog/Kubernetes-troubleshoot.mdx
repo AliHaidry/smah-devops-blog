@@ -1,0 +1,39 @@
+---
+title: 'Kubernetes v1.22.5 - Troubleshooting with Docker Desktop 4.7.1'
+date: '2022-05-07'
+lastmod: '2022-05-07'
+tags: ['docker', 'kubernetes', 'guide', 'devops']
+draft: false
+summary: 'Kubernetes v1.22.5 - Troubleshooting with Docker Desktop 4.7.1'
+images: ['/static/images/docker-01']
+---
+
+Just in-case if anyone, is stuck after updating to Docker Desktop 4.7.1, local Kubernetes (v1.22.5) might not work.
+
+Step 1: Reset Docker Desktop To Factory Defaults
+Right-click the docker icon on the system tray, then choose to troubleshoot, then click the Reset to factory defaults button.
+
+
+Step 2: Close Docker Desktop
+After the reset to factory default is done. Quit Docker Desktop
+
+Step 3: Delete the .kube folder
+It is located on C:\Users\<user name>\.kube
+
+Make a backup for it if you want to.
+
+Step 4: Delete the pki folder
+
+It is located on C:\Users\<user name>\AppData\Local\Docker\pki
+
+Make a backup for it if you want to.
+
+Step 5: Add some entries in your hosts file
+192.168.1.5 host.docker.internal
+192.168.1.5 gateway.docker.internal
+127.0.0.1 docker-for-desktop
+127.0.0.1 kubernetes.docker.internal
+
+Step 6: Run Docker Desktop As Administrator
+
+You’re done, I was able to run my local Kubernetes cluster !!!
