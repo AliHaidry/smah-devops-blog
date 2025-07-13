@@ -14,6 +14,7 @@ Just in-case if anyone, is stuck after updating to Docker Desktop 4.7.1, local K
 Step 1: Reset Docker Desktop To Factory Defaults
 Right-click the docker icon on the system tray, then choose to troubleshoot, then click the Reset to factory defaults button.
 
+layout: PostBanner
 images: ['/static/images/blogs/01/docker-02.png']
 
 Step 2: Close Docker Desktop
@@ -26,6 +27,7 @@ Make a backup for it if you want to.
 
 Step 4: Delete the pki folder
 
+layout: PostBanner
 images: ['/static/images/blogs/01/docker-03.png']
 
 It is located on C:\Users\<user name>\AppData\Local\Docker\pki
@@ -38,10 +40,12 @@ Step 5: Add some entries in your hosts file
 127.0.0.1 docker-for-desktop
 127.0.0.1 kubernetes.docker.internal
 
+layout: PostBanner
 images: ['/static/images/blogs/01/docker-04.png']
 
 Step 6: Run Docker Desktop As Administrator
 
+layout: PostBanner
 images: ['/static/images/blogs/01/docker-05.png']
 
 You’re done, I was able to run my local Kubernetes cluster !!!
