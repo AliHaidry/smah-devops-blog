@@ -19,9 +19,8 @@ Just in-case if anyone, is stuck after updating to Docker Desktop 4.7.1, local K
 1. **Reset Docker Desktop To Factory Defaults**
 Right-click the docker icon on the system tray, then choose to troubleshoot, then click the Reset to factory defaults button.
 
-<div className="my-1 w-full overflow-hidden px-10 xl:my-1 xl:w-1/2 xl:px-10">
-  ![image02](/static/images/blogs/01/docker-02.png)
-</div>
+![image02](/static/images/blogs/01/docker-02.png)
+
 
 ---
 
@@ -39,9 +38,8 @@ Make a backup for it if you want to.
 
 4. **Delete the pki folder**
 
-<div className="my-1 w-full overflow-hidden px-10 xl:my-1 xl:w-1/2 xl:px-10">
-  ![image03](/static/images/blogs/01/docker-03.png)
-</div>
+![image03](/static/images/blogs/01/docker-03.png)
+
 
 It is located on C:\Users\<user name>\AppData\Local\Docker\pki
 
@@ -50,14 +48,13 @@ Make a backup for it if you want to.
 ---
 
 5. **Add some entries in your hosts file**
-192.168.1.5 host.docker.internal
-192.168.1.5 gateway.docker.internal
-127.0.0.1 docker-for-desktop
-127.0.0.1 kubernetes.docker.internal
 
-<div className="my-1 w-full overflow-hidden px-10 xl:my-1 xl:w-1/2 xl:px-10">
-  ![image04](/static/images/blogs/01/docker-04.png)
-</div>
+* 192.168.1.5 host.docker.internal
+* 192.168.1.5 gateway.docker.internal
+* 127.0.0.1 docker-for-desktop
+* 127.0.0.1 kubernetes.docker.internal
+
+![image04](/static/images/blogs/01/docker-04.png)
 
 ---
 
