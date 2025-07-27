@@ -1,32 +1,43 @@
 ---
-title: 'Kubernetes v1.22.5 - Troubleshooting with Docker Desktop 4.7.1'
-date: '2022-05-07'
-lastmod: '2022-05-07'
-tags: ['docker', 'kubernetes', 'guide', 'devops']
-draft: false
-layout: PostBanner
-images: ['/static/images/blogs/01/docker-01.png']
-summary: 'Kubernetes v1.22.5 - Troubleshooting with Docker Desktop 4.7.1'
+title: "Kubernetes v1.22.5 - Troubleshooting with Docker Desktop 4.7.1"
+summary: Kubernetes v1.22.5 - Troubleshooting with Docker Desktop 4.7.1
+objective: To resolve the issue on kubernetes v1.22.5 with Docker Desktop 4.7.1
+tags:
+  - DevOps
+  - Kubernetes
+  - Problem
+  - Troubleshooting
+date: 2022-07-05
 ---
+
+![Concept](/static/images/blogs/01/docker-01.png)
 
 Just in-case if anyone, is stuck after updating to Docker Desktop 4.7.1, local Kubernetes (v1.22.5) might not work.
 
-Step 1: Reset Docker Desktop To Factory Defaults
+---
+
+1. **Reset Docker Desktop To Factory Defaults**
 Right-click the docker icon on the system tray, then choose to troubleshoot, then click the Reset to factory defaults button.
 
 <div className="my-1 w-full overflow-hidden px-10 xl:my-1 xl:w-1/2 xl:px-10">
   ![image02](/static/images/blogs/01/docker-02.png)
 </div>
 
-Step 2: Close Docker Desktop
+---
+
+2. **Close Docker Desktop**
 After the reset to factory default is done. Quit Docker Desktop
 
-Step 3: Delete the .kube folder
+---
+
+3. **Delete the `.kube` folder**
 It is located on C:\Users\<user name>\.kube
 
 Make a backup for it if you want to.
 
-Step 4: Delete the pki folder
+---
+
+4. **Delete the pki folder**
 
 <div className="my-1 w-full overflow-hidden px-10 xl:my-1 xl:w-1/2 xl:px-10">
   ![image03](/static/images/blogs/01/docker-03.png)
@@ -36,7 +47,9 @@ It is located on C:\Users\<user name>\AppData\Local\Docker\pki
 
 Make a backup for it if you want to.
 
-Step 5: Add some entries in your hosts file
+---
+
+5. **Add some entries in your hosts file**
 192.168.1.5 host.docker.internal
 192.168.1.5 gateway.docker.internal
 127.0.0.1 docker-for-desktop
@@ -46,10 +59,14 @@ Step 5: Add some entries in your hosts file
   ![image04](/static/images/blogs/01/docker-04.png)
 </div>
 
-Step 6: Run Docker Desktop As Administrator
+---
+
+6. **Run Docker Desktop As Administrator**
 
 <div className="my-1 w-full overflow-hidden px-10 xl:my-1 xl:w-1/2 xl:px-10">
   ![image05](/static/images/blogs/01/docker-05.png)
 </div>
 
-You’re done, I was able to run my local Kubernetes cluster!!!
+---
+
+You’re done, I was able to run my local `Kubernetes cluster`.
