@@ -1,6 +1,6 @@
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
-  //title: 'Next.js Starter Blog',
+  title: 'DevOps Blog',
   author: 'Syed Muhammad Ali Haidry',
   headerTitle: 'DevOps Blog',
   description: 'A blog about DevOps, Cloud Computing, and Software Development.',
