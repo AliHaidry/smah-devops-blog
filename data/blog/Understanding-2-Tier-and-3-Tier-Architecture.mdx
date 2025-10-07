@@ -1,12 +1,15 @@
 ---
 title: "System Design: Understanding 2-Tier and 3-Tier Architecture"
+summary: Learn the difference between 2-tier and 3-tier architecture in system design
 description: "Learn the difference between 2-tier and 3-tier architecture in system design. Understand how the three layers — presentation, application, and data — work together to create scalable and maintainable systems."
 author: "Ali Haidry"
 date: 2024-10-07
 tags: [System Design, Architecture, Software Engineering, Backend, Cloud]
 ---
 
-# 🏗️ System Design: What Is 3-Tier Architecture?
+![Architecture](/static/images/blogs/03/architecture.png)
+
+# System Design: What Is 3-Tier Architecture?
 
 **3-tier architecture** is one of the most widely used design concepts in modern system design.  
 It divides an application into three distinct layers — **presentation**, **application**, and **data** — enabling better scalability, maintainability, and flexibility.
@@ -15,7 +18,7 @@ In this post, we’ll explore how 3-tier architecture differs from the simpler 2
 
 ---
 
-## 🔹 What Is 2-Tier Architecture?
+## What Is 2-Tier Architecture?
 
 A **2-tier architecture** consists of:
 
@@ -24,17 +27,17 @@ A **2-tier architecture** consists of:
 
 In this model, the client directly communicates with the database — often embedding business logic into the client code.
 
-### 💡 Example
+### Example
 A simple desktop inventory application where the client connects directly to a MySQL database.
 
-### ⚠️ Limitations
-- ❌ Poor scalability — each client opens a database connection.
-- ❌ Tight coupling between UI and data logic.
-- ❌ Hard to update or maintain business rules centrally.
+### Limitations
+- Poor scalability — each client opens a database connection.
+- Tight coupling between UI and data logic.
+- Hard to update or maintain business rules centrally.
 
 ---
 
-## 🔹 What Is 3-Tier Architecture?
+## What Is 3-Tier Architecture?
 
 A **3-tier architecture** introduces a middle layer between the client and the database — separating concerns more effectively.
 
@@ -47,7 +50,7 @@ A **3-tier architecture** introduces a middle layer between the client and the d
 3. **Data Layer (Database):**  
    Stores and retrieves data persistently.
 
-### 💡 Example
+### Example
 An e-commerce system where:
 - The **frontend** (React/Angular) sends a request,
 - The **application layer** (Node.js, Django, Spring Boot) processes it,
@@ -55,16 +58,16 @@ An e-commerce system where:
 
 ---
 
-## ⚙️ Key Benefits of 3-Tier Architecture
+## Key Benefits of 3-Tier Architecture
 
-✅ **Scalability** — Each layer can scale independently (e.g., multiple web servers).  
-✅ **Maintainability** — Centralized business logic simplifies updates.  
-✅ **Security** — The database is hidden behind the application layer.  
-✅ **Flexibility** — Swap or upgrade components without rewriting the system.
+**Scalability** — Each layer can scale independently (e.g., multiple web servers).  
+**Maintainability** — Centralized business logic simplifies updates.  
+**Security** — The database is hidden behind the application layer.  
+**Flexibility** — Swap or upgrade components without rewriting the system.
 
 ---
 
-## 🍽️ Real-World Analogy: The Restaurant Model
+## Real-World Analogy: The Restaurant Model
 
 Think of a restaurant:
 - The **customer** represents the **presentation layer**.  
@@ -75,7 +78,7 @@ The customer never interacts directly with the pantry — just as a user never t
 
 ---
 
-## 🧩 Comparison Table
+## Comparison Table
 
 | Feature | 2-Tier Architecture | 3-Tier Architecture |
 |----------|--------------------|---------------------|
@@ -87,7 +90,7 @@ The customer never interacts directly with the pantry — just as a user never t
 
 ---
 
-## 🏁 Conclusion
+## Conclusion
 
 The **3-tier architecture** is a cornerstone of modern software design.  
 By separating responsibilities across three logical layers, it allows systems to evolve, scale, and remain maintainable over time.
