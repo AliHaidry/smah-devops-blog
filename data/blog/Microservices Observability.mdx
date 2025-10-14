@@ -67,7 +67,7 @@ This stack gives you **full visibility** from data collection to visualization �
           ┌──────▼──────┐
           │  Grafana    │   ← (Visualizes data)
           └─────────────┘
-
+```
 Prometheus scrapes metrics, Loki gathers logs, and Grafana brings both together into a unified dashboard.
 
 ---
@@ -97,7 +97,7 @@ scrape_configs:
         - "auth-service:9100"
         - "payment-service:9100"
         - "notification-service:9100"
-
+```
 Prometheus automatically collects CPU usage, memory, latency, and custom application metrics via exporters (e.g., Node Exporter, cAdvisor, Blackbox).
 
 ---
@@ -136,7 +136,7 @@ scrape_configs:
           job: varlogs
           host: my-server
           __path__: /var/log/*.log
-
+```
 Logs collected by Promtail are sent to Loki, indexed, and ready to query directly inside Grafana.
 
 ---
@@ -160,17 +160,17 @@ It connects to Prometheus for metrics and Loki for logs — allowing you to visu
 
 ```text
 sum(rate(container_cpu_usage_seconds_total{job="microservices"}[1m])) by (service)
-
+```
 - Memory Usage Trend
 
 ```text
 sum(container_memory_usage_bytes{job="microservices"}) by (service)
-
+```
 - Error Log Trends (Loki Query)
 
 ```text
 {job="payment-service"} |= "ERROR"
-
+```
 You can correlate metrics and logs instantly — click on a graph spike to view logs from the same time window.
 
 ---
@@ -193,7 +193,7 @@ groups:
         annotations:
           summary: "High 500 error rate detected"
           description: "Service has >5% error rate in the last 5 minutes."
-
+```
 Then configure Alertmanager or Grafana Alerting to deliver notifications to your chosen channels.
 
 ---
@@ -209,7 +209,7 @@ The Prometheus Operator and Loki Helm charts simplify deployment and scaling of 
 [Service Pods] → [Prometheus Operator] → [Grafana Dashboard]
                         ↓
                     [Loki + Promtail]
-
+```
 ### This architecture ensures:
 
 - Automatic service discovery.
