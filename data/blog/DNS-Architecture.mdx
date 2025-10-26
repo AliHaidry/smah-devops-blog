@@ -7,6 +7,9 @@ date: 2023-01-25
 tags: [System Design, DNS, Networking, Internet Architecture, Cloud, DevOps, Platform Engineering]
 ---
 
+![DNS-Architecture](/static/images/blogs/08/DNS-Resolver.png)
+
+
 # DNS: The Internet’s Address Book and the Key to Scalable System Design
 
 Every time you visit a website, send an email, or call an API, your device first asks a simple question:  
@@ -85,16 +88,16 @@ The IP address is returned to the user’s resolver, cached, and the browser con
 Each step happens in milliseconds, yet this chain powers every web request globally.
 
 ## Key DNS Record Types
-
-Record Type	Purpose	Example
-A Record	Maps domain → IPv4 address	example.com → 93.184.216.34
-AAAA Record	Maps domain → IPv6 address	example.com → 2606:2800:220:1:248:1893:25c8:1946
-CNAME	Alias name to another domain	www → example.com
-MX	Mail exchange server	mail.example.com
-TXT	Misc data (SPF, verification)	v=spf1 include:_spf.google.com
-NS	Authoritative name servers	ns1.exampledns.com
-SRV	Defines ports and services	_sip._tcp.example.com
-
+```text
+Record Type	        Purpose	                        Example
+A Record	        Maps domain → IPv4 address	    example.com → 93.184.216.34
+AAAA Record	        Maps domain → IPv6 address	    example.com → 2606:2800:220:1:248:1893:25c8:1946
+CNAME	            Alias name to another domain	www → example.com
+MX	                Mail exchange server	        mail.example.com
+TXT	                Misc data (SPF, verification)	v=spf1 include:_spf.google.com
+NS	                Authoritative name servers	    ns1.exampledns.com
+SRV	                Defines ports and services	    _sip._tcp.example.com
+```
 Each record plays a unique role in routing, authentication, and service discovery.
 
 ---
@@ -102,13 +105,13 @@ Each record plays a unique role in routing, authentication, and service discover
 ## DNS Caching: Speeding Things Up
 
 To avoid querying DNS servers repeatedly, responses are cached.
-
-Cache Type	Location	Example
-Browser Cache	Inside your browser	Fastest access
-OS Cache	Local resolver cache	ipconfig /displaydns
-ISP Cache	ISP-level resolver	Shared by users
-CDN Cache	Edge nodes cache DNS records	Used by Cloudflare, Akamai
-
+```text
+Cache Type	        Location	                Example
+Browser Cache	    Inside your browser	        Fastest access
+OS Cache	        Local resolver cache	    ipconfig /displaydns
+ISP Cache	        ISP-level resolver	        Shared by users
+CDN Cache	        Edge nodes cache DNS records	Used by Cloudflare, Akamai
+```
 The TTL (Time-To-Live) defines how long a record stays cached — typically 300s to 86,400s.
 
 ---
