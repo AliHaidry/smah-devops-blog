@@ -1,0 +1,641 @@
+---
+title: "Building Production-Grade CI/CD Pipelines for Microservices"
+date: "2026-02-20"
+author: "Ali Haidry"
+tags: ["CI/CD", "Kubernetes", "GitOps", "DevSecOps", "Microservices"]
+readTime: "18 min read"
+---
+
+import { useState } from "react";
+
+export const styles = `
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap');
+
+  :root {
+    --bg: #0b0f1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --accent3: #10b981;
+    --accent4: #f59e0b;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --border: #1e2d42;
+  }
+`;
+
+export const Callout = ({ type = "info", children }) => {
+  const colors = {
+    info:    { border: "#00e5ff", bg: "#0a1f2e" },
+    warning: { border: "#f59e0b", bg: "#1f1500" },
+    success: { border: "#10b981", bg: "#0a1e13" },
+    purple:  { border: "#7c3aed", bg: "#130d1e" },
+  };
+  const c = colors[type] || colors.info;
+  return (
+    <div style={{
+      borderLeft: `3px solid ${c.border}`,
+      background: c.bg,
+      padding: "16px 20px",
+      margin: "24px 0",
+      borderRadius: "0 8px 8px 0",
+      fontSize: "0.92rem",
+      color: "#e2e8f0",
+      lineHeight: 1.7,
+    }}>
+      {children}
+    </div>
+  );
+};
+
+export const DiagramWrap = ({ label, children }) => (
+  <div style={{
+    background: "#111827",
+    border: "1px solid #1e2d42",
+    borderRadius: "12px",
+    padding: "28px 20px",
+    margin: "32px 0",
+    position: "relative",
+    overflow: "hidden",
+  }}>
+    <div style={{
+      position: "absolute", top: 0, left: 0, right: 0, height: "2px",
+      background: "linear-gradient(90deg, #00e5ff, #7c3aed, transparent)",
+    }} />
+    <div style={{
+      fontFamily: "'DM Mono', monospace",
+      fontSize: "11px",
+      color: "#94a3b8",
+      textTransform: "uppercase",
+      letterSpacing: "0.15em",
+      marginBottom: "18px",
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+    }}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#00e5ff", boxShadow: "0 0 8px #00e5ff", display: "inline-block" }} />
+      {label}
+    </div>
+    {children}
+  </div>
+);
+
+export const StageCard = ({ stage, color, title, description, trigger }) => (
+  <div style={{
+    background: "#1a2235",
+    border: `1px solid ${color}44`,
+    borderRadius: "10px",
+    padding: "18px 16px",
+    flex: "1 1 180px",
+  }}>
+    <span style={{
+      fontFamily: "'DM Mono', monospace",
+      fontSize: "10px",
+      letterSpacing: "0.1em",
+      textTransform: "uppercase",
+      padding: "3px 8px",
+      borderRadius: "3px",
+      marginBottom: "10px",
+      display: "inline-block",
+      background: `${color}18`,
+      color: color,
+      border: `1px solid ${color}55`,
+    }}>
+      {stage}
+    </span>
+    <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: "0.93rem", color: "#fff", margin: "8px 0 6px" }}>
+      {title}
+    </div>
+    <p style={{ fontSize: "0.82rem", color: "#94a3b8", margin: 0, lineHeight: 1.6 }}>{description}</p>
+    <div style={{ marginTop: 8, fontFamily: "'DM Mono', monospace", fontSize: "9px", color: color, opacity: 0.8 }}>{trigger}</div>
+  </div>
+);
+
+export const ToolTable = () => {
+  const rows = [
+    ["Source Control",       "GitHub / GitLab / Bitbucket",          "Branch protection, required reviews, status checks enforced"],
+    ["CI Platform",          "GitHub Actions · GitLab CI · Tekton",  "Tekton for K8s-native; GitHub Actions for ecosystem breadth"],
+    ["Container Registry",   "AWS ECR · GCP Artifact Registry · Harbor", "Harbor for self-hosted with policy enforcement"],
+    ["IaC",                  "Terraform + Helm",                     "Terraform for cloud resources; Helm for Kubernetes workloads"],
+    ["GitOps Operator",      "ArgoCD · Flux",                        "ArgoCD has richer UI; Flux is more lightweight"],
+    ["Progressive Delivery", "Argo Rollouts · Flagger",              "Automated canary analysis with metric-based promotion"],
+    ["Secrets Management",   "HashiCorp Vault · AWS Secrets Manager","External Secrets Operator bridges Vault ↔ K8s"],
+    ["Observability",        "Prometheus + Grafana + Loki + Tempo",  "Full open-source stack; Datadog for managed option"],
+    ["Testing",              "Pact · k6 · Playwright · TestContainers","One tool per testing pyramid layer"],
+    ["Security",             "Trivy · Semgrep · Snyk · Checkov",     "One tool per security domain; all integrated into CI"],
+  ];
+  return (
+    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.87rem" }}>
+      <thead>
+        <tr>
+          {["Category", "Recommended Tools", "Notes"].map(h => (
+            <th key={h} style={{
+              fontFamily: "'DM Mono', monospace", fontSize: "10px", letterSpacing: "0.12em",
+              textTransform: "uppercase", color: "#00e5ff", borderBottom: "1px solid #1e2d42",
+              padding: "10px 14px", textAlign: "left",
+            }}>{h}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(([cat, tools, notes]) => (
+          <tr key={cat} style={{ borderBottom: "1px solid #1e2d42" }}>
+            <td style={{ padding: "10px 14px", color: "#fff", fontWeight: 500 }}>{cat}</td>
+            <td style={{ padding: "10px 14px", color: "#94a3b8" }}>{tools}</td>
+            <td style={{ padding: "10px 14px", color: "#94a3b8" }}>{notes}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+};
+
+<div style={{ fontFamily: "'Lora', Georgia, serif", color: "#e2e8f0", lineHeight: 1.85, maxWidth: 900, margin: "0 auto", padding: "0 24px" }}>
+
+# Building Production-Grade CI/CD Pipelines for Microservices
+
+<div style={{ fontFamily: "'DM Mono', monospace", fontSize: "12px", color: "#94a3b8", display: "flex", gap: "20px", flexWrap: "wrap", margin: "16px 0 32px" }}>
+  <span>📅 February 2026</span>
+  <span>⏱ 18 min read</span>
+  <span>🔖 DevOps · Kubernetes · GitOps</span>
+</div>
+
+The shift from monolithic architectures to microservices unlocks scalability — but it also introduces a new class of operational complexity. You're no longer shipping one artifact; you're orchestrating dozens of independently deployable services. A production-grade CI/CD pipeline is the backbone of your entire delivery system. Done right, it enables teams to deploy multiple times a day with confidence. This guide covers every critical dimension: from architecture and tooling to security, observability, and rollback patterns.
+
+---
+
+## 01 — The Microservices CI/CD Challenge
+
+In a monolith, CI/CD is relatively straightforward: one repo, one build, one deployment. In a microservices ecosystem, the challenges multiply across four critical dimensions.
+
+<DiagramWrap label="Microservices Complexity Map">
+  <svg viewBox="0 0 820 280" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="cg1" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#00e5ff" stopOpacity="0.2"/>
+        <stop offset="100%" stopColor="#00e5ff" stopOpacity="0"/>
+      </radialGradient>
+    </defs>
+    <circle cx="410" cy="140" r="52" fill="#1a2235" stroke="#00e5ff" strokeWidth="1.5"/>
+    <circle cx="410" cy="140" r="52" fill="url(#cg1)"/>
+    <text x="410" y="135" textAnchor="middle" fill="#00e5ff" fontSize="11" fontWeight="600" fontFamily="monospace">MICROSERVICES</text>
+    <text x="410" y="152" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">CI/CD</text>
+    <circle cx="175" cy="70" r="42" fill="#111827" stroke="#7c3aed" strokeWidth="1.5"/>
+    <text x="175" y="65" textAnchor="middle" fill="#a78bfa" fontSize="10" fontWeight="600" fontFamily="monospace">Independent</text>
+    <text x="175" y="80" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Release Cycles</text>
+    <line x1="213" y1="95" x2="360" y2="125" stroke="#7c3aed" strokeWidth="1" strokeDasharray="4,3" opacity="0.6"/>
+    <circle cx="640" cy="70" r="42" fill="#111827" stroke="#10b981" strokeWidth="1.5"/>
+    <text x="640" y="65" textAnchor="middle" fill="#6ee7b7" fontSize="10" fontWeight="600" fontFamily="monospace">Polyglot</text>
+    <text x="640" y="80" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Environments</text>
+    <line x1="600" y1="94" x2="460" y2="125" stroke="#10b981" strokeWidth="1" strokeDasharray="4,3" opacity="0.6"/>
+    <circle cx="175" cy="215" r="42" fill="#111827" stroke="#f59e0b" strokeWidth="1.5"/>
+    <text x="175" y="210" textAnchor="middle" fill="#fcd34d" fontSize="10" fontWeight="600" fontFamily="monospace">Inter-service</text>
+    <text x="175" y="225" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Dependencies</text>
+    <line x1="213" y1="190" x2="360" y2="158" stroke="#f59e0b" strokeWidth="1" strokeDasharray="4,3" opacity="0.6"/>
+    <circle cx="640" cy="215" r="42" fill="#111827" stroke="#f43f5e" strokeWidth="1.5"/>
+    <text x="640" y="210" textAnchor="middle" fill="#fb7185" fontSize="10" fontWeight="600" fontFamily="monospace">Deployment</text>
+    <text x="640" y="225" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Coordination</text>
+    <line x1="600" y1="190" x2="460" y2="158" stroke="#f43f5e" strokeWidth="1" strokeDasharray="4,3" opacity="0.6"/>
+  </svg>
+</DiagramWrap>
+
+**Independent release cycles** mean each service can — and should — be deployed without coupling to others. **Inter-service dependencies** create risk: a breaking change in a shared API can cascade across downstream consumers. **Polyglot environments** require heterogeneous build support without ballooning complexity. **Deployment coordination** demands answers: which services deploy together, in what order, with what rollout strategy?
+
+---
+
+## 02 — Repository Strategy: Monorepo vs Polyrepo
+
+<DiagramWrap label="Monorepo vs Polyrepo Comparison">
+  <svg viewBox="0 0 820 300" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <rect x="20" y="20" width="370" height="260" rx="8" fill="#111827" stroke="#7c3aed" strokeWidth="1.5"/>
+    <rect x="20" y="20" width="370" height="36" rx="8" fill="#7c3aed" opacity="0.3"/>
+    <text x="205" y="44" textAnchor="middle" fill="#a78bfa" fontSize="13" fontWeight="700" fontFamily="monospace">MONOREPO</text>
+    <rect x="50" y="76" width="110" height="32" rx="4" fill="#1a2235" stroke="#7c3aed" strokeWidth="1" opacity="0.8"/>
+    <text x="105" y="97" textAnchor="middle" fill="#c4b5fd" fontSize="10" fontFamily="monospace">service-auth/</text>
+    <rect x="170" y="76" width="110" height="32" rx="4" fill="#1a2235" stroke="#7c3aed" strokeWidth="1" opacity="0.8"/>
+    <text x="225" y="97" textAnchor="middle" fill="#c4b5fd" fontSize="10" fontFamily="monospace">service-orders/</text>
+    <rect x="290" y="76" width="80" height="32" rx="4" fill="#1a2235" stroke="#7c3aed" strokeWidth="1" opacity="0.8"/>
+    <text x="330" y="97" textAnchor="middle" fill="#c4b5fd" fontSize="10" fontFamily="monospace">libs/</text>
+    <line x1="105" y1="108" x2="270" y2="138" stroke="#7c3aed" strokeWidth="1" strokeDasharray="3,2" opacity="0.5"/>
+    <line x1="225" y1="108" x2="290" y2="138" stroke="#7c3aed" strokeWidth="1" strokeDasharray="3,2" opacity="0.5"/>
+    <line x1="330" y1="108" x2="330" y2="134" stroke="#7c3aed" strokeWidth="1" opacity="0.5"/>
+    <rect x="245" y="138" width="120" height="28" rx="4" fill="#1a2235" stroke="#7c3aed" strokeWidth="1"/>
+    <text x="305" y="156" textAnchor="middle" fill="#a78bfa" fontSize="10" fontFamily="monospace">shared-utils</text>
+    <text x="205" y="195" textAnchor="middle" fill="#10b981" fontSize="11" fontFamily="monospace">✓ Atomic cross-service changes</text>
+    <text x="205" y="215" textAnchor="middle" fill="#10b981" fontSize="11" fontFamily="monospace">✓ Unified tooling and standards</text>
+    <text x="205" y="235" textAnchor="middle" fill="#10b981" fontSize="11" fontFamily="monospace">✓ Affected-only builds (Nx/Bazel)</text>
+    <text x="205" y="258" textAnchor="middle" fill="#f59e0b" fontSize="11" fontFamily="monospace">△ More complex pipeline logic</text>
+    <rect x="430" y="20" width="370" height="260" rx="8" fill="#111827" stroke="#00e5ff" strokeWidth="1.5"/>
+    <rect x="430" y="20" width="370" height="36" rx="8" fill="#00e5ff" opacity="0.15"/>
+    <text x="615" y="44" textAnchor="middle" fill="#67e8f9" fontSize="13" fontWeight="700" fontFamily="monospace">POLYREPO</text>
+    <rect x="450" y="76" width="100" height="28" rx="4" fill="#1a2235" stroke="#00e5ff" strokeWidth="1" opacity="0.8"/>
+    <text x="500" y="94" textAnchor="middle" fill="#a5f3fc" fontSize="9" fontFamily="monospace">repo: auth</text>
+    <rect x="558" y="76" width="100" height="28" rx="4" fill="#1a2235" stroke="#00e5ff" strokeWidth="1" opacity="0.8"/>
+    <text x="608" y="94" textAnchor="middle" fill="#a5f3fc" fontSize="9" fontFamily="monospace">repo: orders</text>
+    <rect x="666" y="76" width="100" height="28" rx="4" fill="#1a2235" stroke="#00e5ff" strokeWidth="1" opacity="0.8"/>
+    <text x="716" y="94" textAnchor="middle" fill="#a5f3fc" fontSize="9" fontFamily="monospace">repo: payments</text>
+    <line x1="500" y1="104" x2="500" y2="130" stroke="#00e5ff" strokeWidth="1" opacity="0.5"/>
+    <line x1="608" y1="104" x2="608" y2="130" stroke="#00e5ff" strokeWidth="1" opacity="0.5"/>
+    <line x1="716" y1="104" x2="716" y2="130" stroke="#00e5ff" strokeWidth="1" opacity="0.5"/>
+    <rect x="464" y="130" width="72" height="22" rx="3" fill="#0f2a1e" stroke="#10b981" strokeWidth="1"/>
+    <text x="500" y="145" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">pipeline</text>
+    <rect x="572" y="130" width="72" height="22" rx="3" fill="#0f2a1e" stroke="#10b981" strokeWidth="1"/>
+    <text x="608" y="145" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">pipeline</text>
+    <rect x="680" y="130" width="72" height="22" rx="3" fill="#0f2a1e" stroke="#10b981" strokeWidth="1"/>
+    <text x="716" y="145" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">pipeline</text>
+    <text x="615" y="195" textAnchor="middle" fill="#10b981" fontSize="11" fontFamily="monospace">✓ Full team autonomy</text>
+    <text x="615" y="215" textAnchor="middle" fill="#10b981" fontSize="11" fontFamily="monospace">✓ Simple, isolated pipelines</text>
+    <text x="615" y="235" textAnchor="middle" fill="#f59e0b" fontSize="11" fontFamily="monospace">△ Cross-service refactoring is hard</text>
+    <text x="615" y="258" textAnchor="middle" fill="#f59e0b" fontSize="11" fontFamily="monospace">△ Tooling drift between teams</text>
+  </svg>
+</DiagramWrap>
+
+<Callout type="purple">
+  **Pragmatic recommendation:** Use a monorepo for tightly coupled core services with shared libraries, and separate repos for truly independent services with stable API contracts. Nx and Bazel provide build caching and affected-service detection to keep monorepo pipelines fast.
+</Callout>
+
+---
+
+## 03 — Pipeline Architecture: The Four Stages
+
+A well-designed microservices CI/CD pipeline follows four logical stages, each acting as a quality gate before the next. The key principle: **build once, promote everywhere.**
+
+<DiagramWrap label="End-to-End Pipeline Flow">
+  <svg viewBox="0 0 820 200" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#00e5ff" opacity="0.7"/>
+      </marker>
+    </defs>
+    <rect x="20" y="60" width="160" height="80" rx="8" fill="#111827" stroke="#7c3aed" strokeWidth="1.5"/>
+    <rect x="20" y="60" width="160" height="26" rx="8" fill="#7c3aed" opacity="0.25"/>
+    <text x="100" y="78" textAnchor="middle" fill="#a78bfa" fontSize="11" fontWeight="700" fontFamily="monospace">① CI</text>
+    <text x="100" y="100" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Lint · Unit Tests</text>
+    <text x="100" y="116" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Build Image · Scan</text>
+    <text x="100" y="132" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">on: PR / commit</text>
+    <line x1="182" y1="100" x2="216" y2="100" stroke="#00e5ff" strokeWidth="1.5" strokeDasharray="4,2" markerEnd="url(#arr)" opacity="0.7"/>
+    <text x="199" y="90" textAnchor="middle" fill="#94a3b8" fontSize="8" fontFamily="monospace">merge</text>
+    <rect x="218" y="60" width="160" height="80" rx="8" fill="#111827" stroke="#00e5ff" strokeWidth="1.5"/>
+    <rect x="218" y="60" width="160" height="26" rx="8" fill="#00e5ff" opacity="0.1"/>
+    <text x="298" y="78" textAnchor="middle" fill="#67e8f9" fontSize="11" fontWeight="700" fontFamily="monospace">② Staging</text>
+    <text x="298" y="100" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Integration Tests</text>
+    <text x="298" y="116" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Contract · E2E · Perf</text>
+    <text x="298" y="132" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">auto: on merge</text>
+    <line x1="380" y1="100" x2="414" y2="100" stroke="#00e5ff" strokeWidth="1.5" strokeDasharray="4,2" markerEnd="url(#arr)" opacity="0.7"/>
+    <text x="397" y="90" textAnchor="middle" fill="#94a3b8" fontSize="8" fontFamily="monospace">pass</text>
+    <rect x="416" y="60" width="160" height="80" rx="8" fill="#111827" stroke="#f59e0b" strokeWidth="1.5"/>
+    <rect x="416" y="60" width="160" height="26" rx="8" fill="#f59e0b" opacity="0.1"/>
+    <text x="496" y="78" textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="700" fontFamily="monospace">③ Pre-Prod Gate</text>
+    <text x="496" y="100" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Approval / Policy</text>
+    <text x="496" y="116" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Security · Compliance</text>
+    <text x="496" y="132" textAnchor="middle" fill="#fcd34d" fontSize="9" fontFamily="monospace">human or automated</text>
+    <line x1="578" y1="100" x2="612" y2="100" stroke="#00e5ff" strokeWidth="1.5" strokeDasharray="4,2" markerEnd="url(#arr)" opacity="0.7"/>
+    <text x="595" y="90" textAnchor="middle" fill="#94a3b8" fontSize="8" fontFamily="monospace">approved</text>
+    <rect x="614" y="60" width="186" height="80" rx="8" fill="#111827" stroke="#10b981" strokeWidth="1.5"/>
+    <rect x="614" y="60" width="186" height="26" rx="8" fill="#10b981" opacity="0.1"/>
+    <text x="707" y="78" textAnchor="middle" fill="#6ee7b7" fontSize="11" fontWeight="700" fontFamily="monospace">④ Production</text>
+    <text x="707" y="100" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Canary / Blue-Green</text>
+    <text x="707" y="116" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Smoke Tests · Monitor</text>
+    <text x="707" y="132" textAnchor="middle" fill="#fb7185" fontSize="9" fontFamily="monospace">auto-rollback on failure</text>
+    <rect x="250" y="10" width="300" height="22" rx="4" fill="#0f2a1e" stroke="#10b981" strokeWidth="1"/>
+    <text x="400" y="25" textAnchor="middle" fill="#6ee7b7" fontSize="10" fontWeight="600" fontFamily="monospace">🔒 Immutable Artifact — same SHA promoted through all stages</text>
+  </svg>
+</DiagramWrap>
+
+<div style={{ display: "flex", gap: "14px", flexWrap: "wrap", margin: "28px 0" }}>
+  <StageCard stage="Stage 1" color="#7c3aed" title="Continuous Integration" description="Runs on every PR. Validate the change is safe to merge. Must complete in under 10 minutes." trigger="on: pull_request / commit" />
+  <StageCard stage="Stage 2" color="#00e5ff" title="Staging Delivery" description="Auto-deploy to a production-mirror environment. Run integration, contract, and E2E tests." trigger="on: merge to main" />
+  <StageCard stage="Stage 3" color="#f59e0b" title="Pre-Production Gate" description="Human or automated approval. Security, compliance, and change management checks." trigger="on: staging pass" />
+  <StageCard stage="Stage 4" color="#10b981" title="Production Deploy" description="Controlled rollout with automated smoke tests and instant rollback capability." trigger="on: gate approved" />
+</div>
+
+---
+
+## 04 — Containerization & Image Management
+
+<DiagramWrap label="Multi-Stage Docker Build Flow">
+  <svg viewBox="0 0 820 200" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#10b981" opacity="0.8"/>
+      </marker>
+    </defs>
+    <rect x="20" y="40" width="200" height="120" rx="8" fill="#111827" stroke="#7c3aed" strokeWidth="1.5"/>
+    <text x="120" y="65" textAnchor="middle" fill="#a78bfa" fontSize="12" fontWeight="700" fontFamily="monospace">BUILD STAGE</text>
+    <text x="120" y="88" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">FROM golang:1.22 AS builder</text>
+    <text x="120" y="106" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">COPY . .</text>
+    <text x="120" y="122" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">RUN go test ./...</text>
+    <text x="120" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">RUN go build -o /app</text>
+    <text x="120" y="158" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">~900MB image</text>
+    <line x1="222" y1="100" x2="285" y2="100" stroke="#10b981" strokeWidth="1.5" markerEnd="url(#arr2)"/>
+    <text x="254" y="88" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">COPY --from=builder</text>
+    <text x="254" y="100" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">/app binary only</text>
+    <rect x="287" y="40" width="200" height="120" rx="8" fill="#111827" stroke="#10b981" strokeWidth="1.5"/>
+    <text x="387" y="65" textAnchor="middle" fill="#6ee7b7" fontSize="12" fontWeight="700" fontFamily="monospace">FINAL STAGE</text>
+    <text x="387" y="88" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">FROM gcr.io/distroless/static</text>
+    <text x="387" y="106" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">COPY /app /app</text>
+    <text x="387" y="122" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">USER nonroot</text>
+    <text x="387" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">ENTRYPOINT ["/app"]</text>
+    <text x="387" y="158" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">~12MB image ✓</text>
+    <line x1="489" y1="100" x2="540" y2="100" stroke="#10b981" strokeWidth="1.5" markerEnd="url(#arr2)"/>
+    <rect x="542" y="55" width="240" height="90" rx="8" fill="#111827" stroke="#00e5ff" strokeWidth="1.5"/>
+    <text x="662" y="80" textAnchor="middle" fill="#67e8f9" fontSize="12" fontWeight="700" fontFamily="monospace">REGISTRY</text>
+    <text x="662" y="100" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">tag: sha-a3f7c2b1</text>
+    <text x="662" y="118" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">✓ Signed  ✓ CVE-scanned</text>
+    <text x="662" y="134" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">✓ Retention policy applied</text>
+  </svg>
+</DiagramWrap>
+
+<Callout type="warning">
+  **Anti-pattern:** Never tag production images as `:latest`. It destroys traceability. Always tag with the Git commit SHA. Deployment manifests must reference an explicit digest — not a mutable tag.
+</Callout>
+
+---
+
+## 05 — Kubernetes Orchestration & GitOps
+
+Kubernetes is the production runtime for microservices. The modern deployment model is **GitOps**: Git is the single source of truth for cluster state, and an in-cluster operator continuously reconciles the cluster to match the repository.
+
+<DiagramWrap label="GitOps Deployment Model (ArgoCD / Flux)">
+  <svg viewBox="0 0 820 260" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arr3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#00e5ff" opacity="0.8"/>
+      </marker>
+      <marker id="arr4" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#10b981" opacity="0.8"/>
+      </marker>
+      <marker id="arr5" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#f59e0b" opacity="0.8"/>
+      </marker>
+    </defs>
+    <rect x="20" y="100" width="110" height="60" rx="6" fill="#1a2235" stroke="#7c3aed" strokeWidth="1.5"/>
+    <text x="75" y="126" textAnchor="middle" fill="#a78bfa" fontSize="20">👩‍💻</text>
+    <text x="75" y="148" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">Developer</text>
+    <rect x="190" y="100" width="130" height="60" rx="6" fill="#1a2235" stroke="#00e5ff" strokeWidth="1.5"/>
+    <text x="255" y="122" textAnchor="middle" fill="#67e8f9" fontSize="11" fontWeight="700" fontFamily="monospace">CI System</text>
+    <text x="255" y="138" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Build · Test · Push</text>
+    <text x="255" y="152" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Image to Registry</text>
+    <line x1="132" y1="130" x2="188" y2="130" stroke="#00e5ff" strokeWidth="1.5" markerEnd="url(#arr3)"/>
+    <text x="160" y="122" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">git push</text>
+    <rect x="380" y="80" width="140" height="100" rx="6" fill="#1a2235" stroke="#f59e0b" strokeWidth="1.5"/>
+    <text x="450" y="108" textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="700" fontFamily="monospace">GitOps Repo</text>
+    <text x="450" y="128" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">manifests/</text>
+    <text x="450" y="145" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">prod/values.yaml</text>
+    <text x="450" y="162" textAnchor="middle" fill="#fcd34d" fontSize="9" fontFamily="monospace">image: sha-a3f7c2</text>
+    <line x1="322" y1="130" x2="378" y2="130" stroke="#f59e0b" strokeWidth="1.5" markerEnd="url(#arr5)"/>
+    <text x="350" y="120" textAnchor="middle" fill="#fcd34d" fontSize="9" fontFamily="monospace">update</text>
+    <text x="350" y="132" textAnchor="middle" fill="#fcd34d" fontSize="9" fontFamily="monospace">image tag</text>
+    <rect x="590" y="60" width="210" height="140" rx="8" fill="#111827" stroke="#10b981" strokeWidth="1.5"/>
+    <text x="695" y="90" textAnchor="middle" fill="#6ee7b7" fontSize="12" fontWeight="700" fontFamily="monospace">Kubernetes Cluster</text>
+    <rect x="610" y="102" width="170" height="36" rx="4" fill="#0f2a1e" stroke="#10b981" strokeWidth="1"/>
+    <text x="695" y="120" textAnchor="middle" fill="#6ee7b7" fontSize="10" fontWeight="600" fontFamily="monospace">ArgoCD / Flux Operator</text>
+    <text x="695" y="132" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">continuous sync loop</text>
+    <rect x="610" y="148" width="76" height="28" rx="4" fill="#1a2235" stroke="#00e5ff" strokeWidth="1"/>
+    <text x="648" y="166" textAnchor="middle" fill="#a5f3fc" fontSize="9" fontFamily="monospace">pod v2 ✓</text>
+    <rect x="704" y="148" width="76" height="28" rx="4" fill="#1a2235" stroke="#00e5ff" strokeWidth="1"/>
+    <text x="742" y="166" textAnchor="middle" fill="#a5f3fc" fontSize="9" fontFamily="monospace">pod v2 ✓</text>
+    <line x1="522" y1="130" x2="586" y2="130" stroke="#10b981" strokeWidth="1.5" strokeDasharray="5,3" markerEnd="url(#arr4)"/>
+    <text x="553" y="118" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">pull / sync</text>
+    <text x="553" y="130" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">(operator)</text>
+    <text x="450" y="215" textAnchor="middle" fill="#f59e0b" fontSize="10" fontFamily="monospace">Rollback = git revert → instant reconcile</text>
+  </svg>
+</DiagramWrap>
+
+<Callout type="success">
+  **GitOps principle:** The CI pipeline's only job in a GitOps model is to build the image, push it to the registry, and update the image tag in the GitOps repo. The operator handles the rest — giving you a full audit trail, simple rollbacks, and a single source of truth.
+</Callout>
+
+---
+
+## 06 — Deployment Strategies
+
+<DiagramWrap label="Canary Deployment — Automated Progressive Traffic Shifting">
+  <svg viewBox="0 0 820 220" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arr6" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#94a3b8"/>
+      </marker>
+    </defs>
+    <rect x="20" y="90" width="120" height="50" rx="6" fill="#1a2235" stroke="#00e5ff" strokeWidth="1.5"/>
+    <text x="80" y="112" textAnchor="middle" fill="#67e8f9" fontSize="11" fontWeight="700" fontFamily="monospace">Load Balancer</text>
+    <text x="80" y="128" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Traffic routing</text>
+    <text x="210" y="25" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600" fontFamily="monospace">Step 1</text>
+    <text x="380" y="25" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600" fontFamily="monospace">Step 2</text>
+    <text x="560" y="25" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600" fontFamily="monospace">Step 3 (auto-promote)</text>
+    <text x="730" y="25" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="600" fontFamily="monospace">Rollback trigger</text>
+    <rect x="150" y="50" width="120" height="40" rx="5" fill="#1a2235" stroke="#10b981" strokeWidth="1.5"/>
+    <text x="210" y="68" textAnchor="middle" fill="#6ee7b7" fontSize="10" fontFamily="monospace">stable v1</text>
+    <text x="210" y="82" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">95% traffic</text>
+    <rect x="150" y="130" width="120" height="40" rx="5" fill="#0f2a1e" stroke="#f59e0b" strokeWidth="1.5"/>
+    <text x="210" y="148" textAnchor="middle" fill="#fcd34d" fontSize="10" fontFamily="monospace">canary v2</text>
+    <text x="210" y="162" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">5% traffic</text>
+    <line x1="142" y1="108" x2="152" y2="72" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3,2" markerEnd="url(#arr6)"/>
+    <line x1="142" y1="118" x2="152" y2="145" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3,2" markerEnd="url(#arr6)"/>
+    <rect x="320" y="50" width="120" height="40" rx="5" fill="#1a2235" stroke="#10b981" strokeWidth="1.5"/>
+    <text x="380" y="68" textAnchor="middle" fill="#6ee7b7" fontSize="10" fontFamily="monospace">stable v1</text>
+    <text x="380" y="82" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">50% traffic</text>
+    <rect x="320" y="130" width="120" height="40" rx="5" fill="#0f2a1e" stroke="#f59e0b" strokeWidth="1.5"/>
+    <text x="380" y="148" textAnchor="middle" fill="#fcd34d" fontSize="10" fontFamily="monospace">canary v2</text>
+    <text x="380" y="162" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">50% traffic</text>
+    <text x="380" y="200" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">✓ metrics healthy</text>
+    <rect x="490" y="80" width="140" height="60" rx="5" fill="#0f2a1e" stroke="#10b981" strokeWidth="2"/>
+    <text x="560" y="106" textAnchor="middle" fill="#6ee7b7" fontSize="11" fontWeight="700" fontFamily="monospace">v2 — 100%</text>
+    <text x="560" y="124" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">v1 pods terminated</text>
+    <rect x="660" y="80" width="140" height="60" rx="5" fill="#2d1515" stroke="#f43f5e" strokeWidth="1.5"/>
+    <text x="730" y="104" textAnchor="middle" fill="#fb7185" fontSize="11" fontWeight="700" fontFamily="monospace">⚡ Auto-Rollback</text>
+    <text x="730" y="120" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">error rate {">"} threshold</text>
+    <text x="730" y="134" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">v1 restored instantly</text>
+    <line x1="272" y1="110" x2="318" y2="110" stroke="#00e5ff" strokeWidth="1.2" strokeDasharray="4,2"/>
+    <line x1="442" y1="110" x2="488" y2="110" stroke="#00e5ff" strokeWidth="1.2" strokeDasharray="4,2"/>
+    <line x1="632" y1="110" x2="658" y2="110" stroke="#f43f5e" strokeWidth="1.2" strokeDasharray="4,2"/>
+  </svg>
+</DiagramWrap>
+
+---
+
+## 07 — Testing Strategy: The Pyramid
+
+<DiagramWrap label="Microservices Testing Pyramid">
+  <svg viewBox="0 0 820 310" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="160,270 660,270 580,210 240,210" fill="#7c3aed" opacity="0.25" stroke="#7c3aed" strokeWidth="1.5"/>
+    <text x="410" y="247" textAnchor="middle" fill="#a78bfa" fontSize="13" fontWeight="700" fontFamily="monospace">UNIT TESTS</text>
+    <text x="410" y="264" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">Hundreds · Seconds · In-process · High coverage of business logic</text>
+    <polygon points="240,210 580,210 520,155 300,155" fill="#00e5ff" opacity="0.15" stroke="#00e5ff" strokeWidth="1.5"/>
+    <text x="410" y="180" textAnchor="middle" fill="#67e8f9" fontSize="12" fontWeight="700" fontFamily="monospace">INTEGRATION TESTS</text>
+    <text x="410" y="197" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">TestContainers · Real DB/Queue · Minutes</text>
+    <polygon points="300,155 520,155 470,100 350,100" fill="#10b981" opacity="0.2" stroke="#10b981" strokeWidth="1.5"/>
+    <text x="410" y="122" textAnchor="middle" fill="#6ee7b7" fontSize="12" fontWeight="700" fontFamily="monospace">CONTRACT TESTS</text>
+    <text x="410" y="138" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">Pact · API compatibility · Per-service CI</text>
+    <polygon points="350,100 470,100 435,52 385,52" fill="#f59e0b" opacity="0.25" stroke="#f59e0b" strokeWidth="1.5"/>
+    <text x="410" y="75" textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="700" fontFamily="monospace">E2E / CHAOS</text>
+    <text x="410" y="89" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Few · Slow · Staging only</text>
+    <text x="690" y="248" fill="#a78bfa" fontSize="10" fontFamily="monospace">→ Fast · Many · Cheap</text>
+    <text x="690" y="185" fill="#67e8f9" fontSize="10" fontFamily="monospace">→ Medium speed</text>
+    <text x="690" y="130" fill="#6ee7b7" fontSize="10" fontFamily="monospace">→ Critical layer!</text>
+    <text x="690" y="78" fill="#fcd34d" fontSize="10" fontFamily="monospace">→ Slow · Few · Staging</text>
+  </svg>
+</DiagramWrap>
+
+<Callout type="success">
+  **Most underinvested layer:** Contract testing. Consumer-driven contract tests (Pact) let consuming services define the API behavior they depend on, and let providers verify their implementation satisfies those contracts — catching breaking changes before they reach integrated environments.
+</Callout>
+
+---
+
+## 08 — Security at Every Stage (DevSecOps)
+
+Security is not a final checkpoint — it's woven into every stage of the pipeline. The principle of "shift left" means catching vulnerabilities as early as possible, when they are cheapest to fix.
+
+<DiagramWrap label="Security Checkpoints Across the Pipeline">
+  <svg viewBox="0 0 820 180" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <line x1="30" y1="100" x2="790" y2="100" stroke="#1e2d42" strokeWidth="2"/>
+    <circle cx="100" cy="100" r="18" fill="#7c3aed" opacity="0.8"/>
+    <text x="100" y="96" textAnchor="middle" fill="#fff" fontSize="9" fontWeight="700" fontFamily="monospace">SAST</text>
+    <text x="100" y="107" textAnchor="middle" fill="#fff" fontSize="7" fontFamily="monospace">code</text>
+    <text x="100" y="130" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Semgrep</text>
+    <text x="100" y="143" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">SonarQube</text>
+    <text x="100" y="60" textAnchor="middle" fill="#a78bfa" fontSize="9" fontFamily="monospace">on PR</text>
+    <circle cx="240" cy="100" r="18" fill="#00e5ff" opacity="0.7"/>
+    <text x="240" y="96" textAnchor="middle" fill="#000" fontSize="9" fontWeight="700" fontFamily="monospace">SCA</text>
+    <text x="240" y="107" textAnchor="middle" fill="#000" fontSize="7" fontFamily="monospace">deps</text>
+    <text x="240" y="130" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Snyk</text>
+    <text x="240" y="143" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Dependabot</text>
+    <text x="240" y="60" textAnchor="middle" fill="#67e8f9" fontSize="9" fontFamily="monospace">on PR</text>
+    <circle cx="390" cy="100" r="18" fill="#10b981" opacity="0.8"/>
+    <text x="390" y="95" textAnchor="middle" fill="#fff" fontSize="8" fontWeight="700" fontFamily="monospace">IMAGE</text>
+    <text x="390" y="107" textAnchor="middle" fill="#fff" fontSize="7" fontFamily="monospace">SCAN</text>
+    <text x="390" y="130" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Trivy</text>
+    <text x="390" y="143" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Grype / Anchore</text>
+    <text x="390" y="60" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">post-build</text>
+    <circle cx="540" cy="100" r="18" fill="#f59e0b" opacity="0.8"/>
+    <text x="540" y="95" textAnchor="middle" fill="#fff" fontSize="8" fontWeight="700" fontFamily="monospace">SECRETS</text>
+    <text x="540" y="107" textAnchor="middle" fill="#fff" fontSize="7" fontFamily="monospace">MGMT</text>
+    <text x="540" y="130" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Vault</text>
+    <text x="540" y="143" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">AWS SecretsMgr</text>
+    <text x="540" y="60" textAnchor="middle" fill="#fcd34d" fontSize="9" fontFamily="monospace">runtime inject</text>
+    <circle cx="690" cy="100" r="18" fill="#f43f5e" opacity="0.8"/>
+    <text x="690" y="95" textAnchor="middle" fill="#fff" fontSize="8" fontWeight="700" fontFamily="monospace">IaC</text>
+    <text x="690" y="107" textAnchor="middle" fill="#fff" fontSize="7" fontFamily="monospace">SCAN</text>
+    <text x="690" y="130" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Checkov</text>
+    <text x="690" y="143" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">tfsec / KICS</text>
+    <text x="690" y="60" textAnchor="middle" fill="#fb7185" fontSize="9" fontFamily="monospace">pre-apply</text>
+    <text x="30" y="175" fill="#94a3b8" fontSize="9" fontFamily="monospace">← earlier in pipeline (cheaper to fix)</text>
+    <text x="680" y="175" fill="#94a3b8" fontSize="9" fontFamily="monospace">later →</text>
+  </svg>
+</DiagramWrap>
+
+<Callout type="warning">
+  **Secrets rule:** No secrets in source code, environment variables baked into images, or CI/CD pipeline logs — ever. Inject secrets into pods at runtime via Kubernetes External Secrets Operator. Rotate regularly and audit all access.
+</Callout>
+
+---
+
+## 09 — Observability: The Three Pillars
+
+You cannot confidently operate what you cannot observe. Instrumentation should be built into every service as a first-class concern, covering the three pillars: logs, metrics, and traces.
+
+<DiagramWrap label="Observability Stack — Three Pillars + Deployment Markers">
+  <svg viewBox="0 0 820 220" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <rect x="20" y="40" width="220" height="150" rx="8" fill="#111827" stroke="#7c3aed" strokeWidth="1.5"/>
+    <rect x="20" y="40" width="220" height="34" rx="8" fill="#7c3aed" opacity="0.2"/>
+    <text x="130" y="63" textAnchor="middle" fill="#a78bfa" fontSize="13" fontWeight="700" fontFamily="monospace">📋 LOGS</text>
+    <text x="130" y="96" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">Structured JSON format</text>
+    <text x="130" y="114" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">Request IDs + Trace IDs</text>
+    <text x="130" y="132" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">Ship to: Loki / ELK</text>
+    <text x="130" y="155" textAnchor="middle" fill="#c4b5fd" fontSize="10" fontWeight="600" fontFamily="monospace">Grafana / Kibana UI</text>
+    <text x="130" y="178" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Alert on error patterns</text>
+    <rect x="300" y="40" width="220" height="150" rx="8" fill="#111827" stroke="#00e5ff" strokeWidth="1.5"/>
+    <rect x="300" y="40" width="220" height="34" rx="8" fill="#00e5ff" opacity="0.1"/>
+    <text x="410" y="63" textAnchor="middle" fill="#67e8f9" fontSize="13" fontWeight="700" fontFamily="monospace">📊 METRICS</text>
+    <text x="410" y="96" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">4 Golden Signals:</text>
+    <text x="410" y="114" textAnchor="middle" fill="#67e8f9" fontSize="10" fontFamily="monospace">Latency · Traffic · Errors · Saturation</text>
+    <text x="410" y="132" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">Prometheus + Grafana</text>
+    <text x="410" y="150" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">SLO-aligned alerting</text>
+    <text x="410" y="178" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Alert on user-facing symptoms</text>
+    <rect x="580" y="40" width="220" height="150" rx="8" fill="#111827" stroke="#10b981" strokeWidth="1.5"/>
+    <rect x="580" y="40" width="220" height="34" rx="8" fill="#10b981" opacity="0.1"/>
+    <text x="690" y="63" textAnchor="middle" fill="#6ee7b7" fontSize="13" fontWeight="700" fontFamily="monospace">🔍 TRACES</text>
+    <text x="690" y="96" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">OpenTelemetry instrumentation</text>
+    <text x="690" y="114" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">Spans across service boundaries</text>
+    <text x="690" y="132" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">Jaeger / Tempo backend</text>
+    <text x="690" y="150" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">Diagnose cross-service latency</text>
+    <text x="690" y="178" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Correlate with logs via trace ID</text>
+  </svg>
+</DiagramWrap>
+
+<Callout type="info">
+  **Deployment markers:** Your pipeline should emit a deployment event to your monitoring system on every production release. Most platforms (Datadog, Grafana, New Relic) support annotation events, making it trivial to correlate a spike in errors with the deployment that caused it.
+</Callout>
+
+---
+
+## 10 — Rollback & Incident Response
+
+Even the best pipelines ship bugs. The measure of a mature system is how quickly and safely you can recover.
+
+<DiagramWrap label="Incident Response Decision Tree">
+  <svg viewBox="0 0 820 280" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arr7" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#94a3b8" opacity="0.8"/>
+      </marker>
+    </defs>
+    <rect x="310" y="10" width="200" height="44" rx="6" fill="#1a2235" stroke="#00e5ff" strokeWidth="1.5"/>
+    <text x="410" y="28" textAnchor="middle" fill="#67e8f9" fontSize="11" fontWeight="700" fontFamily="monospace">Production Deployment</text>
+    <text x="410" y="46" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">monitoring active</text>
+    <line x1="410" y1="54" x2="410" y2="80" stroke="#94a3b8" strokeWidth="1" markerEnd="url(#arr7)"/>
+    <rect x="310" y="80" width="200" height="40" rx="6" fill="#1a2235" stroke="#f59e0b" strokeWidth="1.5"/>
+    <text x="410" y="97" textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="600" fontFamily="monospace">Post-deploy health checks</text>
+    <text x="410" y="113" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">error rate · latency · readiness</text>
+    <line x1="310" y1="100" x2="240" y2="100" stroke="#10b981" strokeWidth="1.5" markerEnd="url(#arr7)"/>
+    <text x="272" y="92" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">✓ healthy</text>
+    <rect x="100" y="80" width="136" height="40" rx="6" fill="#0f2a1e" stroke="#10b981" strokeWidth="1.5"/>
+    <text x="168" y="97" textAnchor="middle" fill="#6ee7b7" fontSize="11" fontWeight="600" fontFamily="monospace">Deploy complete</text>
+    <text x="168" y="113" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">continue monitoring</text>
+    <line x1="510" y1="100" x2="570" y2="100" stroke="#f43f5e" strokeWidth="1.5" markerEnd="url(#arr7)"/>
+    <text x="540" y="92" textAnchor="middle" fill="#fb7185" fontSize="9" fontFamily="monospace">✗ degraded</text>
+    <rect x="572" y="80" width="160" height="40" rx="6" fill="#2d1515" stroke="#f43f5e" strokeWidth="1.5"/>
+    <text x="652" y="97" textAnchor="middle" fill="#fb7185" fontSize="11" fontWeight="600" fontFamily="monospace">Auto-Rollback</text>
+    <text x="652" y="113" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">{"<"}60 seconds · automated</text>
+    <line x1="652" y1="120" x2="652" y2="155" stroke="#94a3b8" strokeWidth="1" markerEnd="url(#arr7)"/>
+    <rect x="560" y="155" width="184" height="40" rx="6" fill="#1a2235" stroke="#f59e0b" strokeWidth="1.5"/>
+    <text x="652" y="172" textAnchor="middle" fill="#fcd34d" fontSize="10" fontWeight="600" fontFamily="monospace">Incident declared</text>
+    <text x="652" y="188" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">on-call paged · runbook linked</text>
+    <line x1="652" y1="196" x2="652" y2="228" stroke="#94a3b8" strokeWidth="1" markerEnd="url(#arr7)"/>
+    <rect x="530" y="228" width="244" height="40" rx="6" fill="#1a2235" stroke="#7c3aed" strokeWidth="1.5"/>
+    <text x="652" y="245" textAnchor="middle" fill="#a78bfa" fontSize="10" fontWeight="600" fontFamily="monospace">GitOps rollback</text>
+    <text x="652" y="261" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">git revert → operator reconciles</text>
+    <rect x="60" y="155" width="240" height="65" rx="6" fill="#1a2235" stroke="#f59e0b" strokeWidth="1"/>
+    <text x="180" y="175" textAnchor="middle" fill="#fcd34d" fontSize="10" fontWeight="600" fontFamily="monospace">⚠️ Database Migration Rule</text>
+    <text x="180" y="193" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Always use expand-contract pattern.</text>
+    <text x="180" y="209" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">New schema must be backward compat.</text>
+  </svg>
+</DiagramWrap>
+
+---
+
+## 11 — Reference Tooling Stack
+
+<DiagramWrap label="Recommended Tool Choices by Category">
+  <ToolTable />
+</DiagramWrap>
+
+---
+
+## 12 — Conclusion
+
+Building a production-grade CI/CD pipeline for microservices is not a one-time project — it's a continuous investment in your organization's ability to deliver value safely and quickly. The principles laid out here — **immutable artifacts, progressive delivery, shift-left security, deep observability, and automated recovery** — form the foundation of a system that scales with your teams and ambitions.
+
+Start where you are. If you have no automated tests, start there. If you're deploying manually, automate that first. Each incremental improvement compounds. Within months you can find yourself operating a system that teams trust and customers experience as reliably excellent.
+
+<Callout type="success">
+  **The pipeline is the product.** High-performing engineering organizations treat their CI/CD infrastructure with the same rigor as user-facing products — measuring reliability, performance, and developer satisfaction. Invest in it accordingly.
+</Callout>
+
+---
+
+*Written for engineering teams shipping production microservices at scale · February 2026*
+
+</div>
