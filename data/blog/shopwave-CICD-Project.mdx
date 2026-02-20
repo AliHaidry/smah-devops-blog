@@ -1,12 +1,12 @@
 ---
 title: "ShopWave: Production-Grade E-Commerce CI/CD on Azure"
-subtitle: "A complete end-to-end walkthrough — Python FastAPI microservices, AKS, ACR, GitHub Actions"
+subtitle: "A complete end-to-end walkthrough — Python FastAPI microservices, AKS, ACR, GitHub Actions, Terraform"
 date: "2026-02-20"
-author: "Ali Haidry"
-tags: ["Azure", "AKS", "GitHub Actions", "FastAPI", "Python", "CI/CD", "Microservices", "E-Commerce"]
-readTime: "35 min read"
+author: "Platform Engineering Team"
+tags: ["Azure", "AKS", "GitHub Actions", "FastAPI", "Python", "CI/CD", "Microservices", "E-Commerce", "Terraform", "IaC"]
+readTime: "40 min read"
 project: "ShopWave E-Commerce Platform"
-stack: "Python · FastAPI · Azure AKS · ACR · Azure DB · GitHub Actions"
+stack: "Python · FastAPI · Azure AKS · ACR · Azure DB · Terraform · GitHub Actions"
 ---
 
 import { useState } from "react";
@@ -141,28 +141,30 @@ export const ServiceCard = ({ name, port, color, desc, routes }) => (
     <Badge color={T.accent}>Azure AKS</Badge>
     <Badge color={T.accent2}>GitHub Actions</Badge>
     <Badge color={T.accent3}>FastAPI · Python</Badge>
-    <Badge color={T.accent4}>Production Grade</Badge>
+    <Badge color={T.accent4}>Terraform IaC</Badge>
+    <Badge color={T.warn}>Production Grade</Badge>
     <Badge color={T.accent5}>E-Commerce</Badge>
   </div>
   <h1 style={{ fontFamily: "'Bebas Neue','Anton',sans-serif", fontSize: "clamp(2.8rem,7vw,5.2rem)", lineHeight: 1.0, letterSpacing: "0.04em", color: "#fff", marginBottom: "20px", background: `linear-gradient(135deg,#fff 0%,#93c5fd 50%,${T.accent} 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
     SHOPWAVE
   </h1>
   <p style={{ fontSize: "1.25rem", color: T.muted, maxWidth: "680px", margin: "0 0 16px" }}>
-    A complete, production-grade E-Commerce platform built with Python FastAPI microservices, deployed on Azure Kubernetes Service via GitHub Actions — from zero to live, nothing skipped.
+    A complete, production-grade E-Commerce platform built with Python FastAPI microservices, deployed on Azure Kubernetes Service via GitHub Actions — infrastructure provisioned entirely with Terraform. From zero to live, nothing skipped.
   </p>
   <div style={{ fontFamily: "monospace", fontSize: "12px", color: T.muted, display: "flex", gap: "24px", flexWrap: "wrap" }}>
     <span>📅 February 2026</span>
-    <span>⏱ 35 min read</span>
+    <span>⏱ 40 min read</span>
     <span>🐍 Python 3.12 + FastAPI</span>
     <span>☁️ Azure AKS + ACR + PostgreSQL</span>
+    <span>🏗️ Terraform 1.7+</span>
     <span>⚙️ GitHub Actions</span>
   </div>
 </div>
 
 {/* ── WHAT WE'RE BUILDING ── */}
 <div style={{ padding: "40px 0 20px" }}>
-  <p>This is not a tutorial with placeholder code. Every file, pipeline, and configuration in this walkthrough is <strong style={{color:"#fff"}}>real, production-ready, and battle-tested</strong>. By the end you will have a complete monorepo containing four Python FastAPI microservices, a full Azure infrastructure stack, and GitHub Actions pipelines that take code from a developer's laptop to a live Kubernetes cluster — with security scanning, automated testing, canary deployments, and instant rollback capability built in.</p>
-  <p>We are building <strong style={{color:"#fff"}}>ShopWave</strong> — a modern e-commerce backend with an API Gateway, Auth Service, Product Service, and Order Service. Each service is independently deployable, containerised, and operated through a fully automated CI/CD pipeline.</p>
+  <p>This is not a tutorial with placeholder code. Every file, pipeline, and configuration in this walkthrough is <strong style={{color:"#fff"}}>real, production-ready, and battle-tested</strong>. By the end you will have a complete monorepo containing four Python FastAPI microservices, a full Azure infrastructure stack provisioned with Terraform, and GitHub Actions pipelines that take code from a developer's laptop to a live Kubernetes cluster — with security scanning, automated testing, canary deployments, and instant rollback capability built in.</p>
+  <p>We are building <strong style={{color:"#fff"}}>ShopWave</strong> — a modern e-commerce backend with an API Gateway, Auth Service, Product Service, and Order Service. Each service is independently deployable, containerised, and operated through a fully automated CI/CD pipeline. The entire Azure infrastructure — AKS cluster, Container Registry, PostgreSQL databases, Key Vault, private networking, and GitHub OIDC federation — is declared as Terraform code and applied through its own dedicated pipeline.</p>
 </div>
 
 {/* ── ARCHITECTURE DIAGRAM ── */}
@@ -266,8 +268,8 @@ export const ServiceCard = ({ name, port, color, desc, routes }) => (
     <rect x="720" y="250" width="125" height="70" rx="8" fill="#161a26" stroke="#a855f7" strokeWidth="1.5"/>
     <rect x="720" y="250" width="125" height="26" rx="8" fill="#a855f7" opacity="0.2"/>
     <text x="782" y="268" textAnchor="middle" fill="#d8b4fe" fontSize="11" fontFamily="monospace" fontWeight="700">GH ACTIONS</text>
-    <text x="782" y="288" textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="monospace">CI · CD · Security</text>
-    <text x="782" y="304" textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="monospace">5 pipelines</text>
+    <text x="782" y="288" textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="monospace">CI · CD · Terraform</text>
+    <text x="782" y="304" textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="monospace">7 pipelines</text>
 
     {/* ACR → AKS */}
     <line x1="782" y1="122" x2="782" y2="143" stroke="#f97316" strokeWidth="1.5" markerEnd="url(#a3)"/>
@@ -299,7 +301,7 @@ export const ServiceCard = ({ name, port, color, desc, routes }) => (
 ══════════════════════════════════════════════════ */}
 <SectionHeader num="01" title="PROJECT STRUCTURE & MONOREPO LAYOUT" sub="Every file, every directory — nothing hand-wavy." />
 
-<p>ShopWave lives in a single monorepo. GitHub Actions uses path-based filtering to detect which services changed and runs only the relevant pipelines — so deploying a hotfix to <code style={{color:T.accent3}}>order-service</code> does not trigger a rebuild of <code style={{color:T.accent3}}>auth-service</code>.</p>
+<p>ShopWave lives in a single monorepo. GitHub Actions uses path-based filtering to detect which services changed and runs only the relevant pipelines — so deploying a hotfix to <code style={{color:T.accent3}}>order-service</code> does not trigger a rebuild of <code style={{color:T.accent3}}>auth-service</code>. A separate <code style={{color:T.accent3}}>terraform.yml</code> pipeline manages all Azure infrastructure changes, keeping application and infrastructure deployments completely independent.</p>
 
 <FileTree>{`shopwave/
 ├── .github/
@@ -309,7 +311,8 @@ export const ServiceCard = ({ name, port, color, desc, routes }) => (
 │       ├── ci-order-service.yml       ← CI for order-service
 │       ├── ci-api-gateway.yml         ← CI for api-gateway
 │       ├── cd-staging.yml             ← Deploy ALL changed services → staging
-│       └── cd-production.yml          ← Promote staging → production (manual gate)
+│       ├── cd-production.yml          ← Promote staging → production (manual gate)
+│       └── terraform.yml              ← Infrastructure CI/CD (plan on PR · apply on dispatch)
 │
 ├── services/
 │   ├── api-gateway/
@@ -322,8 +325,6 @@ export const ServiceCard = ({ name, port, color, desc, routes }) => (
 │   │   │   │   └── rate_limit.py      ← Redis-backed rate limiter
 │   │   │   └── config.py              ← Pydantic settings
 │   │   ├── tests/
-│   │   │   ├── test_proxy.py
-│   │   │   └── test_middleware.py
 │   │   ├── Dockerfile
 │   │   ├── requirements.txt
 │   │   └── pyproject.toml
@@ -331,22 +332,18 @@ export const ServiceCard = ({ name, port, color, desc, routes }) => (
 │   ├── auth-service/
 │   │   ├── app/
 │   │   │   ├── main.py
-│   │   │   ├── api/
-│   │   │   │   └── v1/
-│   │   │   │       ├── auth.py        ← Login / register / refresh
-│   │   │   │       └── users.py       ← User CRUD
+│   │   │   ├── api/v1/
+│   │   │   │   ├── auth.py            ← Login / register / refresh
+│   │   │   │   └── users.py           ← User CRUD
 │   │   │   ├── core/
 │   │   │   │   ├── security.py        ← JWT + bcrypt
 │   │   │   │   └── config.py
 │   │   │   ├── db/
 │   │   │   │   ├── models.py          ← SQLAlchemy ORM models
 │   │   │   │   └── session.py         ← Async DB session
-│   │   │   └── schemas/
-│   │   │       └── auth.py            ← Pydantic schemas
-│   │   ├── alembic/                   ← DB migrations
-│   │   │   ├── env.py
-│   │   │   └── versions/
-│   │   │       └── 001_init.py
+│   │   │   └── schemas/auth.py        ← Pydantic schemas
+│   │   ├── alembic/versions/
+│   │   │   └── 001_init.py
 │   │   ├── tests/
 │   │   ├── Dockerfile
 │   │   ├── requirements.txt
@@ -357,13 +354,21 @@ export const ServiceCard = ({ name, port, color, desc, routes }) => (
 │
 ├── infrastructure/
 │   └── terraform/
-│       ├── main.tf                    ← AKS + ACR + Azure DB provisioning
-│       ├── variables.tf
-│       ├── outputs.tf
-│       └── modules/
-│           ├── aks/
-│           ├── acr/
-│           └── postgres/
+│       ├── main.tf                    ← Root: wires all modules + OIDC federation
+│       ├── variables.tf               ← All input variables with validation
+│       ├── outputs.tf                 ← GitHub Secrets summary + resource IDs
+│       ├── terraform.tfvars.example   ← Copy → terraform.tfvars to configure
+│       ├── modules/
+│       │   ├── networking/            ← VNet · subnets · NSGs · private DNS zone
+│       │   ├── aks/                   ← AKS cluster · node pools · Log Analytics
+│       │   ├── acr/                   ← Azure Container Registry
+│       │   ├── postgres/              ← PostgreSQL Flexible Server · databases
+│       │   └── keyvault/              ← Azure Key Vault · seeds JWT + origins
+│       ├── environments/
+│       │   ├── staging/staging.tfvars
+│       │   └── production/production.tfvars
+│       └── scripts/
+│           └── bootstrap-tfstate.sh   ← One-time: creates remote state backend
 │
 ├── helm/
 │   └── shopwave/
@@ -377,16 +382,14 @@ export const ServiceCard = ({ name, port, color, desc, routes }) => (
 │           ├── ingress.yaml
 │           ├── hpa.yaml               ← Horizontal Pod Autoscaler
 │           ├── pdb.yaml               ← Pod Disruption Budget
-│           └── externalsecret.yaml    ← Azure Key Vault secrets
+│           └── externalsecret.yaml    ← Azure Key Vault secret injection
 │
 ├── k8s/
-│   ├── namespaces.yaml
 │   ├── network-policies.yaml
 │   └── rbac.yaml
 │
 ├── scripts/
-│   ├── bootstrap-azure.sh             ← One-shot Azure resource setup
-│   └── seed-db.sh
+│   └── init-databases.sql             ← Local dev: create all three databases
 │
 ├── docker-compose.yml                 ← Local development
 ├── .env.example
@@ -1604,11 +1607,450 @@ spec:
               drop: [ALL]`}</CodeBlock>
 
 {/* ══════════════════════════════════════════════════
-    SECTION 7 — AZURE SECRETS & RBAC
+    SECTION 7 — TERRAFORM INFRASTRUCTURE AS CODE
 ══════════════════════════════════════════════════ */}
-<SectionHeader num="07" title="SECRETS, RBAC & AZURE KEY VAULT" sub="Zero secrets in code, environment variables, or pipeline logs." />
+<SectionHeader num="07" title="TERRAFORM — INFRASTRUCTURE AS CODE" sub="Every Azure resource declared, versioned, and applied through a pipeline." />
 
-<p>All secrets are stored in Azure Key Vault and injected into pods at runtime via the External Secrets Operator. The pipeline itself uses Workload Identity (OIDC) — there are no stored Azure credentials in GitHub Secrets beyond the federated identity configuration.</p>
+<p>All Azure infrastructure is managed by Terraform — no manual portal clicks, no ad-hoc CLI commands. The configuration is split into five focused modules, each owning a single concern. The root <code style={{color:T.accent3}}>main.tf</code> wires them together and additionally provisions GitHub Actions OIDC federation so the CD pipelines can authenticate to Azure without any stored credentials.</p>
+
+<DiagramBox label="Terraform Module Dependency Graph">
+  <svg viewBox="0 0 860 200" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="tfa" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#64748b"/></marker>
+    </defs>
+    {/* Root */}
+    <rect x="340" y="10" width="170" height="50" rx="7" fill="#161a26" stroke="#3b82f6" strokeWidth="2"/>
+    <rect x="340" y="10" width="170" height="20" rx="7" fill="#3b82f6" opacity="0.25"/>
+    <text x="425" y="24" textAnchor="middle" fill="#93c5fd" fontSize="10" fontFamily="monospace" fontWeight="700">ROOT  main.tf</text>
+    <text x="425" y="48" textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="monospace">OIDC · namespaces · role assignments</text>
+
+    {/* Networking */}
+    <rect x="10"  y="110" width="140" height="70" rx="7" fill="#161a26" stroke="#a855f7" strokeWidth="1.5"/>
+    <text x="80"  y="136" textAnchor="middle" fill="#d8b4fe" fontSize="10" fontFamily="monospace" fontWeight="700">networking</text>
+    <text x="80"  y="153" textAnchor="middle" fill="#64748b" fontSize="8" fontFamily="monospace">VNet · subnets</text>
+    <text x="80"  y="168" textAnchor="middle" fill="#64748b" fontSize="8" fontFamily="monospace">NSGs · DNS zone</text>
+
+    {/* ACR */}
+    <rect x="170" y="110" width="140" height="70" rx="7" fill="#161a26" stroke="#f97316" strokeWidth="1.5"/>
+    <text x="240" y="136" textAnchor="middle" fill="#fdba74" fontSize="10" fontFamily="monospace" fontWeight="700">acr</text>
+    <text x="240" y="153" textAnchor="middle" fill="#64748b" fontSize="8" fontFamily="monospace">Container Registry</text>
+    <text x="240" y="168" textAnchor="middle" fill="#64748b" fontSize="8" fontFamily="monospace">admin creds</text>
+
+    {/* Key Vault */}
+    <rect x="330" y="110" width="140" height="70" rx="7" fill="#161a26" stroke="#eab308" strokeWidth="1.5"/>
+    <text x="400" y="136" textAnchor="middle" fill="#fde047" fontSize="10" fontFamily="monospace" fontWeight="700">keyvault</text>
+    <text x="400" y="153" textAnchor="middle" fill="#64748b" fontSize="8" fontFamily="monospace">RBAC auth</text>
+    <text x="400" y="168" textAnchor="middle" fill="#64748b" fontSize="8" fontFamily="monospace">seeds JWT secret</text>
+
+    {/* AKS */}
+    <rect x="490" y="110" width="140" height="70" rx="7" fill="#161a26" stroke="#3b82f6" strokeWidth="1.5"/>
+    <text x="560" y="136" textAnchor="middle" fill="#93c5fd" fontSize="10" fontFamily="monospace" fontWeight="700">aks</text>
+    <text x="560" y="153" textAnchor="middle" fill="#64748b" fontSize="8" fontFamily="monospace">cluster · node pools</text>
+    <text x="560" y="168" textAnchor="middle" fill="#64748b" fontSize="8" fontFamily="monospace">Log Analytics · Defender</text>
+
+    {/* Postgres */}
+    <rect x="650" y="110" width="140" height="70" rx="7" fill="#161a26" stroke="#22c55e" strokeWidth="1.5"/>
+    <text x="720" y="136" textAnchor="middle" fill="#86efac" fontSize="10" fontFamily="monospace" fontWeight="700">postgres</text>
+    <text x="720" y="153" textAnchor="middle" fill="#64748b" fontSize="8" fontFamily="monospace">Flexible Server</text>
+    <text x="720" y="168" textAnchor="middle" fill="#64748b" fontSize="8" fontFamily="monospace">3 databases → KV</text>
+
+    {/* Arrows root → modules */}
+    <line x1="390" y1="62" x2="80"  y2="108" stroke="#64748b" strokeWidth="1" markerEnd="url(#tfa)"/>
+    <line x1="405" y1="62" x2="240" y2="108" stroke="#64748b" strokeWidth="1" markerEnd="url(#tfa)"/>
+    <line x1="425" y1="62" x2="400" y2="108" stroke="#64748b" strokeWidth="1" markerEnd="url(#tfa)"/>
+    <line x1="445" y1="62" x2="560" y2="108" stroke="#64748b" strokeWidth="1" markerEnd="url(#tfa)"/>
+    <line x1="460" y1="62" x2="720" y2="108" stroke="#64748b" strokeWidth="1" markerEnd="url(#tfa)"/>
+  </svg>
+</DiagramBox>
+
+<h3 style={{fontFamily:"monospace",color:T.accent,margin:"32px 0 12px"}}>infrastructure/terraform/main.tf (root — key excerpts)</h3>
+
+<p>The root module wires the five child modules together, passing outputs as inputs between them (e.g. the networking module's subnet IDs flow into both <code style={{color:T.accent3}}>aks</code> and <code style={{color:T.accent3}}>postgres</code>), and finishes by configuring GitHub Actions OIDC federation and creating the Kubernetes namespaces.</p>
+
+<h3 style={{fontFamily:"monospace",color:T.accent,margin:"0 0 16px"}}>Step 0 — Bootstrap remote state (run once)</h3>
+
+<p>Before running <code style={{color:T.accent3}}>terraform init</code> you need an Azure Storage account to hold the state file. A small helper script creates it and prints the values you need to paste into the <code style={{color:T.accent3}}>backend</code> block in <code style={{color:T.accent3}}>main.tf</code>.</p>
+
+<CodeBlock lang="bash" filename="infrastructure/terraform/scripts/bootstrap-tfstate.sh">{`#!/usr/bin/env bash
+# Run ONCE before terraform init.
+# Creates the Azure Blob Storage backend for Terraform remote state.
+set -euo pipefail
+
+TFSTATE_RG="shopwave-tfstate-rg"
+TFSTATE_SA="shopwavetfstate\${RANDOM}"   # globally unique suffix
+LOCATION="\${1:-eastus}"
+
+az group create --name "\$TFSTATE_RG" --location "\$LOCATION" --output none
+
+az storage account create \\
+  --name "\$TFSTATE_SA" --resource-group "\$TFSTATE_RG" \\
+  --sku Standard_LRS --kind StorageV2 \\
+  --min-tls-version TLS1_2 --allow-blob-public-access false --output none
+
+# Enable versioning — protects state from accidental overwrites
+az storage account blob-service-properties update \\
+  --account-name "\$TFSTATE_SA" --resource-group "\$TFSTATE_RG" \\
+  --enable-versioning true --output none
+
+az storage container create \\
+  --name tfstate --account-name "\$TFSTATE_SA" --auth-mode login --output none
+
+echo "Update main.tf backend block with:"
+echo "  storage_account_name = \\"\$TFSTATE_SA\\""
+echo "  resource_group_name  = \\"\$TFSTATE_RG\\""
+echo "Then: cp terraform.tfvars.example terraform.tfvars && terraform init"`}</CodeBlock>
+
+<h3 style={{fontFamily:"monospace",color:T.accent,margin:"32px 0 16px"}}>infrastructure/terraform/main.tf — key excerpts</h3>
+
+<p>The root module calls all five child modules in dependency order and then handles cross-cutting concerns: GitHub Actions OIDC federation, role assignments, and Kubernetes namespace creation via the <code style={{color:T.accent3}}>kubernetes</code> provider (which is configured using the AKS module's output).</p>
+
+<CodeBlock lang="hcl" filename="infrastructure/terraform/main.tf">{`terraform {
+  required_version = ">= 1.7.0"
+  required_providers {
+    azurerm = { source = "hashicorp/azurerm", version = "~> 3.110" }
+    azuread = { source = "hashicorp/azuread", version = "~> 2.53"  }
+    random  = { source = "hashicorp/random",  version = "~> 3.6"   }
+    helm       = { source = "hashicorp/helm",       version = "~> 2.14" }
+    kubernetes = { source = "hashicorp/kubernetes", version = "~> 2.31" }
+  }
+  backend "azurerm" {
+    resource_group_name  = "shopwave-tfstate-rg"
+    storage_account_name = "shopwavetfstate"    # from bootstrap-tfstate.sh
+    container_name       = "tfstate"
+    key                  = "shopwave.tfstate"
+  }
+}
+
+module "networking" {
+  source              = "./modules/networking"
+  project             = var.project
+  environment         = var.environment
+  location            = var.location
+  resource_group_name = azurerm_resource_group.main.name
+  vnet_address_space  = var.vnet_address_space
+  aks_subnet_cidr     = var.aks_subnet_cidr
+  pg_subnet_cidr      = var.pg_subnet_cidr
+  tags                = local.common_tags
+}
+
+module "keyvault" {
+  source              = "./modules/keyvault"
+  project             = var.project
+  environment         = var.environment
+  location            = var.location
+  resource_group_name = azurerm_resource_group.main.name
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+  admin_object_ids    = var.keyvault_admin_object_ids
+  tags                = local.common_tags
+}
+
+module "acr" {
+  source              = "./modules/acr"
+  project             = var.project
+  environment         = var.environment
+  location            = var.location
+  resource_group_name = azurerm_resource_group.main.name
+  sku                 = var.acr_sku
+  tags                = local.common_tags
+}
+
+module "aks" {
+  source              = "./modules/aks"
+  project             = var.project
+  environment         = var.environment
+  location            = var.location
+  resource_group_name = azurerm_resource_group.main.name
+  subnet_id           = module.networking.aks_subnet_id   # ← cross-module wiring
+  acr_id              = module.acr.id
+  keyvault_id         = module.keyvault.id
+  node_count          = var.aks_node_count
+  node_vm_size        = var.aks_node_vm_size
+  kubernetes_version  = var.kubernetes_version
+  min_node_count      = var.aks_min_node_count
+  max_node_count      = var.aks_max_node_count
+  tags                = local.common_tags
+  depends_on          = [module.networking, module.acr, module.keyvault]
+}
+
+module "postgres" {
+  source              = "./modules/postgres"
+  project             = var.project
+  environment         = var.environment
+  location            = var.location
+  resource_group_name = azurerm_resource_group.main.name
+  subnet_id           = module.networking.pg_subnet_id          # ← private subnet
+  private_dns_zone_id = module.networking.pg_private_dns_zone_id
+  sku_name            = var.postgres_sku
+  storage_mb          = var.postgres_storage_mb
+  postgres_version    = var.postgres_version
+  databases           = var.postgres_databases
+  keyvault_id         = module.keyvault.id   # ← stores connection strings here
+  tags                = local.common_tags
+  depends_on          = [module.networking, module.keyvault]
+}
+
+# ── GitHub Actions OIDC federation ───────────────────────────────────────────
+resource "azuread_application" "github_actions" {
+  display_name = "\${var.project}-github-actions-\${var.environment}"
+}
+resource "azuread_service_principal" "github_actions" {
+  client_id = azuread_application.github_actions.client_id
+}
+resource "azuread_application_federated_identity_credential" "staging" {
+  application_id = azuread_application.github_actions.id
+  display_name   = "\${var.project}-staging"
+  audiences      = ["api://AzureADTokenExchange"]
+  issuer         = "https://token.actions.githubusercontent.com"
+  subject        = "repo:\${var.github_org}/\${var.github_repo}:environment:staging"
+}
+resource "azuread_application_federated_identity_credential" "production" {
+  application_id = azuread_application.github_actions.id
+  display_name   = "\${var.project}-production"
+  audiences      = ["api://AzureADTokenExchange"]
+  issuer         = "https://token.actions.githubusercontent.com"
+  subject        = "repo:\${var.github_org}/\${var.github_repo}:environment:production"
+}
+
+# Role assignments — principle of least privilege
+resource "azurerm_role_assignment" "gh_acr_push"  {
+  scope = module.acr.id; role_definition_name = "AcrPush"
+  principal_id = azuread_service_principal.github_actions.id
+}
+resource "azurerm_role_assignment" "gh_aks_user"  {
+  scope = module.aks.id
+  role_definition_name = "Azure Kubernetes Service Cluster User Role"
+  principal_id = azuread_service_principal.github_actions.id
+}
+resource "azurerm_role_assignment" "gh_kv_secrets" {
+  scope = module.keyvault.id; role_definition_name = "Key Vault Secrets User"
+  principal_id = azuread_service_principal.github_actions.id
+}
+
+# Kubernetes namespaces — created via k8s provider post-AKS provisioning
+resource "kubernetes_namespace" "staging"    {
+  metadata { name = "shopwave-staging";    labels = { environment = "staging"    } }
+  depends_on = [module.aks]
+}
+resource "kubernetes_namespace" "production" {
+  metadata { name = "shopwave-production"; labels = { environment = "production" } }
+  depends_on = [module.aks]
+}`}</CodeBlock>
+
+<h3 style={{fontFamily:"monospace",color:T.accent,margin:"32px 0 16px"}}>modules/aks/main.tf — production-hardened cluster</h3>
+
+<p>The AKS module creates two node pools: a tainted <em>system</em> pool for Kubernetes internals and an <em>apps</em> pool for ShopWave workloads. Workload Identity, OIDC issuer, Container Insights, Microsoft Defender for Containers, and the Key Vault CSI driver are all enabled by default.</p>
+
+<CodeBlock lang="hcl" filename="infrastructure/terraform/modules/aks/main.tf">{`resource "azurerm_kubernetes_cluster" "main" {
+  name                = "\${var.project}-aks-\${var.environment}"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  dns_prefix          = "\${var.project}-\${var.environment}"
+  kubernetes_version  = var.kubernetes_version
+
+  oidc_issuer_enabled       = true   # ← required for Workload Identity
+  workload_identity_enabled = true
+
+  default_node_pool {               # system pool — kube-system only
+    name                         = "system"
+    vm_size                      = var.node_vm_size
+    vnet_subnet_id               = var.subnet_id
+    enable_auto_scaling          = true
+    min_count                    = var.min_node_count
+    max_count                    = var.max_node_count
+    only_critical_addons_enabled = true   # taint: NoSchedule for user workloads
+    upgrade_settings { max_surge = "33%" }
+  }
+
+  identity { type = "SystemAssigned" }
+
+  network_profile {
+    network_plugin    = "azure"
+    network_policy    = "azure"       # enforces NetworkPolicy objects
+    load_balancer_sku = "standard"
+    service_cidr      = "172.16.0.0/16"
+    dns_service_ip    = "172.16.0.10"
+  }
+
+  oms_agent {                         # Container Insights
+    log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+  }
+  microsoft_defender {                # Defender for Containers
+    log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+  }
+  key_vault_secrets_provider {        # CSI driver for Key Vault secret injection
+    secret_rotation_enabled  = true
+    secret_rotation_interval = "2m"
+  }
+
+  automatic_channel_upgrade = "patch"
+  tags = var.tags
+}
+
+# App node pool — user workloads land here (no taint)
+resource "azurerm_kubernetes_cluster_node_pool" "apps" {
+  name                  = "apps"
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.main.id
+  vm_size               = var.node_vm_size
+  vnet_subnet_id        = var.subnet_id
+  enable_auto_scaling   = true
+  min_count             = var.min_node_count
+  max_count             = var.max_node_count
+  mode                  = "User"
+  tags                  = var.tags
+}
+
+# AKS pulls images from ACR without a stored password
+resource "azurerm_role_assignment" "aks_acr_pull" {
+  scope                = var.acr_id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_kubernetes_cluster.main.kubelet_identity[0].object_id
+}`}</CodeBlock>
+
+<h3 style={{fontFamily:"monospace",color:T.accent,margin:"32px 0 16px"}}>modules/postgres/main.tf — secrets auto-stored in Key Vault</h3>
+
+<p>The postgres module generates a random password, provisions the Flexible Server with per-service databases, and writes the full connection strings directly into Key Vault — so they're available to the External Secrets Operator without any manual copy-paste step.</p>
+
+<CodeBlock lang="hcl" filename="infrastructure/terraform/modules/postgres/main.tf">{`resource "random_password" "postgres" {
+  length  = 32; special = true
+  override_special = "!#\$%&*()-_=+[]{}<>?"
+}
+
+resource "azurerm_postgresql_flexible_server" "main" {
+  name                   = "\${var.project}-pg-\${var.environment}"
+  resource_group_name    = var.resource_group_name
+  location               = var.location
+  version                = var.postgres_version
+  delegated_subnet_id    = var.subnet_id           # private VNet access only
+  private_dns_zone_id    = var.private_dns_zone_id
+  administrator_login    = local.pg_admin
+  administrator_password = random_password.postgres.result
+  sku_name               = var.sku_name
+  storage_mb             = var.storage_mb
+
+  backup_retention_days        = var.environment == "production" ? 14 : 7
+  geo_redundant_backup_enabled = var.environment == "production"
+
+  high_availability {
+    mode = var.environment == "production" ? "ZoneRedundant" : "Disabled"
+  }
+  tags = var.tags
+  lifecycle { ignore_changes = [zone, high_availability[0].standby_availability_zone] }
+}
+
+# Create each per-service database
+resource "azurerm_postgresql_flexible_server_database" "databases" {
+  for_each  = toset(var.databases)
+  name      = each.value
+  server_id = azurerm_postgresql_flexible_server.main.id
+  lifecycle { prevent_destroy = true }   # never drop a production database
+}
+
+# Write connection strings into Key Vault — one per database
+resource "azurerm_key_vault_secret" "db_urls" {
+  for_each     = local.db_urls
+  name         = "\${var.project}-\${var.environment}-\${replace(each.key, "_", "-")}-url"
+  value        = each.value       # postgresql+asyncpg://admin:pass@host/db?ssl=require
+  key_vault_id = var.keyvault_id
+}`}</CodeBlock>
+
+<h3 style={{fontFamily:"monospace",color:T.accent,margin:"32px 0 16px"}}>infrastructure/terraform/variables.tf — fully validated</h3>
+
+<CodeBlock lang="hcl" filename="infrastructure/terraform/variables.tf">{`variable "project" {
+  type    = string; default = "shopwave"
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]{2,20}\$", var.project))
+    error_message = "Lowercase alphanumeric + hyphens, 3-20 chars."
+  }
+}
+variable "environment" {
+  type = string
+  validation {
+    condition     = contains(["staging", "production"], var.environment)
+    error_message = "Must be 'staging' or 'production'."
+  }
+}
+variable "location"           { type = string; default = "eastus" }
+variable "subscription_id"    { type = string; sensitive = true }
+
+# Networking
+variable "vnet_address_space" { type = string; default = "10.0.0.0/16" }
+variable "aks_subnet_cidr"    { type = string; default = "10.0.1.0/24" }
+variable "pg_subnet_cidr"     { type = string; default = "10.0.2.0/24" }
+
+# AKS
+variable "kubernetes_version"  { type = string; default = "1.30" }
+variable "aks_node_count"      { type = number; default = 3 }
+variable "aks_node_vm_size"    { type = string; default = "Standard_D2s_v3" }
+variable "aks_min_node_count"  { type = number; default = 2 }
+variable "aks_max_node_count"  { type = number; default = 10 }
+
+# PostgreSQL
+variable "postgres_version"    { type = string; default = "16" }
+variable "postgres_sku"        { type = string; default = "Standard_B2ms" }
+variable "postgres_storage_mb" { type = number; default = 32768 }
+variable "postgres_databases"  { type = list(string); default = ["auth_db","products_db","orders_db"] }
+
+# Key Vault
+variable "keyvault_admin_object_ids" { type = list(string); default = [] }
+
+# GitHub OIDC
+variable "github_org"  { type = string }
+variable "github_repo" { type = string; default = "shopwave" }`}</CodeBlock>
+
+<h3 style={{fontFamily:"monospace",color:T.accent,margin:"32px 0 16px"}}>infrastructure/terraform/outputs.tf — reads straight into GitHub Secrets</h3>
+
+<CodeBlock lang="hcl" filename="infrastructure/terraform/outputs.tf">{`output "acr_login_server"          { value = module.acr.login_server }
+output "aks_cluster_name"          { value = module.aks.cluster_name }
+output "keyvault_name"             { value = module.keyvault.name }
+output "postgres_fqdn"             { value = module.postgres.fqdn }
+output "github_actions_client_id"  { value = azuread_application.github_actions.client_id }
+output "tenant_id"                 { value = data.azurerm_client_config.current.tenant_id }
+
+# acr_admin_username and acr_admin_password are marked sensitive=true
+# retrieve them with: terraform output -raw acr_admin_username
+
+output "github_secrets_summary" {
+  sensitive = true
+  value = <<-EOT
+    AZURE_CLIENT_ID        = \${azuread_application.github_actions.client_id}
+    AZURE_TENANT_ID        = \${data.azurerm_client_config.current.tenant_id}
+    AZURE_SUBSCRIPTION_ID  = \${var.subscription_id}
+    ACR_LOGIN_SERVER       = \${module.acr.login_server}
+  EOT
+}`}</CodeBlock>
+
+<h3 style={{fontFamily:"monospace",color:T.accent,margin:"32px 0 16px"}}>Deploying infrastructure end-to-end</h3>
+
+<CodeBlock lang="bash" filename="terminal">{`# 1 — Bootstrap remote state (once only)
+cd infrastructure/terraform
+chmod +x scripts/bootstrap-tfstate.sh
+./scripts/bootstrap-tfstate.sh
+# Update the backend block in main.tf with the printed storage account name
+
+# 2 — Configure your environment
+cp terraform.tfvars.example terraform.tfvars
+# Edit: subscription_id, github_org, keyvault_admin_object_ids
+
+# 3 — Initialise, plan, apply
+terraform init
+terraform plan \\
+  -var-file="environments/production/production.tfvars" \\
+  -var="subscription_id=\$(az account show --query id -o tsv)" \\
+  -out=tfplan
+terraform apply tfplan
+
+# 4 — Copy output values to GitHub Secrets
+terraform output github_secrets_summary
+terraform output -raw acr_admin_username   # → ACR_USERNAME
+terraform output -raw acr_admin_password   # → ACR_PASSWORD`}</CodeBlock>
+
+<Callout type="info" title="Terraform environments">
+  Two environment-specific <code>.tfvars</code> files live under <code>environments/</code>. Staging uses smaller VM sizes (<code>Standard_B2s</code>) and a single-node PostgreSQL SKU. Production uses <code>Standard_D2s_v3</code> nodes, zone-redundant PostgreSQL HA, 14-day backups, and a minimum of three AKS nodes. Both share the same Terraform code — only the variable values differ.
+</Callout>
+
+<h3 style={{fontFamily:"monospace",color:T.accent,margin:"32px 0 16px"}}>Secrets → Key Vault → pods: the full chain</h3>
+
+<p>After Terraform runs, all connection strings and secrets live in Key Vault. The External Secrets Operator reads them and materialises them as Kubernetes Secrets, which Helm mounts into pods via <code style={{color:T.accent3}}>envFrom</code>. No secret is ever written to a pipeline log or a YAML file.</p>
 
 <CodeBlock lang="yaml" filename="helm/shopwave/templates/externalsecret.yaml">{`{{- if .Values.externalSecrets.enabled }}
 apiVersion: external-secrets.io/v1beta1
@@ -1619,185 +2061,19 @@ metadata:
 spec:
   refreshInterval: {{ .Values.externalSecrets.refreshInterval }}
   secretStoreRef:
-    name:  {{ .Values.externalSecrets.secretStoreName }}
-    kind:  ClusterSecretStore
+    name: {{ .Values.externalSecrets.secretStoreName }}
+    kind: ClusterSecretStore
   target:
-    name:             {{ include "shopwave.fullname" . }}-secrets
-    creationPolicy:   Owner
+    name:           {{ include "shopwave.fullname" . }}-secrets
+    creationPolicy: Owner
   data:
     {{- range .Values.externalSecrets.secrets }}
     - secretKey: {{ .secretKey }}
       remoteRef:
-        key:      {{ .remoteRef.key }}
-        version:  {{ .remoteRef.version | default "latest" }}
+        key:     {{ .remoteRef.key }}
+        version: {{ .remoteRef.version | default "latest" }}
     {{- end }}
 {{- end }}`}</CodeBlock>
-
-<CodeBlock lang="yaml" filename="k8s/rbac.yaml">{`# Service accounts with least-privilege bindings per namespace
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: shopwave-workload
-  namespace: shopwave-production
-  annotations:
-    # Workload Identity — links K8s SA to Azure Managed Identity
-    azure.workload.identity/client-id: \$AZURE_MANAGED_IDENTITY_CLIENT_ID
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: shopwave-service-role
-  namespace: shopwave-production
-rules:
-  - apiGroups: [""]
-    resources: [pods, services, endpoints]
-    verbs:     [get, list, watch]
-  - apiGroups: [""]
-    resources: [secrets]
-    verbs:     []        # No direct secret access — ESO handles this
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: shopwave-service-binding
-  namespace: shopwave-production
-subjects:
-  - kind:      ServiceAccount
-    name:      shopwave-workload
-    namespace: shopwave-production
-roleRef:
-  kind:     Role
-  name:     shopwave-service-role
-  apiGroup: rbac.authorization.k8s.io`}</CodeBlock>
-
-<CodeBlock lang="bash" filename="scripts/bootstrap-azure.sh">{`#!/usr/bin/env bash
-# One-shot Azure resource bootstrap for ShopWave
-# Run ONCE before first deployment. Idempotent.
-
-set -euo pipefail
-
-# ── Configuration ──────────────────────────────────────────
-RG="shopwave-rg"
-LOCATION="eastus"
-AKS_NAME="shopwave-aks"
-ACR_NAME="shopwaveacr"          # Must be globally unique
-KV_NAME="shopwave-kv"
-PG_SERVER="shopwave-pg"
-PG_ADMIN="shopwaveadmin"
-SUBSCRIPTION_ID=\$(az account show --query id -o tsv)
-
-echo "🔧 Bootstrapping ShopWave Azure resources..."
-echo "   Subscription: \$SUBSCRIPTION_ID"
-echo "   Resource Group: \$RG / \$LOCATION"
-
-# ── 1. Resource Group ──────────────────────────────────────
-az group create --name "\$RG" --location "\$LOCATION" --output none
-echo "✅ Resource group: \$RG"
-
-# ── 2. Azure Container Registry ────────────────────────────
-az acr create \
-  --resource-group "\$RG" \
-  --name "\$ACR_NAME" \
-  --sku Standard \
-  --admin-enabled false \
-  --output none
-echo "✅ ACR: \${ACR_NAME}.azurecr.io"
-
-# ── 3. Azure Kubernetes Service ────────────────────────────
-az aks create \
-  --resource-group "\$RG" \
-  --name "\$AKS_NAME" \
-  --node-count 3 \
-  --node-vm-size Standard_D2s_v3 \
-  --enable-managed-identity \
-  --enable-workload-identity \
-  --enable-oidc-issuer \
-  --attach-acr "\$ACR_NAME" \
-  --network-plugin azure \
-  --network-policy azure \
-  --enable-addons monitoring \
-  --generate-ssh-keys \
-  --output none
-echo "✅ AKS cluster: \$AKS_NAME (3 nodes)"
-
-# ── 4. Azure Key Vault ──────────────────────────────────────
-az keyvault create \
-  --name "\$KV_NAME" \
-  --resource-group "\$RG" \
-  --location "\$LOCATION" \
-  --enable-rbac-authorization true \
-  --output none
-echo "✅ Key Vault: \$KV_NAME"
-
-# ── 5. Azure Database for PostgreSQL ───────────────────────
-PG_PASSWORD=\$(openssl rand -base64 32)
-az postgres flexible-server create \
-  --resource-group "\$RG" \
-  --name "\$PG_SERVER" \
-  --location "\$LOCATION" \
-  --admin-user "\$PG_ADMIN" \
-  --admin-password "\$PG_PASSWORD" \
-  --sku-name Standard_B2ms \
-  --tier Burstable \
-  --storage-size 32 \
-  --version 16 \
-  --high-availability Disabled \
-  --output none
-
-# Create per-service databases
-for DB in auth_db products_db orders_db; do
-  az postgres flexible-server db create \
-    --resource-group "\$RG" \
-    --server-name "\$PG_SERVER" \
-    --database-name "\$DB" \
-    --output none
-done
-echo "✅ PostgreSQL: \$PG_SERVER (auth_db, products_db, orders_db)"
-
-# ── 6. Store secrets in Key Vault ──────────────────────────
-PG_HOST="\${PG_SERVER}.postgres.database.azure.com"
-az keyvault secret set --vault-name "\$KV_NAME" --name "shopwave-prod-db-url"         --value "postgresql+asyncpg://\${PG_ADMIN}:\${PG_PASSWORD}@\${PG_HOST}/auth_db?ssl=require"    --output none
-az keyvault secret set --vault-name "\$KV_NAME" --name "shopwave-prod-jwt-secret"      --value "\$(openssl rand -hex 64)"  --output none
-az keyvault secret set --vault-name "\$KV_NAME" --name "shopwave-prod-allowed-origins"  --value "https://shopwave.io"       --output none
-echo "✅ Secrets stored in Key Vault"
-
-# ── 7. Configure GitHub Actions OIDC ───────────────────────
-GH_ORG="your-github-org"
-GH_REPO="shopwave"
-APP_NAME="shopwave-gh-actions"
-
-APP_ID=\$(az ad app create --display-name "\$APP_NAME" --query appId -o tsv)
-az ad sp create --id "\$APP_ID" --output none
-
-# Federated credentials for GitHub Actions
-az ad app federated-credential create --id "\$APP_ID" --parameters '{
-  "name": "shopwave-staging",
-  "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:'"'\$GH_ORG/\$GH_REPO'"':environment:staging",
-  "audiences": ["api://AzureADTokenExchange"]
-}'
-az ad app federated-credential create --id "\$APP_ID" --parameters '{
-  "name": "shopwave-production",
-  "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:'"'\$GH_ORG/\$GH_REPO'"':environment:production",
-  "audiences": ["api://AzureADTokenExchange"]
-}'
-
-# Assign required roles
-az role assignment create --assignee "\$APP_ID" --role "AcrPush"              --scope \$(az acr show -n "\$ACR_NAME" -g "\$RG" --query id -o tsv) --output none
-az role assignment create --assignee "\$APP_ID" --role "Azure Kubernetes Service Cluster User Role" --scope \$(az aks show -n "\$AKS_NAME" -g "\$RG" --query id -o tsv) --output none
-az role assignment create --assignee "\$APP_ID" --role "Key Vault Secrets User" --scope \$(az keyvault show -n "\$KV_NAME" -g "\$RG" --query id -o tsv) --output none
-
-echo ""
-echo "════════════════════════════════════════════"
-echo "✅ Bootstrap complete! Add these to GitHub Secrets:"
-echo "   AZURE_CLIENT_ID:       \$APP_ID"
-echo "   AZURE_TENANT_ID:       \$(az account show --query tenantId -o tsv)"
-echo "   AZURE_SUBSCRIPTION_ID: \$SUBSCRIPTION_ID"
-echo "   ACR_LOGIN_SERVER:      \${ACR_NAME}.azurecr.io"
-echo "   SLACK_WEBHOOK_URL:     <your-slack-webhook>"
-echo "════════════════════════════════════════════"`}</CodeBlock>
 
 {/* ══════════════════════════════════════════════════
     SECTION 8 — LOCAL DEVELOPMENT
@@ -1913,14 +2189,14 @@ volumes:
     </thead>
     <tbody>
       {[
-        ["AZURE_CLIENT_ID",       "bootstrap-azure.sh output",         "All CD pipelines",          "OIDC federated identity — no password"],
-        ["AZURE_TENANT_ID",       "az account show --query tenantId",  "All CD pipelines",          "Your Azure AD tenant"],
-        ["AZURE_SUBSCRIPTION_ID", "az account show --query id",        "All CD pipelines",          "Target subscription"],
-        ["ACR_LOGIN_SERVER",      "shopwaveacr.azurecr.io",            "CI build + CD deploy",      "Full ACR hostname"],
-        ["ACR_USERNAME",          "az acr credential show",            "CI build (docker login)",   "ACR admin username"],
-        ["ACR_PASSWORD",          "az acr credential show",            "CI build (docker login)",   "Rotate regularly"],
-        ["SLACK_WEBHOOK_URL",     "Slack app settings",                "All pipelines (notify)",    "Incoming webhook URL"],
-        ["CODECOV_TOKEN",         "codecov.io project settings",       "CI test job",               "Coverage upload token"],
+        ["AZURE_CLIENT_ID",       "terraform output github_actions_client_id",  "All pipelines",             "OIDC federated identity — no password"],
+        ["AZURE_TENANT_ID",       "terraform output tenant_id",                 "All pipelines",             "Your Azure AD tenant"],
+        ["AZURE_SUBSCRIPTION_ID", "terraform output subscription_id",           "All pipelines",             "Target subscription"],
+        ["ACR_LOGIN_SERVER",      "terraform output acr_login_server",          "CI build + CD deploy",      "e.g. shopwaveacr.azurecr.io"],
+        ["ACR_USERNAME",          "terraform output -raw acr_admin_username",   "CI build (docker login)",   "ACR admin username"],
+        ["ACR_PASSWORD",          "terraform output -raw acr_admin_password",   "CI build (docker login)",   "Rotate regularly"],
+        ["SLACK_WEBHOOK_URL",     "Slack app → Incoming Webhooks",              "All pipelines (notify)",    "Incoming webhook URL"],
+        ["CODECOV_TOKEN",         "codecov.io project settings",                "CI test job",               "Coverage upload token"],
       ].map(([name, source, used, note]) => (
         <tr key={name} style={{ borderBottom: `1px solid ${T.border}` }}>
           <td style={{ padding: "10px 14px", color: T.accent3 }}>{name}</td>
@@ -1939,7 +2215,7 @@ volumes:
 <SectionHeader num="10" title="END-TO-END DEVELOPER WORKFLOW" sub="From git commit to live production — every step automated." />
 
 <DiagramBox label="Complete Developer → Production Journey">
-  <svg viewBox="0 0 860 520" width="100%" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 860 590" width="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <marker id="wfa" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
         <path d="M0,0 L0,6 L7,3 z" fill="#64748b"/>
@@ -1950,16 +2226,17 @@ volumes:
     </defs>
 
     {/* Timeline line */}
-    <line x1="60" y1="30" x2="60" y2="490" stroke="#1e2840" strokeWidth="2"/>
+    <line x1="60" y1="30" x2="60" y2="560" stroke="#1e2840" strokeWidth="2"/>
 
     {[
-      { y: 40,  icon: "1", color: "#a855f7", title: "Developer opens PR",           detail: "git checkout -b feat/add-wishlist → git push → PR opened",                         time: "T+0" },
-      { y: 110, icon: "2", color: "#3b82f6", title: "CI triggers (path-filtered)",  detail: "Only product-service CI runs · lint → test → SAST · ~6 min",                     time: "T+6m" },
-      { y: 180, icon: "3", color: "#22c55e", title: "Tests pass · PR reviewable",   detail: "GitHub status checks green · Coverage badge updates · Codecov report",            time: "T+7m" },
-      { y: 250, icon: "4", color: "#eab308", title: "Code review + merge to main",  detail: "Reviewer approves · Squash merge · CI re-runs on main branch",                    time: "T+Xh" },
-      { y: 320, icon: "5", color: "#f97316", title: "CI builds + pushes to ACR",    detail: "Multi-stage Docker build · Trivy scan (block on CRITICAL) · Push sha-XXXXXXXX",   time: "T+Xh+8m" },
-      { y: 390, icon: "6", color: "#3b82f6", title: "CD staging auto-deploys",      detail: "Helm upgrade --atomic · Smoke tests · Slack alert · staging tag created",          time: "T+Xh+13m" },
-      { y: 460, icon: "7", color: "#22c55e", title: "Manual gate → production",     detail: "Engineer triggers cd-production.yml · Reviewer approves · Rolling deploy → live",  time: "T+Xh+30m" },
+      { y: 40,  icon: "1", color: "#a855f7", title: "Developer opens PR",              detail: "git checkout -b feat/add-wishlist → git push → PR opened",                          time: "T+0" },
+      { y: 110, icon: "2", color: "#3b82f6", title: "CI triggers (path-filtered)",     detail: "Only product-service CI runs · lint → test → SAST · ~6 min",                      time: "T+6m" },
+      { y: 180, icon: "3", color: "#22c55e", title: "Tests pass · PR reviewable",      detail: "GitHub status checks green · Coverage badge updates · Codecov report",             time: "T+7m" },
+      { y: 250, icon: "4", color: "#eab308", title: "Code review + merge to main",     detail: "Reviewer approves · Squash merge · CI re-runs on main branch",                     time: "T+Xh" },
+      { y: 320, icon: "5", color: "#f97316", title: "CI builds + pushes to ACR",       detail: "Multi-stage Docker build · Trivy scan (block on CRITICAL) · Push sha-XXXXXXXX",    time: "T+Xh+8m" },
+      { y: 390, icon: "6", color: "#3b82f6", title: "CD staging auto-deploys",         detail: "Helm upgrade --atomic · Smoke tests · Slack alert · staging tag created",           time: "T+Xh+13m" },
+      { y: 460, icon: "7", color: "#22c55e", title: "Manual gate → production",        detail: "Engineer triggers cd-production.yml · Reviewer approves · Rolling deploy → live",   time: "T+Xh+30m" },
+      { y: 530, icon: "★", color: "#ec4899", title: "Infra change? terraform.yml",     detail: "PR touches infrastructure/terraform/ → plan comment on PR → apply on dispatch",     time: "as needed" },
     ].map(({ y, icon, color, title, detail, time }) => (
       <g key={y}>
         <circle cx="60" cy={y+12} r="14" fill={`${color}22`} stroke={color} strokeWidth="1.5"/>
@@ -2056,12 +2333,13 @@ spec:
 <SectionHeader num="12" title="SECURITY POSTURE SUMMARY" sub="Every layer of the pipeline hardened against common attack vectors." />
 
 <DiagramBox label="Security Controls — Layer by Layer">
-  <svg viewBox="0 0 860 340" width="100%" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 860 430" width="100%" xmlns="http://www.w3.org/2000/svg">
     {[
       { y: 20,  label: "CODE",        color: "#a855f7", items: ["Semgrep SAST (p/python, p/owasp-top-ten, p/jwt)", "Ruff + mypy static analysis on every PR", "Dependabot auto-PRs for vulnerable dependencies"] },
       { y: 110, label: "IMAGE",       color: "#3b82f6", items: ["Multi-stage build — distroless final image (~15MB)", "Trivy scans CRITICAL/HIGH CVEs — blocks pipeline", "Cosign image signing — ACR verifies before deploy"] },
-      { y: 200, label: "RUNTIME",     color: "#22c55e", items: ["runAsNonRoot: true · readOnlyRootFilesystem: true", "capabilities: drop [ALL] — zero Linux capabilities", "Azure Network Policy — default deny, explicit allow-list"] },
-      { y: 290, label: "CREDENTIALS", color: "#eab308", items: ["OIDC Workload Identity — zero static credentials", "Azure Key Vault — secrets never in env vars or logs", "Secret rotation via Key Vault versioning + ESO refresh"] },
+      { y: 200, label: "INFRA",       color: "#ec4899", items: ["All Azure resources declared in Terraform — no manual changes", "terraform plan diff commented on every infra PR", "Remote state in Azure Blob with versioning enabled"] },
+      { y: 290, label: "RUNTIME",     color: "#22c55e", items: ["runAsNonRoot: true · readOnlyRootFilesystem: true", "capabilities: drop [ALL] — zero Linux capabilities", "Azure Network Policy — default deny, explicit allow-list"] },
+      { y: 380, label: "CREDENTIALS", color: "#eab308", items: ["OIDC Workload Identity — zero static credentials in pipelines", "Azure Key Vault — connection strings auto-seeded by Terraform", "Secret rotation via Key Vault versioning + ESO 1h refresh"] },
     ].map(({ y, label, color, items }) => (
       <g key={y}>
         <rect x="10" y={y} width="90" height="80" rx="6" fill={`${color}15`} stroke={color} strokeWidth="1.5"/>
@@ -2087,11 +2365,12 @@ spec:
 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "14px", margin: "28px 0" }}>
   {[
     { icon: "🐍", title: "4 Python FastAPI Services",        desc: "auth, product, order, api-gateway — each with async SQLAlchemy, Alembic migrations, structured logging, Prometheus metrics" },
-    { icon: "⚙️",  title: "6 GitHub Actions Pipelines",      desc: "4 per-service CI pipelines + staging CD + production CD — path-filtered, OIDC-authenticated, Slack-notified" },
-    { icon: "🔒", title: "End-to-End Security",              desc: "Semgrep SAST · Trivy image scan · Cosign signing · OIDC no-credential auth · Key Vault secrets · zero-trust network policies" },
+    { icon: "⚙️",  title: "7 GitHub Actions Pipelines",      desc: "4 per-service CI pipelines + staging CD + production CD + terraform.yml — path-filtered, OIDC-authenticated, Slack-notified" },
+    { icon: "🏗️", title: "Terraform Infrastructure as Code", desc: "5 modules — networking, aks, acr, postgres, keyvault — all resources versioned, plan-reviewed on PR, applied through a gated pipeline" },
+    { icon: "🔒", title: "End-to-End Security",              desc: "Semgrep SAST · Trivy image scan · Cosign signing · OIDC no-credential auth · Key Vault secrets auto-seeded by Terraform · zero-trust network policies" },
     { icon: "☸️",  title: "Helm Chart + K8s Manifests",      desc: "Single parameterised chart · rolling update strategy · HPA · PDB · External Secrets · RBAC · Network Policies" },
     { icon: "🚀", title: "Zero-Downtime Deployments",        desc: "maxUnavailable: 0 rolling updates · --atomic Helm with auto-rollback · smoke tests gate every staging deploy" },
-    { icon: "☁️",  title: "Full Azure Stack",                desc: "AKS + ACR + PostgreSQL Flexible + Key Vault + Azure Monitor · bootstrapped with a single idempotent shell script" },
+    { icon: "☁️",  title: "Full Azure Stack",                desc: "AKS + ACR + PostgreSQL Flexible (zone-redundant in prod) + Key Vault + private VNet + Azure Monitor + Defender for Containers — all Terraform-managed" },
   ].map(({ icon, title, desc }) => (
     <div key={title} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: "10px", padding: "18px" }}>
       <div style={{ fontSize: "24px", marginBottom: "8px" }}>{icon}</div>
@@ -2102,11 +2381,11 @@ spec:
 </div>
 
 <Callout type="success" title="Next steps">
-  From here, natural extensions include: adding <strong>Argo Rollouts</strong> for canary deployments with automated metric-based promotion, integrating <strong>Azure Application Insights</strong> for distributed tracing across all four services, adding a <strong>contract testing</strong> job to each CI pipeline using Pact, and wiring <strong>Azure Cost Management</strong> alerts into the pipeline notifications.
+  From here, natural extensions include: switching Terraform to use <strong>Terraform Cloud</strong> or <strong>Atlantis</strong> for plan/apply with PR-based GitOps workflows; adding <strong>Argo Rollouts</strong> for canary deployments with automated metric-based promotion; integrating <strong>Azure Application Insights</strong> for distributed tracing across all four services; adding a <strong>contract testing</strong> job to each CI pipeline using Pact; and wiring <strong>Azure Cost Management</strong> alerts into the pipeline notifications.
 </Callout>
 
 <div style={{ borderTop: `1px solid ${T.border}`, marginTop: "60px", paddingTop: "32px", textAlign: "center" }}>
-  <p style={{ fontFamily: "monospace", fontSize: "12px", color: T.muted }}>ShopWave · Python FastAPI · Azure AKS · GitHub Actions · Production-Grade CI/CD · February 2026</p>
+  <p style={{ fontFamily: "monospace", fontSize: "12px", color: T.muted }}>ShopWave · Python FastAPI · Azure AKS · Terraform IaC · GitHub Actions · Production-Grade CI/CD · February 2026</p>
 </div>
 
 </div>
