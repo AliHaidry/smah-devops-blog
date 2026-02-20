@@ -1,7 +1,7 @@
 ---
 title: "Building Production-Grade CI/CD Pipelines for Microservices"
 date: "2026-02-20"
-author: "Ali Haidry"
+author: "Senior DevOps Engineer"
 tags: ["CI/CD", "Kubernetes", "GitOps", "DevSecOps", "Microservices", "Docker"]
 readTime: "18 min read"
 ---
@@ -315,35 +315,48 @@ A well-designed microservices CI/CD pipeline follows four logical stages, each a
 ## 04 — Containerization & Image Management
 
 <DiagramWrap label="Multi-Stage Docker Build Flow">
-  <svg viewBox="0 0 820 200" width="100%" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 860 220" width="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-        <path d="M0,0 L0,6 L8,3 z" fill="#10b981" opacity="0.8"/>
+        <path d="M0,0 L0,6 L8,3 z" fill="#10b981" opacity="0.9"/>
       </marker>
     </defs>
-    <rect x="20" y="40" width="200" height="120" rx="8" fill="#111827" stroke="#7c3aed" strokeWidth="1.5"/>
-    <text x="120" y="65" textAnchor="middle" fill="#a78bfa" fontSize="12" fontWeight="700" fontFamily="monospace">BUILD STAGE</text>
-    <text x="120" y="88" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">FROM golang:1.22 AS builder</text>
-    <text x="120" y="106" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">COPY . .</text>
-    <text x="120" y="122" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">RUN go test ./...</text>
-    <text x="120" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">RUN go build -o /app</text>
-    <text x="120" y="158" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">~900MB image</text>
-    <line x1="222" y1="100" x2="285" y2="100" stroke="#10b981" strokeWidth="1.5" markerEnd="url(#arr2)"/>
-    <text x="254" y="88" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">COPY --from=builder</text>
-    <text x="254" y="100" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">/app binary only</text>
-    <rect x="287" y="40" width="200" height="120" rx="8" fill="#111827" stroke="#10b981" strokeWidth="1.5"/>
-    <text x="387" y="65" textAnchor="middle" fill="#6ee7b7" fontSize="12" fontWeight="700" fontFamily="monospace">FINAL STAGE</text>
-    <text x="387" y="88" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">FROM gcr.io/distroless/static</text>
-    <text x="387" y="106" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">COPY /app /app</text>
-    <text x="387" y="122" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">USER nonroot</text>
-    <text x="387" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">ENTRYPOINT ["/app"]</text>
-    <text x="387" y="158" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">~12MB image ✓</text>
-    <line x1="489" y1="100" x2="540" y2="100" stroke="#10b981" strokeWidth="1.5" markerEnd="url(#arr2)"/>
-    <rect x="542" y="55" width="240" height="90" rx="8" fill="#111827" stroke="#00e5ff" strokeWidth="1.5"/>
-    <text x="662" y="80" textAnchor="middle" fill="#67e8f9" fontSize="12" fontWeight="700" fontFamily="monospace">REGISTRY</text>
-    <text x="662" y="100" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">tag: sha-a3f7c2b1</text>
-    <text x="662" y="118" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">✓ Signed  ✓ CVE-scanned</text>
-    <text x="662" y="134" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">✓ Retention policy applied</text>
+
+    {/* ── BUILD STAGE ── */}
+    <rect x="20" y="30" width="230" height="150" rx="8" fill="#111827" stroke="#7c3aed" strokeWidth="1.5"/>
+    <rect x="20" y="30" width="230" height="30" rx="8" fill="#7c3aed" opacity="0.25"/>
+    <text x="135" y="51" textAnchor="middle" fill="#a78bfa" fontSize="12" fontWeight="700" fontFamily="monospace">BUILD STAGE</text>
+    <text x="135" y="82"  textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">FROM golang:1.22 AS builder</text>
+    <text x="135" y="100" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">COPY . .</text>
+    <text x="135" y="118" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">RUN go test ./...</text>
+    <text x="135" y="136" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">RUN go build -o /app</text>
+    <text x="135" y="168" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">~900MB image</text>
+
+    {/* ── ARROW 1: BUILD → FINAL (label above) ── */}
+    <text x="310" y="88" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">COPY --from=builder</text>
+    <text x="310" y="101" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">/app binary only</text>
+    <line x1="252" y1="115" x2="368" y2="115" stroke="#10b981" strokeWidth="1.5" markerEnd="url(#arr2)"/>
+
+    {/* ── FINAL STAGE ── */}
+    <rect x="370" y="30" width="220" height="150" rx="8" fill="#111827" stroke="#10b981" strokeWidth="1.5"/>
+    <rect x="370" y="30" width="220" height="30" rx="8" fill="#10b981" opacity="0.15"/>
+    <text x="480" y="51"  textAnchor="middle" fill="#6ee7b7" fontSize="12" fontWeight="700" fontFamily="monospace">FINAL STAGE</text>
+    <text x="480" y="82"  textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">FROM gcr.io/distroless/static</text>
+    <text x="480" y="100" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">COPY /app /app</text>
+    <text x="480" y="118" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">USER nonroot</text>
+    <text x="480" y="136" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">ENTRYPOINT ["/app"]</text>
+    <text x="480" y="168" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">~12MB image ✓</text>
+
+    {/* ── ARROW 2: FINAL → REGISTRY ── */}
+    <line x1="592" y1="115" x2="618" y2="115" stroke="#10b981" strokeWidth="1.5" markerEnd="url(#arr2)"/>
+
+    {/* ── REGISTRY ── */}
+    <rect x="620" y="50" width="220" height="120" rx="8" fill="#111827" stroke="#00e5ff" strokeWidth="1.5"/>
+    <rect x="620" y="50" width="220" height="30" rx="8" fill="#00e5ff" opacity="0.1"/>
+    <text x="730" y="71"  textAnchor="middle" fill="#67e8f9" fontSize="12" fontWeight="700" fontFamily="monospace">REGISTRY</text>
+    <text x="730" y="100" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">tag: sha-a3f7c2b1</text>
+    <text x="730" y="118" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">✓ Signed  ✓ CVE-scanned</text>
+    <text x="730" y="136" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">✓ Retention policy applied</text>
   </svg>
 </DiagramWrap>
 
@@ -358,48 +371,65 @@ A well-designed microservices CI/CD pipeline follows four logical stages, each a
 Kubernetes is the production runtime for microservices. The modern deployment model is **GitOps**: Git is the single source of truth for cluster state, and an in-cluster operator continuously reconciles the cluster to match the repository.
 
 <DiagramWrap label="GitOps Deployment Model (ArgoCD / Flux)">
-  <svg viewBox="0 0 820 260" width="100%" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 860 240" width="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <marker id="arr3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-        <path d="M0,0 L0,6 L8,3 z" fill="#00e5ff" opacity="0.8"/>
+        <path d="M0,0 L0,6 L8,3 z" fill="#00e5ff" opacity="0.9"/>
       </marker>
       <marker id="arr4" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-        <path d="M0,0 L0,6 L8,3 z" fill="#10b981" opacity="0.8"/>
+        <path d="M0,0 L0,6 L8,3 z" fill="#10b981" opacity="0.9"/>
       </marker>
       <marker id="arr5" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-        <path d="M0,0 L0,6 L8,3 z" fill="#f59e0b" opacity="0.8"/>
+        <path d="M0,0 L0,6 L8,3 z" fill="#f59e0b" opacity="0.9"/>
       </marker>
     </defs>
-    <rect x="20" y="100" width="110" height="60" rx="6" fill="#1a2235" stroke="#7c3aed" strokeWidth="1.5"/>
-    <text x="75" y="126" textAnchor="middle" fill="#a78bfa" fontSize="20">👩‍💻</text>
-    <text x="75" y="148" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">Developer</text>
-    <rect x="190" y="100" width="130" height="60" rx="6" fill="#1a2235" stroke="#00e5ff" strokeWidth="1.5"/>
-    <text x="255" y="122" textAnchor="middle" fill="#67e8f9" fontSize="11" fontWeight="700" fontFamily="monospace">CI System</text>
-    <text x="255" y="138" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Build · Test · Push</text>
-    <text x="255" y="152" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Image to Registry</text>
-    <line x1="132" y1="130" x2="188" y2="130" stroke="#00e5ff" strokeWidth="1.5" markerEnd="url(#arr3)"/>
-    <text x="160" y="122" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">git push</text>
-    <rect x="380" y="80" width="140" height="100" rx="6" fill="#1a2235" stroke="#f59e0b" strokeWidth="1.5"/>
-    <text x="450" y="108" textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="700" fontFamily="monospace">GitOps Repo</text>
-    <text x="450" y="128" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">manifests/</text>
-    <text x="450" y="145" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">prod/values.yaml</text>
-    <text x="450" y="162" textAnchor="middle" fill="#fcd34d" fontSize="9" fontFamily="monospace">image: sha-a3f7c2</text>
-    <line x1="322" y1="130" x2="378" y2="130" stroke="#f59e0b" strokeWidth="1.5" markerEnd="url(#arr5)"/>
-    <text x="350" y="120" textAnchor="middle" fill="#fcd34d" fontSize="9" fontFamily="monospace">update</text>
-    <text x="350" y="132" textAnchor="middle" fill="#fcd34d" fontSize="9" fontFamily="monospace">image tag</text>
-    <rect x="590" y="60" width="210" height="140" rx="8" fill="#111827" stroke="#10b981" strokeWidth="1.5"/>
-    <text x="695" y="90" textAnchor="middle" fill="#6ee7b7" fontSize="12" fontWeight="700" fontFamily="monospace">Kubernetes Cluster</text>
-    <rect x="610" y="102" width="170" height="36" rx="4" fill="#0f2a1e" stroke="#10b981" strokeWidth="1"/>
-    <text x="695" y="120" textAnchor="middle" fill="#6ee7b7" fontSize="10" fontWeight="600" fontFamily="monospace">ArgoCD / Flux Operator</text>
-    <text x="695" y="132" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">continuous sync loop</text>
-    <rect x="610" y="148" width="76" height="28" rx="4" fill="#1a2235" stroke="#00e5ff" strokeWidth="1"/>
-    <text x="648" y="166" textAnchor="middle" fill="#a5f3fc" fontSize="9" fontFamily="monospace">pod v2 ✓</text>
-    <rect x="704" y="148" width="76" height="28" rx="4" fill="#1a2235" stroke="#00e5ff" strokeWidth="1"/>
-    <text x="742" y="166" textAnchor="middle" fill="#a5f3fc" fontSize="9" fontFamily="monospace">pod v2 ✓</text>
-    <line x1="522" y1="130" x2="586" y2="130" stroke="#10b981" strokeWidth="1.5" strokeDasharray="5,3" markerEnd="url(#arr4)"/>
-    <text x="553" y="118" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">pull / sync</text>
-    <text x="553" y="130" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">(operator)</text>
-    <text x="450" y="215" textAnchor="middle" fill="#f59e0b" fontSize="10" fontFamily="monospace">Rollback = git revert → instant reconcile</text>
+
+    {/* ── DEVELOPER (cy=100) ── */}
+    <rect x="10" y="70" width="110" height="70" rx="6" fill="#1a2235" stroke="#7c3aed" strokeWidth="1.5"/>
+    <text x="65" y="102" textAnchor="middle" fontSize="22">👩‍💻</text>
+    <text x="65" y="128" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">Developer</text>
+
+    {/* ── ARROW 1: Dev → CI (label above) ── */}
+    <text x="162" y="93" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">git push</text>
+    <line x1="122" y1="105" x2="198" y2="105" stroke="#00e5ff" strokeWidth="1.5" markerEnd="url(#arr3)"/>
+
+    {/* ── CI SYSTEM ── */}
+    <rect x="200" y="70" width="140" height="70" rx="6" fill="#1a2235" stroke="#00e5ff" strokeWidth="1.5"/>
+    <rect x="200" y="70" width="140" height="26" rx="6" fill="#00e5ff" opacity="0.1"/>
+    <text x="270" y="88"  textAnchor="middle" fill="#67e8f9" fontSize="11" fontWeight="700" fontFamily="monospace">CI System</text>
+    <text x="270" y="112" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Build · Test · Push</text>
+    <text x="270" y="128" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Image to Registry</text>
+
+    {/* ── ARROW 2: CI → GitOps Repo (label above) ── */}
+    <text x="362" y="93" textAnchor="middle" fill="#fcd34d" fontSize="9" fontFamily="monospace">update image tag</text>
+    <line x1="342" y1="105" x2="398" y2="105" stroke="#f59e0b" strokeWidth="1.5" markerEnd="url(#arr5)"/>
+
+    {/* ── GITOPS REPO ── */}
+    <rect x="400" y="60" width="150" height="100" rx="6" fill="#1a2235" stroke="#f59e0b" strokeWidth="1.5"/>
+    <rect x="400" y="60" width="150" height="26" rx="6" fill="#f59e0b" opacity="0.15"/>
+    <text x="475" y="79"  textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="700" fontFamily="monospace">GitOps Repo</text>
+    <text x="475" y="104" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">manifests/</text>
+    <text x="475" y="120" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">prod/values.yaml</text>
+    <text x="475" y="138" textAnchor="middle" fill="#fcd34d" fontSize="9" fontFamily="monospace">image: sha-a3f7c2</text>
+
+    {/* ── ARROW 3: GitOps Repo → K8s (label above, dashed pull) ── */}
+    <text x="582" y="93" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">pull / sync (operator)</text>
+    <line x1="552" y1="105" x2="608" y2="105" stroke="#10b981" strokeWidth="1.5" strokeDasharray="5,3" markerEnd="url(#arr4)"/>
+
+    {/* ── KUBERNETES CLUSTER ── */}
+    <rect x="610" y="40" width="230" height="160" rx="8" fill="#111827" stroke="#10b981" strokeWidth="1.5"/>
+    <rect x="610" y="40" width="230" height="28" rx="8" fill="#10b981" opacity="0.1"/>
+    <text x="725" y="60" textAnchor="middle" fill="#6ee7b7" fontSize="12" fontWeight="700" fontFamily="monospace">Kubernetes Cluster</text>
+    <rect x="628" y="78" width="194" height="38" rx="4" fill="#0f2a1e" stroke="#10b981" strokeWidth="1"/>
+    <text x="725" y="97"  textAnchor="middle" fill="#6ee7b7" fontSize="10" fontWeight="600" fontFamily="monospace">ArgoCD / Flux Operator</text>
+    <text x="725" y="110" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">continuous sync loop</text>
+    <rect x="628" y="128" width="88" height="30" rx="4" fill="#1a2235" stroke="#00e5ff" strokeWidth="1"/>
+    <text x="672" y="147" textAnchor="middle" fill="#a5f3fc" fontSize="9" fontFamily="monospace">pod v2 ✓</text>
+    <rect x="734" y="128" width="88" height="30" rx="4" fill="#1a2235" stroke="#00e5ff" strokeWidth="1"/>
+    <text x="778" y="147" textAnchor="middle" fill="#a5f3fc" fontSize="9" fontFamily="monospace">pod v2 ✓</text>
+
+    {/* ── ROLLBACK NOTE ── */}
+    <text x="430" y="195" textAnchor="middle" fill="#f59e0b" fontSize="10" fontFamily="monospace">Rollback = git revert → instant reconcile</text>
   </svg>
 </DiagramWrap>
 
@@ -412,44 +442,79 @@ Kubernetes is the production runtime for microservices. The modern deployment mo
 ## 06 — Deployment Strategies
 
 <DiagramWrap label="Canary Deployment — Automated Progressive Traffic Shifting">
-  <svg viewBox="0 0 820 220" width="100%" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 900 250" width="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <marker id="arr6" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <marker id="arr6a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
         <path d="M0,0 L0,6 L8,3 z" fill="#94a3b8"/>
       </marker>
+      <marker id="arr6b" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#00e5ff"/>
+      </marker>
+      <marker id="arr6c" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#f43f5e"/>
+      </marker>
     </defs>
-    <rect x="20" y="90" width="120" height="50" rx="6" fill="#1a2235" stroke="#00e5ff" strokeWidth="1.5"/>
-    <text x="80" y="112" textAnchor="middle" fill="#67e8f9" fontSize="11" fontWeight="700" fontFamily="monospace">Load Balancer</text>
-    <text x="80" y="128" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Traffic routing</text>
-    <text x="210" y="25" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600" fontFamily="monospace">Step 1</text>
-    <text x="380" y="25" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600" fontFamily="monospace">Step 2</text>
-    <text x="560" y="25" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600" fontFamily="monospace">Step 3 (auto-promote)</text>
-    <text x="730" y="25" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="600" fontFamily="monospace">Rollback trigger</text>
-    <rect x="150" y="50" width="120" height="40" rx="5" fill="#1a2235" stroke="#10b981" strokeWidth="1.5"/>
-    <text x="210" y="68" textAnchor="middle" fill="#6ee7b7" fontSize="10" fontFamily="monospace">stable v1</text>
-    <text x="210" y="82" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">95% traffic</text>
-    <rect x="150" y="130" width="120" height="40" rx="5" fill="#0f2a1e" stroke="#f59e0b" strokeWidth="1.5"/>
-    <text x="210" y="148" textAnchor="middle" fill="#fcd34d" fontSize="10" fontFamily="monospace">canary v2</text>
-    <text x="210" y="162" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">5% traffic</text>
-    <line x1="142" y1="108" x2="152" y2="72" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3,2" markerEnd="url(#arr6)"/>
-    <line x1="142" y1="118" x2="152" y2="145" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3,2" markerEnd="url(#arr6)"/>
-    <rect x="320" y="50" width="120" height="40" rx="5" fill="#1a2235" stroke="#10b981" strokeWidth="1.5"/>
-    <text x="380" y="68" textAnchor="middle" fill="#6ee7b7" fontSize="10" fontFamily="monospace">stable v1</text>
-    <text x="380" y="82" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">50% traffic</text>
-    <rect x="320" y="130" width="120" height="40" rx="5" fill="#0f2a1e" stroke="#f59e0b" strokeWidth="1.5"/>
-    <text x="380" y="148" textAnchor="middle" fill="#fcd34d" fontSize="10" fontFamily="monospace">canary v2</text>
-    <text x="380" y="162" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">50% traffic</text>
-    <text x="380" y="200" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">✓ metrics healthy</text>
-    <rect x="490" y="80" width="140" height="60" rx="5" fill="#0f2a1e" stroke="#10b981" strokeWidth="2"/>
-    <text x="560" y="106" textAnchor="middle" fill="#6ee7b7" fontSize="11" fontWeight="700" fontFamily="monospace">v2 — 100%</text>
-    <text x="560" y="124" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">v1 pods terminated</text>
-    <rect x="660" y="80" width="140" height="60" rx="5" fill="#2d1515" stroke="#f43f5e" strokeWidth="1.5"/>
-    <text x="730" y="104" textAnchor="middle" fill="#fb7185" fontSize="11" fontWeight="700" fontFamily="monospace">⚡ Auto-Rollback</text>
-    <text x="730" y="120" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">error rate {">"} threshold</text>
-    <text x="730" y="134" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">v1 restored instantly</text>
-    <line x1="272" y1="110" x2="318" y2="110" stroke="#00e5ff" strokeWidth="1.2" strokeDasharray="4,2"/>
-    <line x1="442" y1="110" x2="488" y2="110" stroke="#00e5ff" strokeWidth="1.2" strokeDasharray="4,2"/>
-    <line x1="632" y1="110" x2="658" y2="110" stroke="#f43f5e" strokeWidth="1.2" strokeDasharray="4,2"/>
+
+    {/* ── COLUMN HEADER LABELS ── */}
+    <text x="215" y="22" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600" fontFamily="monospace">Step 1</text>
+    <text x="390" y="22" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600" fontFamily="monospace">Step 2</text>
+    <text x="570" y="22" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600" fontFamily="monospace">Step 3 (auto-promote)</text>
+    <text x="770" y="22" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="600" fontFamily="monospace">Rollback trigger</text>
+
+    {/* ── LOAD BALANCER ── */}
+    <rect x="10" y="90" width="120" height="55" rx="6" fill="#1a2235" stroke="#00e5ff" strokeWidth="1.5"/>
+    <text x="70" y="114" textAnchor="middle" fill="#67e8f9" fontSize="11" fontWeight="700" fontFamily="monospace">Load Balancer</text>
+    <text x="70" y="133" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Traffic routing</text>
+
+    {/* ── LB → STABLE V1 (top fork) ── */}
+    <polyline points="130,105 148,105 148,78 155,78" fill="none" stroke="#94a3b8" strokeWidth="1.2" strokeDasharray="3,2" markerEnd="url(#arr6a)"/>
+    {/* ── LB → CANARY V2 (bottom fork) ── */}
+    <polyline points="130,128 148,128 148,162 155,162" fill="none" stroke="#94a3b8" strokeWidth="1.2" strokeDasharray="3,2" markerEnd="url(#arr6a)"/>
+
+    {/* ── STEP 1: STABLE V1 ── */}
+    <rect x="157" y="55" width="120" height="46" rx="5" fill="#1a2235" stroke="#10b981" strokeWidth="1.5"/>
+    <text x="217" y="76" textAnchor="middle" fill="#6ee7b7" fontSize="10" fontFamily="monospace">stable v1</text>
+    <text x="217" y="92" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">95% traffic</text>
+
+    {/* ── STEP 1: CANARY V2 ── */}
+    <rect x="157" y="138" width="120" height="46" rx="5" fill="#0f2a1e" stroke="#f59e0b" strokeWidth="1.5"/>
+    <text x="217" y="159" textAnchor="middle" fill="#fcd34d" fontSize="10" fontFamily="monospace">canary v2</text>
+    <text x="217" y="175" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">5% traffic</text>
+
+    {/* ── STEP 1 → STEP 2 ARROWS ── */}
+    <line x1="279" y1="78"  x2="327" y2="78"  stroke="#00e5ff" strokeWidth="1.2" strokeDasharray="4,2" markerEnd="url(#arr6b)"/>
+    <line x1="279" y1="161" x2="327" y2="161" stroke="#00e5ff" strokeWidth="1.2" strokeDasharray="4,2" markerEnd="url(#arr6b)"/>
+
+    {/* ── STEP 2: STABLE V1 ── */}
+    <rect x="329" y="55" width="120" height="46" rx="5" fill="#1a2235" stroke="#10b981" strokeWidth="1.5"/>
+    <text x="389" y="76" textAnchor="middle" fill="#6ee7b7" fontSize="10" fontFamily="monospace">stable v1</text>
+    <text x="389" y="92" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">50% traffic</text>
+
+    {/* ── STEP 2: CANARY V2 ── */}
+    <rect x="329" y="138" width="120" height="46" rx="5" fill="#0f2a1e" stroke="#f59e0b" strokeWidth="1.5"/>
+    <text x="389" y="159" textAnchor="middle" fill="#fcd34d" fontSize="10" fontFamily="monospace">canary v2</text>
+    <text x="389" y="175" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">50% traffic</text>
+    <text x="389" y="210" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="monospace">✓ metrics healthy</text>
+
+    {/* ── STEP 2 → STEP 3 ARROW (single, merging) ── */}
+    <line x1="451" y1="78"  x2="500" y2="78"  stroke="#00e5ff" strokeWidth="1.2" strokeDasharray="4,2"/>
+    <line x1="451" y1="161" x2="500" y2="161" stroke="#00e5ff" strokeWidth="1.2" strokeDasharray="4,2"/>
+    <line x1="500" y1="78" x2="500" y2="161" stroke="#00e5ff" strokeWidth="1.2" strokeDasharray="4,2"/>
+    <line x1="500" y1="118" x2="508" y2="118" stroke="#00e5ff" strokeWidth="1.2" markerEnd="url(#arr6b)"/>
+
+    {/* ── STEP 3: V2 100% ── */}
+    <rect x="510" y="88" width="140" height="60" rx="5" fill="#0f2a1e" stroke="#10b981" strokeWidth="2"/>
+    <text x="580" y="113" textAnchor="middle" fill="#6ee7b7" fontSize="11" fontWeight="700" fontFamily="monospace">v2 — 100%</text>
+    <text x="580" y="131" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">v1 pods terminated</text>
+
+    {/* ── STEP 3 → ROLLBACK ARROW ── */}
+    <line x1="652" y1="118" x2="682" y2="118" stroke="#f43f5e" strokeWidth="1.2" strokeDasharray="4,2" markerEnd="url(#arr6c)"/>
+
+    {/* ── ROLLBACK BOX ── */}
+    <rect x="684" y="82" width="200" height="72" rx="5" fill="#2d1515" stroke="#f43f5e" strokeWidth="1.5"/>
+    <text x="784" y="108" textAnchor="middle" fill="#fb7185" fontSize="11" fontWeight="700" fontFamily="monospace">⚡ Auto-Rollback</text>
+    <text x="784" y="126" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">error rate {">"} threshold</text>
+    <text x="784" y="143" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">v1 restored instantly</text>
   </svg>
 </DiagramWrap>
 
