@@ -94,7 +94,7 @@ export function AIDecisionTree() {
     { q: 'Can a well-crafted prompt solve it today?', yes: 'Prompt engineering first', no: 6 },
     { q: 'Do you need a specific style, format, or niche domain vocabulary?', yes: 'Fine-tuning', no: 'Re-examine problem definition' },
   ]
-  const [step, setStep] = useState(0)
+  const [step, setStep] = useState<number | string>(0)
   const current = nodes[typeof step === 'number' ? step : 0]
   const isLeaf = typeof current?.yes === 'string'
 
@@ -127,7 +127,7 @@ export function AIDecisionTree() {
               No →
             </button>
           </div>
-          {step > 0 && (
+          {typeof step === 'number' && step > 0 && (
             <button onClick={() => setStep(0)} className="mt-3 text-xs font-mono text-zinc-600 hover:text-zinc-400 transition-colors">
               ↩ Start over
             </button>
