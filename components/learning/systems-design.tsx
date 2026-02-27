@@ -133,7 +133,7 @@ export function TradeoffExplorer() {
         costs: ['Stale reads possible', 'Complex conflict resolution'],
       },
       insight:
-        "Most consumer apps choose availability. Money systems choose consistency. Know your business requirement before picking a DB.",
+        'Most consumer apps choose availability. Money systems choose consistency. Know your business requirement before picking a DB.',
     },
     {
       title: 'Latency vs Throughput',
@@ -343,7 +343,12 @@ export function CachingStrategies() {
     'cache-aside': {
       label: 'Cache-Aside (Lazy Loading)',
       color: C.cyan,
-      steps: ['App checks cache → MISS', 'App fetches from DB', 'App writes result to cache', 'Next request → HIT'],
+      steps: [
+        'App checks cache → MISS',
+        'App fetches from DB',
+        'App writes result to cache',
+        'Next request → HIT',
+      ],
       pros: ["Only caches what's actually read", "Cache failure doesn't break app"],
       cons: ['First request always slow (cold start)', 'Cache stampede on popular miss'],
       use: 'General purpose. Most common pattern.',
@@ -403,7 +408,7 @@ export function CachingStrategies() {
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
-            <div className="mb-2 font-mono text-[9px] tracking-widest uppercase text-zinc-500">
+            <div className="mb-2 font-mono text-[9px] tracking-widest text-zinc-500 uppercase">
               FLOW
             </div>
             {s.steps.map((step, i) => (
@@ -520,7 +525,12 @@ export function ObservabilityPillars() {
       emoji: '📝',
       color: C.green,
       desc: 'Timestamped records of discrete events. The "what happened and why" signal.',
-      examples: ['Request/response details', 'Error stack traces', 'Audit trail', 'Business events'],
+      examples: [
+        'Request/response details',
+        'Error stack traces',
+        'Audit trail',
+        'Business events',
+      ],
       tools: ['Elasticsearch', 'Loki', 'Splunk'],
     },
     {
@@ -541,7 +551,7 @@ export function ObservabilityPillars() {
             {p.title}
           </div>
           <div className="mb-3 text-xs leading-relaxed text-zinc-400">{p.desc}</div>
-          <div className="mb-1 font-mono text-[9px] tracking-widest uppercase text-zinc-600">
+          <div className="mb-1 font-mono text-[9px] tracking-widest text-zinc-600 uppercase">
             EXAMPLES
           </div>
           {p.examples.map((e) => (
@@ -615,7 +625,7 @@ export function CAPTheoremDiagram() {
 
   return (
     <div className="my-6 rounded-sm border border-zinc-700 bg-zinc-900 p-5">
-      <div className="mb-1 font-mono text-[9px] tracking-[3px] uppercase text-zinc-500">
+      <div className="mb-1 font-mono text-[9px] tracking-[3px] text-zinc-500 uppercase">
         CAP Theorem
       </div>
       <p className="mb-4 text-xs leading-relaxed text-zinc-500">
@@ -630,7 +640,7 @@ export function CAPTheoremDiagram() {
               {n.label}
             </div>
             <div className="mb-3 text-xs leading-relaxed text-zinc-400">{n.desc}</div>
-            <div className="mb-1 font-mono text-[9px] tracking-widest uppercase text-zinc-600">
+            <div className="mb-1 font-mono text-[9px] tracking-widest text-zinc-600 uppercase">
               Examples
             </div>
             {n.dbs.map((db) => (

@@ -175,7 +175,10 @@ export function Quiz({
   const [sel, setSel] = useState<number | null>(null)
   return (
     <div className="my-6 rounded-sm border border-zinc-700 bg-zinc-900 p-5">
-      <div className="mb-3 font-mono text-[9px] tracking-[3px] uppercase" style={{ color: C.amber }}>
+      <div
+        className="mb-3 font-mono text-[9px] tracking-[3px] uppercase"
+        style={{ color: C.amber }}
+      >
         Knowledge Check
       </div>
       <p className="mb-4 text-sm leading-relaxed font-semibold text-zinc-200">{question}</p>
