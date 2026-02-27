@@ -4,6 +4,7 @@
 // Used across all learning module components.
 // Import from here to keep styling consistent.
 
+import React from 'react'
 import { useState } from 'react'
 
 // ── Colour tokens ─────────────────────────────────────────────────────────────
@@ -31,7 +32,7 @@ export const C = {
 }
 
 // ── Pill / badge ──────────────────────────────────────────────────────────────
-export function Pill({ color, children }) {
+export function Pill({ color, children }: { color: string; children: React.ReactNode }) {
   return (
     <span
       className="inline-block font-mono text-[9px] tracking-widest uppercase px-2 py-0.5 rounded-sm mr-1"
@@ -43,7 +44,11 @@ export function Pill({ color, children }) {
 }
 
 // ── Callout ───────────────────────────────────────────────────────────────────
-export function Callout({ type = 'info', title, children }) {
+export function Callout({ type = 'info', title, children }: {
+  type?: 'info' | 'warn' | 'tip' | 'insight' | 'danger'
+  title?: string
+  children: React.ReactNode
+}) {
   const map = {
     info:    C.cyan,
     warn:    C.amber,
@@ -69,7 +74,12 @@ export function Callout({ type = 'info', title, children }) {
 }
 
 // ── Card ──────────────────────────────────────────────────────────────────────
-export function Card({ children, accent, className = '', onClick }) {
+export function Card({ children, accent, className = '', onClick }: {
+  children: React.ReactNode
+  accent?: string
+  className?: string
+  onClick?: () => void
+}) {
   const [hovered, setHovered] = useState(false)
   return (
     <div
@@ -96,7 +106,11 @@ export function Card({ children, accent, className = '', onClick }) {
 }
 
 // ── Section heading ───────────────────────────────────────────────────────────
-export function SHead({ children, sub, accent = C.amber }) {
+export function SHead({ children, sub, accent = C.amber }: {
+  children: React.ReactNode
+  sub?: string
+  accent?: string
+}) {
   return (
     <div className="mt-8 mb-4">
       <div className="flex items-center gap-3 mb-1">
@@ -118,7 +132,11 @@ export function SHead({ children, sub, accent = C.amber }) {
 }
 
 // ── Code block ────────────────────────────────────────────────────────────────
-export function CodeBlock({ label, bad = false, children }) {
+export function CodeBlock({ label, bad = false, children }: {
+  label?: string
+  bad?: boolean
+  children: React.ReactNode
+}) {
   return (
     <div className="my-3">
       {label && (
@@ -144,8 +162,13 @@ export function CodeBlock({ label, bad = false, children }) {
 }
 
 // ── Quiz ──────────────────────────────────────────────────────────────────────
-export function Quiz({ question, opts, correct, explanations }) {
-  const [sel, setSel] = useState(null)
+export function Quiz({ question, opts, correct, explanations }: {
+  question: string
+  opts: string[]
+  correct: number
+  explanations: string[]
+}) {
+  const [sel, setSel] = useState<number | null>(null)
   return (
     <div className="my-6 rounded-sm border border-zinc-700 bg-zinc-900 p-5">
       <div
@@ -193,13 +216,13 @@ export function Quiz({ question, opts, correct, explanations }) {
 }
 
 // ── Checklist ─────────────────────────────────────────────────────────────────
-export function Checklist({ storageKey, items }) {
+export function Checklist({ storageKey, items }: { storageKey: string; items: string[] }) {
   const [checked, setChecked] = useState(() => {
     try { return JSON.parse(localStorage.getItem(storageKey) || '[]') }
     catch { return [] }
   })
 
-  const toggle = (i) => {
+  const toggle = (i: number) => {
     const next = checked.includes(i)
       ? checked.filter(x => x !== i)
       : [...checked, i]
@@ -264,7 +287,7 @@ export function Checklist({ storageKey, items }) {
 }
 
 // ── Simple data table ─────────────────────────────────────────────────────────
-export function DataTable({ heads, rows }) {
+export function DataTable({ heads, rows }: { heads: string[]; rows: string[][] }) {
   return (
     <div className="overflow-x-auto my-4">
       <table className="w-full text-sm border-collapse">
