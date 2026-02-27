@@ -134,12 +134,14 @@ export function RoadmapNav() {
           <div>
             {/* Breadcrumb */}
             <p style={{ margin: '0 0 10px', fontSize: '12px', fontFamily: 'monospace' }}>
-              <span onClick={() => navigate('overview')}
-                style={{ color: '#71717a', cursor: 'pointer' }}
-                onMouseEnter={e => ((e.target as HTMLElement).style.color = '#d4d4d8')}
-                onMouseLeave={e => ((e.target as HTMLElement).style.color = '#71717a')}>
+              <button
+                type="button"
+                onClick={() => navigate('overview')}
+                style={{ color: '#71717a', cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'monospace', fontSize: '12px', padding: 0 }}
+                onMouseEnter={(e) => ((e.currentTarget.style.color = '#d4d4d8'))}
+                onMouseLeave={(e) => ((e.currentTarget.style.color = '#71717a'))}>
                 Roadmap
-              </span>
+              </button>
               <span style={{ color: '#3f3f46', margin: '0 6px' }}>/</span>
               <span style={{ color: mod.color }}>{mod.label}</span>
             </p>
@@ -205,8 +207,8 @@ export function RoadmapFooter() {
       </div>
       <button onClick={() => go('overview')}
         style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'monospace', fontSize: '10px', letterSpacing: '3px', textTransform: 'uppercase', color: '#52525b' }}
-        onMouseEnter={e => ((e.currentTarget.style.color = '#a1a1aa'))}
-        onMouseLeave={e => ((e.currentTarget.style.color = '#52525b'))}>
+        onMouseEnter={(e) => (e.currentTarget.style.color = '#a1a1aa')}
+        onMouseLeave={(e) => (e.currentTarget.style.color = '#52525b')}>
         ↑ Overview
       </button>
       <div>
@@ -226,7 +228,7 @@ export function RoadmapFooter() {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function ModuleCard({ m, onClick }: { m: typeof MODULES[0]; onClick: () => void }) {
+function ModuleCard({ m, onClick }: { m: (typeof MODULES)[0]; onClick: () => void }) {
   const [hovered, setHovered] = useState(false)
   return (
     <button

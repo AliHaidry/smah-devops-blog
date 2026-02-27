@@ -295,8 +295,11 @@ prod_sorter = Sorter(TimSort())      # fast, real workloads
 }
 
 // ── Architecture Explorer ─────────────────────────────────────────────────────
+type ArchLayer = { name: string; color: string; desc: string }
+type ArchDef = { name: string; color: string; tagline: string; desc: string; layers: ArchLayer[] }
+
 export function ArchitectureExplorer() {
-  const architectures: Record<string, any> = {
+  const architectures: Record<string, ArchDef> = {
     clean: {
       name: 'Clean Architecture', color: C.amber,
       tagline: 'Business logic at the centre, infrastructure at the edges.',
@@ -338,8 +341,8 @@ export function ArchitectureExplorer() {
   return (
     <div className="my-6">
       <div className="flex gap-2 mb-4 flex-wrap">
-        {Object.entries(architectures).map(([k, v]: [string, any]) => (
-          <button key={k} onClick={() => setActive(k)}
+        {Object.entries(architectures).map(([k, v]) => (
+          <button key={k} type="button" onClick={() => setActive(k)}
             className="text-xs px-3 py-1.5 rounded-sm border transition-all duration-150"
             style={{ borderColor: k === active ? v.color : '#3f3f46', background: k === active ? `${v.color}18` : 'transparent', color: k === active ? v.color : '#71717a' }}>
             {v.name}
@@ -351,7 +354,7 @@ export function ArchitectureExplorer() {
         <div className="font-mono text-[10px] text-zinc-500 tracking-wide mb-3">"{arch.tagline}"</div>
         <p className="text-sm text-zinc-400 leading-relaxed mb-4">{arch.desc}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {arch.layers.map((l: any) => (
+          {arch.layers.map((l) => (
             <div key={l.name} className="bg-zinc-900 border border-zinc-700 rounded-sm p-3">
               <div className="text-xs font-bold mb-1" style={{ color: l.color }}>{l.name}</div>
               <div className="text-[11px] text-zinc-500 leading-snug">{l.desc}</div>
