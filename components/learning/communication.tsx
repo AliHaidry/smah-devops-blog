@@ -324,7 +324,6 @@ export function MentoringTechniques() {
           </div>
           <div className="mb-2 text-xs leading-relaxed text-zinc-400">{t.desc}</div>
           <div className="font-mono text-[9px] tracking-widest text-zinc-600 uppercase">
-            WHEN:{' '}
             <span className="tracking-normal text-zinc-500 normal-case">{t.when}</span>
           </div>
         </Card>
@@ -350,7 +349,7 @@ export function CommChecklist() {
         'Surfaced a problem to leadership on the day it was discovered (not after)',
         'Disagreed with a decision, made the case clearly, then committed fully',
         'Mentored a less experienced engineer using at least one structured technique',
-        "Written a \"Rule of Three\" internal doc — something you'd explained twice already",
+        "Written a - Rule of Three - internal doc — something you'd explained twice already",
         'Given a lunch-and-learn or lightning talk on a technical topic',
         "Read The Staff Engineer's Path (Tanya Reilly)",
       ]}
