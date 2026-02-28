@@ -60,8 +60,6 @@ import DocumentTypesTable, {
   CommChecklist,
 } from './learning/communication'
 
-
-
 export const components: MDXComponents = {
   Image,
   TOCInline,
@@ -72,7 +70,7 @@ export const components: MDXComponents = {
 
   // ...your existing stuff (Image, TOCInline, a, pre, etc.)...
 
- // ── Module 01 ────────────────────────────────────────────────────────────
+  // ── Module 01 ────────────────────────────────────────────────────────────
   BigOVisual,
   DataStructuresTable,
   AlgorithmPatterns,

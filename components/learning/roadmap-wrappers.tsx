@@ -4,13 +4,7 @@ import { C, Card } from './shared'
 
 // ── Module Section ────────────────────────────────────────────────────────────
 // Scroll target wrapper for RoadmapNav links
-export function ModuleSection({
-  id,
-  children,
-}: {
-  id: string
-  children: React.ReactNode
-}) {
+export function ModuleSection({ id, children }: { id: string; children: React.ReactNode }) {
   return (
     <section id={id} className="scroll-mt-24">
       {children}
@@ -98,7 +92,7 @@ export function CAPTheoremDiagram() {
         {nodes.map((n) => (
           <Card key={n.abbr} accent={n.color}>
             <div
-              className="mb-1 font-mono text-3xl font-bold leading-none"
+              className="mb-1 font-mono text-3xl leading-none font-bold"
               style={{ color: `${n.color}40` }}
             >
               {n.abbr}
