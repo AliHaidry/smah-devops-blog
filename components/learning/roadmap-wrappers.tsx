@@ -1,37 +1,4 @@
-'use client'
-
 import { C, Card } from './shared'
-
-// ── Module Section ────────────────────────────────────────────────────────────
-// Scroll target wrapper for RoadmapNav links
-export function ModuleSection({ id, children }: { id: string; children: React.ReactNode }) {
-  return (
-    <section id={id} className="scroll-mt-24">
-      {children}
-    </section>
-  )
-}
-
-// ── Roadmap Footer ────────────────────────────────────────────────────────────
-export function RoadmapFooter() {
-  return (
-    <div className="my-12 rounded-sm border border-zinc-800 bg-zinc-900/60 p-8 text-center">
-      <div className="mb-3 font-mono text-[9px] tracking-[4px] text-zinc-600 uppercase">
-        End of Roadmap
-      </div>
-      <div className="mb-4 text-2xl font-bold text-zinc-200">
-        Engineering is a practice, not a destination.
-      </div>
-      <p className="mx-auto max-w-xl text-sm leading-relaxed text-zinc-500">
-        Revisit these modules as you grow. The concepts that seemed abstract at month 1 will click
-        at month 6. The patterns you skimmed will become the ones you reach for daily.
-      </p>
-      <div className="mt-6 font-mono text-[10px] tracking-widest text-zinc-700 uppercase">
-        Ship. Learn. Iterate.
-      </div>
-    </div>
-  )
-}
 
 // ── CAP Theorem Diagram ───────────────────────────────────────────────────────
 export function CAPTheoremDiagram() {
@@ -81,7 +48,7 @@ export function CAPTheoremDiagram() {
       label: 'Consistent + Available',
       color: C.purple,
       sacrifice: 'Partition Tolerance',
-      desc: 'Only possible without network partitions — i.e., a single-node or tightly-coupled cluster. Not viable for distributed systems.',
+      desc: "Only possible without network partitions — i.e., a single-node or tightly-coupled cluster. Not viable for distributed systems.",
       examples: ['Single-node PostgreSQL', 'SQLite'],
     },
   ]

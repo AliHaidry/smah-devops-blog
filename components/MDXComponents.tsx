@@ -7,8 +7,8 @@ import CustomLink from './Link'
 import TableWrapper from './TableWrapper'
 
 // ── Roadmap layout components ─────────────────────────────────────────────────
-import { RoadmapNav } from './RoadmapNav'
-import { CAPTheoremDiagram, ModuleSection, RoadmapFooter } from './learning/roadmap-wrappers'
+import { ModuleSection, RoadmapFooter, RoadmapNav } from './RoadmapNav'
+import { CAPTheoremDiagram } from './learning/roadmap-wrappers'
 
 // ── Module 01: Foundations ────────────────────────────────────────────────────
 import BigOVisual, {
