@@ -48,7 +48,7 @@ export function CAPTheoremDiagram() {
       label: 'Consistent + Available',
       color: C.purple,
       sacrifice: 'Partition Tolerance',
-      desc: "Only possible without network partitions — i.e., a single-node or tightly-coupled cluster. Not viable for distributed systems.",
+      desc: 'Only possible without network partitions — i.e., a single-node or tightly-coupled cluster. Not viable for distributed systems.',
       examples: ['Single-node PostgreSQL', 'SQLite'],
     },
   ]
