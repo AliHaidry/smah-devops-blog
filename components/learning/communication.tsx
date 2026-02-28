@@ -349,9 +349,9 @@ export function CommChecklist() {
         'Surfaced a problem to leadership on the day it was discovered (not after)',
         'Disagreed with a decision, made the case clearly, then committed fully',
         'Mentored a less experienced engineer using at least one structured technique',
-        'Written a "Rule of Three" internal doc — something you'd explained twice already',
+        "Written a \"Rule of Three\" internal doc — something you'd explained twice already",
         'Given a lunch-and-learn or lightning talk on a technical topic',
-        'Read The Staff Engineer's Path (Tanya Reilly)',
+        "Read The Staff Engineer's Path (Tanya Reilly)",
       ]}
     />
   )
