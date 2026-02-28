@@ -83,10 +83,9 @@ function useActive(initial: ModuleId = 'overview') {
 export function RoadmapNav() {
   const [active, go] = useActive('overview')
   const topRef = useRef<HTMLDivElement>(null)
-  const contentRef = useRef<HTMLDivElement>(null)
   const pendingScrollRef = useRef<ModuleId | null>(null)
 
-  // Scroll AFTER React has rendered the new content
+  // Scroll AFTER React has rendered the new content into the DOM
   useEffect(() => {
     const id = pendingScrollRef.current
     if (!id) return
@@ -94,7 +93,9 @@ export function RoadmapNav() {
     if (id === 'overview') {
       topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     } else {
-      contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      // ModuleSection renders a div with id={id} — scroll to it directly
+      const el = document.getElementById(id)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }, [active])
 
@@ -303,9 +304,7 @@ export function RoadmapNav() {
       {/* ── Module header ───────────────────────────────────────────────────── */}
       {active !== 'overview' && mod && (
         <div
-          ref={contentRef}
           style={{
-            scrollMarginTop: '80px',
             marginTop: '20px',
             paddingBottom: '24px',
             borderBottom: '1px solid #27272a',
@@ -384,7 +383,7 @@ export function RoadmapNav() {
 export function ModuleSection({ id, children }: { id: ModuleId; children: React.ReactNode }) {
   const [active] = useActive()
   if (active !== id) return null
-  return <div style={{ marginTop: '6px' }}>{children}</div>
+  return <div id={id} style={{ marginTop: '6px' }}>{children}</div>
 }
 
 // ─── RoadmapFooter ────────────────────────────────────────────────────────────
