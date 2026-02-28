@@ -84,16 +84,23 @@ export function RoadmapNav() {
   const [active, go] = useActive('overview')
   const topRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
+  const pendingScrollRef = useRef<ModuleId | null>(null)
+
+  // Scroll AFTER React has rendered the new content
+  useEffect(() => {
+    const id = pendingScrollRef.current
+    if (!id) return
+    pendingScrollRef.current = null
+    if (id === 'overview') {
+      topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [active])
 
   const navigate = (id: ModuleId) => {
+    pendingScrollRef.current = id
     go(id)
-    setTimeout(() => {
-      if (id === 'overview') {
-        topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      } else {
-        contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
-    }, 40)
   }
 
   const mod = MODULES.find((m) => m.id === active)
