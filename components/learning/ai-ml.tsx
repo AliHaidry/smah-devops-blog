@@ -296,7 +296,7 @@ export function AIChecklist() {
         'Can explain the OWASP Top 5 for LLMs with a concrete example of each',
         'Calculated and tracked cost-per-inference for a production LLM endpoint',
         'Completed fast.ai Practical Deep Learning Part 1',
-        "Watched Karpathy's - Let's build GPT from scratch",
+        "Watched Karpathy's \"Let's build GPT from scratch\"",
       ]}
     />
   )

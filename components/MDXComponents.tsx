@@ -67,6 +67,10 @@ import DocumentTypesTable, {
   TechnicalToBusinessTable,
 } from './learning/communication'
 
+// ── Roadmap layout components ─────────────────────────────────────────────────
+import RoadmapNav from './RoadmapNav'
+import { CAPTheoremDiagram, ModuleSection, RoadmapFooter } from './learning/roadmap-wrappers'
+
 // ── Boilerplate defaults (keep these) ────────────────────────────────────────
 export const components: MDXComponents = {
   Image,
@@ -116,4 +120,10 @@ export const components: MDXComponents = {
   TechnicalToBusinessTable,
   MentoringTechniques,
   CommChecklist,
+
+  // ── Roadmap layout ────────────────────────────────────────────────────────
+  RoadmapNav,
+  ModuleSection,
+  RoadmapFooter,
+  CAPTheoremDiagram,
 }
