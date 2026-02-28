@@ -45,7 +45,7 @@ export default function DocumentTypesTable() {
         'Action Items',
         'Process Improvements',
       ],
-      rule: "Blameless. The question is never \"who did this?\" — it's \"what made this possible?\"",
+      rule: 'Blameless. The question is never "who did this?" — it\'s "what made this possible?"',
     },
   ]
   const [active, setActive] = useState(0)
@@ -190,7 +190,7 @@ export function CodeReviewPrinciples() {
     {
       title: 'Explain the why',
       color: C.green,
-      bad: "\"Don't do it this way.\"",
+      bad: '"Don\'t do it this way."',
       good: '"Avoid mutable default args in Python — this dict is shared across all calls. Use None and initialise inside the function."',
       why: 'The author learns, not just changes.',
     },
@@ -305,7 +305,7 @@ export function MentoringTechniques() {
     {
       name: 'Show Your Work',
       color: C.blue,
-      desc: "When you solve something, narrate your thinking. \"I'm checking the logs first because... then I'm going to look at...\" Expose the process, not just the answer.",
+      desc: 'When you solve something, narrate your thinking. "I\'m checking the logs first because... then I\'m going to look at..." Expose the process, not just the answer.',
       when: 'Pair programming, live debugging, architecture sessions',
     },
     {
