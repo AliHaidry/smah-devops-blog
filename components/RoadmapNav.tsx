@@ -83,10 +83,17 @@ function useActive(initial: ModuleId = 'overview') {
 export function RoadmapNav() {
   const [active, go] = useActive('overview')
   const topRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   const navigate = (id: ModuleId) => {
     go(id)
-    setTimeout(() => topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 40)
+    setTimeout(() => {
+      if (id === 'overview') {
+        topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      } else {
+        contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 40)
   }
 
   const mod = MODULES.find((m) => m.id === active)
@@ -289,7 +296,9 @@ export function RoadmapNav() {
       {/* ── Module header ───────────────────────────────────────────────────── */}
       {active !== 'overview' && mod && (
         <div
+          ref={contentRef}
           style={{
+            scrollMarginTop: '80px',
             marginTop: '20px',
             paddingBottom: '24px',
             borderBottom: '1px solid #27272a',
