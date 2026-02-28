@@ -90,13 +90,26 @@ export function RoadmapNav() {
     const id = pendingScrollRef.current
     if (!id) return
     pendingScrollRef.current = null
-    if (id === 'overview') {
-      topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    } else {
-      // ModuleSection renders a div with id={id} — scroll to it directly
-      const el = document.getElementById(id)
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+    // Use a small delay to ensure the DOM has fully updated after state change
+    const scrollToTarget = () => {
+      if (id === 'overview') {
+        const el = topRef.current
+        if (!el) return
+        const top = el.getBoundingClientRect().top + window.scrollY - 80
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+      } else {
+        const el = document.getElementById(id)
+        if (!el) return
+        const top = el.getBoundingClientRect().top + window.scrollY - 80
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+      }
     }
+
+    // Try immediately, then retry after 100ms in case of slow render
+    scrollToTarget()
+    const t = setTimeout(scrollToTarget, 100)
+    return () => clearTimeout(t)
   }, [active])
 
   const navigate = (id: ModuleId) => {
@@ -382,8 +395,17 @@ export function RoadmapNav() {
 
 export function ModuleSection({ id, children }: { id: ModuleId; children: React.ReactNode }) {
   const [active] = useActive()
-  if (active !== id) return null
-  return <div id={id} style={{ marginTop: '6px' }}>{children}</div>
+  return (
+    <div
+      id={id}
+      style={{
+        display: active === id ? 'block' : 'none',
+        marginTop: '6px',
+      }}
+    >
+      {children}
+    </div>
+  )
 }
 
 // ─── RoadmapFooter ────────────────────────────────────────────────────────────
