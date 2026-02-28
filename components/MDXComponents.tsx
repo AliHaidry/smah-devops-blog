@@ -1,82 +1,78 @@
-// components/MDXComponents.tsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Register ALL custom components here.
-// They become available in every .mdx file without any import.
-//
-// Usage in .mdx:
-//   <SOLIDExplorer />
-//   <Quiz question="..." opts={[...]} correct={1} explanations={[...]} />
-//
-// Rules (from tailwind-nextjs-starter-blog):
-//   1. Always use DEFAULT exports in component files (not named exports)
-//   2. Add 'use client' to any component using useState / useEffect
-//   3. Register the component name here exactly as you want to use it in MDX
-// ─────────────────────────────────────────────────────────────────────────────
-
-import { MDXComponents } from 'mdx/types'
+import TOCInline from 'pliny/ui/TOCInline'
+import Pre from 'pliny/ui/Pre'
+import BlogNewsletterForm from 'pliny/ui/BlogNewsletterForm'
+import type { MDXComponents } from 'mdx/types'
 import Image from './Image'
 import CustomLink from './Link'
+import TableWrapper from './TableWrapper'
+
+// ── Roadmap layout components ─────────────────────────────────────────────────
+import { RoadmapNav } from './RoadmapNav'
+import { CAPTheoremDiagram, ModuleSection, RoadmapFooter } from './learning/roadmap-wrappers'
 
 // ── Module 01: Foundations ────────────────────────────────────────────────────
 import BigOVisual, {
+  DataStructuresTable,
   AlgorithmPatterns,
   ComputationalThinkingPillars,
-  DataStructuresTable,
-  FoundationsChecklist,
-  LinuxCommands,
-  NetworkingConcepts,
   ProgrammingConcepts,
+  NetworkingConcepts,
+  LinuxCommands,
+  FoundationsChecklist,
 } from './learning/foundations'
 
 // ── Module 02: Systems Design ─────────────────────────────────────────────────
 import DesignFramework, {
-  CachingStrategies,
-  DistributedConceptsGrid,
-  ObservabilityPillars,
-  SecurityConceptsGrid,
-  SystemsDesignChecklist,
   TradeoffExplorer,
+  DistributedConceptsGrid,
+  CachingStrategies,
+  SecurityConceptsGrid,
+  ObservabilityPillars,
+  SystemsDesignChecklist,
 } from './learning/systems-design'
 
 // ── Module 04: AI / ML Engineering ───────────────────────────────────────────
 import MLConceptsGrid, {
-  AIChecklist,
-  AIDecisionTree,
-  MLOpsToolsTable,
   PromptPatternsTable,
   VectorDBComparison,
+  MLOpsToolsTable,
+  AIDecisionTree,
+  AIChecklist,
 } from './learning/ai-ml'
 
 // ── Module 05: Software Design & Craft ───────────────────────────────────────
 import NamingTaxonomy, {
-  APIDesignComparison,
-  ArchitectureExplorer,
-  CodeSmells,
-  CraftChecklist,
-  PatternExplorer,
   SOLIDExplorer,
+  PatternExplorer,
+  ArchitectureExplorer,
   TestingPyramid,
+  CodeSmells,
+  APIDesignComparison,
+  CraftChecklist,
 } from './learning/software-design'
 
 // ── Module 06: Communication & Influence ─────────────────────────────────────
 import DocumentTypesTable, {
   C4ModelDiagram,
   CodeReviewPrinciples,
-  CommChecklist,
-  MentoringTechniques,
   TechnicalToBusinessTable,
+  MentoringTechniques,
+  CommChecklist,
 } from './learning/communication'
 
-// ── Roadmap layout components ─────────────────────────────────────────────────
-import RoadmapNav from './RoadmapNav'
-import { CAPTheoremDiagram, ModuleSection, RoadmapFooter } from './learning/roadmap-wrappers'
 
-// ── Boilerplate defaults (keep these) ────────────────────────────────────────
+
 export const components: MDXComponents = {
   Image,
+  TOCInline,
   a: CustomLink,
+  pre: Pre,
+  table: TableWrapper,
+  BlogNewsletterForm,
 
-  // ── Module 01 ────────────────────────────────────────────────────────────
+  // ...your existing stuff (Image, TOCInline, a, pre, etc.)...
+
+ // ── Module 01 ────────────────────────────────────────────────────────────
   BigOVisual,
   DataStructuresTable,
   AlgorithmPatterns,
