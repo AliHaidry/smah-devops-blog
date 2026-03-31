@@ -1,0 +1,104 @@
+---
+title: 'Internet Gateway vs NAT Gateway on Azure'
+date: '2026-03-31'
+lastmod: '2026-03-31'
+tags: ['azure', 'networking', 'devops', 'cloud-architecture', 'interview-prep']
+draft: false
+summary: >
+  A senior DevOps deep-dive into one of the most commonly tested Azure networking
+  concepts — traffic direction, use cases, production architecture patterns, and
+  the one-line rule that wins interviews.
+images: ['/static/images/azure-gateway-explainer.png']
+authors: ['default']
+---
+
+import AzureGatewayExplainer from '@/components/AzureGatewayExplainer'
+// Component source: components/AzureGatewayExplainer.tsx
+
+There is a question that comes up in nearly every senior DevOps or cloud architecture
+interview that touches Azure networking:
+
+> *"What is the difference between an Internet Gateway and a NAT Gateway?"*
+
+The surface-level answer — one is inbound/outbound, the other is outbound-only — is
+table stakes. What interviewers are actually probing for is whether you can reason about
+**when** to use each, **how** they compose together in a production VNet, and **what
+breaks** when you choose the wrong one.
+
+The interactive explainer below covers all of it.
+
+<AzureGatewayExplainer />
+
+---
+
+## The One-Line Rule
+
+> **Internet Gateway (Public IP) = the internet can reach YOU.**
+> **NAT Gateway = YOU can reach the internet, but nobody can reach you back.**
+
+Everything else flows from that distinction.
+
+---
+
+## What Azure Actually Calls These
+
+Unlike AWS — which has a discrete `InternetGateway` resource you attach to a VPC —
+**Azure has no resource literally called "Internet Gateway."**
+
+Public internet access in Azure is achieved by:
+
+1. Assigning a **Public IP Address** resource to a NIC or Load Balancer
+2. Placing that resource in a subnet whose Route Table has a `0.0.0.0/0 → Internet` default route
+3. Configuring an **NSG** to permit the inbound traffic you want
+
+**Azure NAT Gateway**, on the other hand, _is_ a named, first-class Azure resource. You
+create it, assign one or more Public IP Addresses to it, and associate it with a subnet.
+All outbound traffic from VMs in that subnet is translated through the NAT Gateway's
+public IP — and no inbound connections can be initiated from the internet side.
+
+---
+
+## The 3-Tier Production Pattern
+
+In a well-architected Azure workload you will see both patterns used together:
+
+| Tier | Subnet | Internet Connectivity |
+|---|---|---|
+| Web / Load Balancer | **Public subnet** | Public IP — bidirectional, NSG-controlled |
+| App servers | **Private subnet + NAT GW** | NAT Gateway — outbound only |
+| Database / Key Vault | **Isolated subnet** | None — Private Endpoints only |
+
+This is exactly the architecture used in a production AKS private cluster: nodes live in
+a private subnet with NAT Gateway for pulling container images and reaching external APIs,
+while the Application Gateway or Azure Front Door in the public subnet handles all
+inbound user traffic.
+
+---
+
+## SNAT Port Exhaustion — The Production Gotcha
+
+The most common production incident related to this topic is **SNAT port exhaustion**.
+
+When VMs in a private subnet make outbound connections through a NAT Gateway, each
+connection consumes a SNAT port. A single NAT Gateway Public IP provides **64,000 SNAT
+ports**. At scale — many VMs making many simultaneous connections to the same destination
+— you can exhaust these ports, causing new outbound connections to fail silently.
+
+**Mitigation:** Attach multiple Public IPs to your NAT Gateway (up to 16), giving you up
+to 1,024,000 SNAT ports. Monitor `SNATConnectionCount` and `DroppedPackets` in Azure
+Monitor on the NAT Gateway resource.
+
+Without a NAT Gateway (using default Azure SNAT on a Load Balancer), the port limit is
+much lower and the public IP is **not static** — breaking any third-party IP whitelisting.
+This is why NAT Gateway is the correct default for private subnets in production, not an
+optional extra.
+
+---
+
+## Key Takeaways for Interviews
+
+- In Azure, "Internet Gateway" is a **pattern** (Public IP + Route Table), not a resource name
+- `Azure NAT Gateway` is a **real, managed resource** — always use it for private subnets that need outbound access
+- Default Azure SNAT (via Load Balancer) gives you a non-static IP and limited ports — avoid it in production
+- The correct production architecture layers **Public IP → NSG → Load Balancer** for ingress and **NAT Gateway** for egress from private resources
+- Each NAT Gateway public IP = 64,000 SNAT ports — scale by adding IPs, not by adding NAT Gateways
