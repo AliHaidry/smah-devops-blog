@@ -435,53 +435,62 @@ function Diagrams() {
               20.50.100.10
             </text>
 
-            {/* Animated flowing lines — bidirectional */}
+            {/* ── Arrow: Internet → Public IP (down) and return (up) ── */}
+            {/* 10px gap each side — lines start/end 2px away from element edges */}
             <line
-              x1="260"
-              y1="76"
-              x2="260"
-              y2="85"
-              stroke="#a78bfa"
-              strokeWidth="3"
-              className="agx-flow-fwd"
-            />
-            <line
-              x1="253"
-              y1="85"
-              x2="253"
-              y2="76"
-              stroke="#c4b5fd"
-              strokeWidth="1.8"
-              className="agx-flow-bwd"
-              opacity="0.55"
-            />
-            <line
-              x1="260"
-              y1="122"
-              x2="260"
-              y2="176"
+              x1="265"
+              y1="78"
+              x2="265"
+              y2="84"
               stroke="#a78bfa"
               strokeWidth="2.5"
               className="agx-flow-fwd"
             />
             <line
-              x1="253"
-              y1="176"
-              x2="253"
-              y2="122"
+              x1="255"
+              y1="84"
+              x2="255"
+              y2="78"
               stroke="#c4b5fd"
-              strokeWidth="1.8"
+              strokeWidth="1.6"
               className="agx-flow-bwd"
-              opacity="0.5"
+              opacity="0.6"
             />
+            <polygon points="265,84 259,75 271,75" fill="#a78bfa" />
+            <polygon points="255,78 249,87 261,87" fill="#c4b5fd" opacity="0.65" />
 
-            {/* Arrowheads */}
-            <polygon points="260,85 254,76 266,76" fill="#a78bfa" />
-            <polygon points="253,122 247,131 259,131" fill="#c4b5fd" opacity="0.7" />
-            <polygon points="260,176 254,167 266,167" fill="#a78bfa" />
+            {/* ── Arrow: Public IP → VM (down) and return (up) — 55px gap ── */}
+            <line
+              x1="265"
+              y1="124"
+              x2="265"
+              y2="175"
+              stroke="#a78bfa"
+              strokeWidth="2.5"
+              className="agx-flow-fwd"
+            />
+            <line
+              x1="255"
+              y1="175"
+              x2="255"
+              y2="124"
+              stroke="#c4b5fd"
+              strokeWidth="1.6"
+              className="agx-flow-bwd"
+              opacity="0.55"
+            />
+            <polygon points="265,175 259,164 271,164" fill="#a78bfa" />
+            <polygon points="255,124 249,135 261,135" fill="#c4b5fd" opacity="0.65" />
 
             {/* Travelling packet dot */}
-            <circle cx="260" cy="79" r="5" fill="#a78bfa" opacity="0.85" className="agx-pkt-down" />
+            <circle
+              cx="265"
+              cy="130"
+              r="5"
+              fill="#a78bfa"
+              opacity="0.85"
+              className="agx-pkt-down"
+            />
 
             {/* VM box */}
             <rect
@@ -1178,147 +1187,174 @@ function Production() {
         </text>
 
         {/* ══ ANIMATED ARROWS ══ */}
+
+        {/* Internet ↔ LB: centre column, clear 10px gaps each side */}
+        {/* Internet bottom=66, LB top=132 → 66px gap, lines span 68→130 */}
         <line
-          x1="260"
-          y1="66"
-          x2="260"
-          y2="131"
+          x1="265"
+          y1="68"
+          x2="265"
+          y2="130"
           stroke="#a78bfa"
           strokeWidth="2.5"
           className="agx-flow-fwd"
         />
         <line
-          x1="253"
-          y1="131"
-          x2="253"
-          y2="66"
+          x1="255"
+          y1="130"
+          x2="255"
+          y2="68"
           stroke="#c4b5fd"
           strokeWidth="1.5"
           className="agx-flow-bwd"
           opacity="0.5"
         />
-        <polygon points="260,131 254,120 266,120" fill="#a78bfa" />
-        <polygon points="253,66 247,77 259,77" fill="#c4b5fd" opacity="0.6" />
-        <text x="282" y="100" fill="#a78bfa" fontSize="11" fontFamily="monospace">
+        <polygon points="265,130 259,119 271,119" fill="#a78bfa" />
+        <polygon points="255,68 249,79 261,79" fill="#c4b5fd" opacity="0.6" />
+        <text x="282" y="102" fill="#a78bfa" fontSize="11" fontFamily="monospace">
           ⬆⬇ public
         </text>
+
+        {/* LB → Web VM 1: diagonal from LB left-centre to VM1 top-centre */}
+        {/* LB bottom=186, VM1 centre-x=140 top=196 → start (175,186) end (140,196) */}
         <line
-          x1="210"
-          y1="186"
-          x2="170"
-          y2="196"
+          x1="175"
+          y1="187"
+          x2="142"
+          y2="195"
           stroke="#a78bfa"
           strokeWidth="2"
           className="agx-flow-fwd"
         />
-        <polygon points="170,196 166,187 178,185" fill="#a78bfa" />
+        <polygon points="142,195 144,184 153,191" fill="#a78bfa" />
+
+        {/* LB → Web VM 2: symmetric right side */}
+        {/* VM2 centre-x=380, start (345,186) end (380,196) */}
         <line
-          x1="310"
-          y1="186"
-          x2="350"
-          y2="196"
+          x1="345"
+          y1="187"
+          x2="378"
+          y2="195"
           stroke="#a78bfa"
           strokeWidth="2"
           className="agx-flow-fwd"
         />
-        <polygon points="350,196 342,186 354,185" fill="#a78bfa" />
+        <polygon points="378,195 367,184 376,191" fill="#a78bfa" />
+
+        {/* Web VM 1 → App VM 1: straight down, centre-x=140 */}
+        {/* VM1 bottom=254, AppVM1 top=304 → 50px gap, lines span 256→302 */}
         <line
           x1="140"
-          y1="254"
+          y1="256"
           x2="140"
-          y2="304"
+          y2="302"
           stroke="#60a5fa"
           strokeWidth="2"
           className="agx-flow-fwd"
         />
-        <polygon points="140,304 134,293 146,293" fill="#60a5fa" />
+        <polygon points="140,302 134,291 146,291" fill="#60a5fa" />
+
+        {/* Web VM 2 → App VM 2: straight down, centre-x=380 */}
         <line
           x1="380"
-          y1="254"
+          y1="256"
           x2="380"
-          y2="304"
+          y2="302"
           stroke="#60a5fa"
           strokeWidth="2"
           className="agx-flow-fwd"
         />
-        <polygon points="380,304 374,293 386,293" fill="#60a5fa" />
-        <text x="430" y="282" fill="#60a5fa" fontSize="11" fontFamily="monospace">
+        <polygon points="380,302 374,291 386,291" fill="#60a5fa" />
+        <text x="404" y="280" fill="#60a5fa" fontSize="11" fontFamily="monospace">
           internal
         </text>
+
+        {/* App VM 1 → NAT GW: down from VM bottom (362) to NAT top (374) = 12px */}
+        {/* Use centre of VM1 (140) routing to NAT left-quarter (210) */}
         <line
-          x1="210"
+          x1="200"
           y1="362"
-          x2="210"
-          y2="374"
+          x2="200"
+          y2="372"
           stroke="#00d68f"
           strokeWidth="2"
           className="agx-flow-bwd"
         />
-        <polygon points="210,362 204,372 216,372" fill="#00d68f" />
+        <polygon points="200,362 194,372 206,372" fill="#00d68f" />
+
+        {/* App VM 2 → NAT GW: from VM2 (380) to NAT right-quarter (320) */}
         <line
-          x1="310"
+          x1="320"
           y1="362"
-          x2="310"
-          y2="374"
+          x2="320"
+          y2="372"
           stroke="#00d68f"
           strokeWidth="2"
           className="agx-flow-bwd"
         />
-        <polygon points="310,362 304,372 316,372" fill="#00d68f" />
+        <polygon points="320,362 314,372 326,372" fill="#00d68f" />
+
+        {/* NAT GW → Internet outbound: route via RIGHT side to avoid overlapping boxes */}
+        {/* NAT right edge=370, route right at x=490, up to y=50, then left to Internet */}
         <line
-          x1="150"
-          y1="394"
-          x2="30"
-          y2="394"
-          stroke="#00d68f"
-          strokeWidth="2"
-          className="agx-flow-bwd"
-        />
-        <line
-          x1="30"
-          y1="394"
-          x2="30"
-          y2="66"
+          x1="372"
+          y1="401"
+          x2="490"
+          y2="401"
           stroke="#00d68f"
           strokeWidth="2"
           className="agx-flow-bwd"
         />
         <line
-          x1="30"
-          y1="66"
-          x2="230"
-          y2="66"
+          x1="490"
+          y1="401"
+          x2="490"
+          y2="50"
           stroke="#00d68f"
           strokeWidth="2"
           className="agx-flow-bwd"
         />
-        <polygon points="230,66 219,60 219,72" fill="#00d68f" />
-        <text x="48" y="440" fill="#00d68f" fontSize="11" fontFamily="monospace">
-          outbound only
+        <line
+          x1="490"
+          y1="50"
+          x2="292"
+          y2="50"
+          stroke="#00d68f"
+          strokeWidth="2"
+          className="agx-flow-bwd"
+        />
+        <polygon points="292,50 303,44 303,56" fill="#00d68f" />
+        <text x="392" y="396" fill="#00d68f" fontSize="11" fontFamily="monospace">
+          outbound only →
         </text>
+
+        {/* App VM 1 → PostgreSQL: straight down, centre-x=145 */}
+        {/* AppVM1 bottom=362, PostgreSQL top=470 → 108px gap via DB subnet (enters at 446) */}
         <line
-          x1="140"
-          y1="362"
-          x2="140"
-          y2="444"
+          x1="145"
+          y1="364"
+          x2="145"
+          y2="468"
           stroke="#fbbf24"
           strokeWidth="2"
           className="agx-flow-fwd"
           strokeDasharray="6 4"
         />
-        <polygon points="140,444 134,433 146,433" fill="#fbbf24" />
+        <polygon points="145,468 139,457 151,457" fill="#fbbf24" />
+
+        {/* App VM 2 → Key Vault: straight down, centre-x=375 */}
         <line
-          x1="380"
-          y1="362"
+          x1="375"
+          y1="364"
           x2="375"
-          y2="444"
+          y2="468"
           stroke="#fb923c"
           strokeWidth="2"
           className="agx-flow-fwd"
           strokeDasharray="6 4"
         />
-        <polygon points="375,444 369,433 381,433" fill="#fb923c" />
-        <text x="430" y="410" fill="#fbbf24" fontSize="11" fontFamily="monospace">
+        <polygon points="375,468 369,457 381,457" fill="#fb923c" />
+        <text x="404" y="418" fill="#fbbf24" fontSize="11" fontFamily="monospace">
           private link
         </text>
       </svg>
