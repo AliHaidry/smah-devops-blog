@@ -276,7 +276,7 @@ function Overview() {
           <div className="mb-3 text-3xl">🌐</div>
           <h2 className="mb-1 font-sans text-lg font-bold text-violet-400">Internet Gateway</h2>
           <p className="mb-4 font-mono text-[11px] text-slate-500">
-            // Inbound + Outbound public traffic
+            {'// Inbound + Outbound public traffic'}
           </p>
           <ul className="space-y-2">
             {internetPoints.map((item) => (
@@ -296,7 +296,7 @@ function Overview() {
           <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-cyan-500 to-emerald-400" />
           <div className="mb-3 text-3xl">🔒</div>
           <h2 className="mb-1 font-sans text-lg font-bold text-cyan-400">NAT Gateway</h2>
-          <p className="mb-4 font-mono text-[11px] text-slate-500">// Outbound-only traffic</p>
+          <p className="mb-4 font-mono text-[11px] text-slate-500">{'// Outbound-only traffic'}</p>
           <ul className="space-y-2">
             {natPoints.map((item) => (
               <li key={item} className="relative pl-4 text-[13px] text-slate-400">
