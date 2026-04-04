@@ -1196,7 +1196,7 @@ function Production() {
           x2="265"
           y2="130"
           stroke="#a78bfa"
-          strokeWidth="2.5"
+          strokeWidth="1.5"
           className="agx-flow-fwd"
         />
         <line
@@ -1205,7 +1205,7 @@ function Production() {
           x2="255"
           y2="68"
           stroke="#c4b5fd"
-          strokeWidth="1.5"
+          strokeWidth="1.0"
           className="agx-flow-bwd"
           opacity="0.5"
         />
@@ -1223,7 +1223,7 @@ function Production() {
           x2="142"
           y2="195"
           stroke="#a78bfa"
-          strokeWidth="2"
+          strokeWidth="1"
           className="agx-flow-fwd"
         />
         <polygon points="142,195 144,184 153,191" fill="#a78bfa" />
@@ -1236,7 +1236,7 @@ function Production() {
           x2="378"
           y2="195"
           stroke="#a78bfa"
-          strokeWidth="2"
+          strokeWidth="1"
           className="agx-flow-fwd"
         />
         <polygon points="378,195 367,184 376,191" fill="#a78bfa" />
@@ -1277,7 +1277,7 @@ function Production() {
           x2="200"
           y2="372"
           stroke="#00d68f"
-          strokeWidth="2"
+          strokeWidth="1"
           className="agx-flow-bwd"
         />
         <polygon points="200,362 194,372 206,372" fill="#00d68f" />
@@ -1289,7 +1289,7 @@ function Production() {
           x2="320"
           y2="372"
           stroke="#00d68f"
-          strokeWidth="2"
+          strokeWidth="1"
           className="agx-flow-bwd"
         />
         <polygon points="320,362 314,372 326,372" fill="#00d68f" />
@@ -1302,7 +1302,7 @@ function Production() {
           x2="490"
           y2="401"
           stroke="#00d68f"
-          strokeWidth="2"
+          strokeWidth="1"
           className="agx-flow-bwd"
         />
         <line
@@ -1311,7 +1311,7 @@ function Production() {
           x2="490"
           y2="50"
           stroke="#00d68f"
-          strokeWidth="2"
+          strokeWidth="1"
           className="agx-flow-bwd"
         />
         <line
@@ -1320,7 +1320,7 @@ function Production() {
           x2="292"
           y2="50"
           stroke="#00d68f"
-          strokeWidth="2"
+          strokeWidth="1"
           className="agx-flow-bwd"
         />
         <polygon points="292,50 303,44 303,56" fill="#00d68f" />
@@ -1336,7 +1336,7 @@ function Production() {
           x2="145"
           y2="468"
           stroke="#fbbf24"
-          strokeWidth="2"
+          strokeWidth="1"
           className="agx-flow-fwd"
           strokeDasharray="6 4"
         />
@@ -1349,7 +1349,7 @@ function Production() {
           x2="375"
           y2="468"
           stroke="#fb923c"
-          strokeWidth="2"
+          strokeWidth="1"
           className="agx-flow-fwd"
           strokeDasharray="6 4"
         />
