@@ -1424,10 +1424,24 @@ export default function AzureGatewayExplainer() {
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [mounted, setMounted] = useState(false)
 
-  // Prevent SSR / hydration mismatch — animations only run client-side
+  // Return a skeleton before mount so the SSR prerender never instantiates
+  // any sub-component that calls useState — avoiding the prerender crash.
+  // React replaces the skeleton with the real component after hydration.
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  if (!mounted) {
+    return (
+      <div className="relative my-8 flex min-h-[420px] items-center justify-center overflow-hidden rounded-3xl border border-slate-700/50 bg-[#0a0e1a] shadow-2xl">
+        <div className="text-center">
+          <div className="mx-auto mb-3 h-2 w-48 animate-pulse rounded-full bg-slate-700/60" />
+          <div className="mx-auto mb-2 h-8 w-80 animate-pulse rounded-lg bg-slate-700/40" />
+          <div className="mx-auto h-4 w-64 animate-pulse rounded bg-slate-800/60" />
+        </div>
+      </div>
+    )
+  }
 
   const content: Record<TabId, ReactNode> = {
     overview: <Overview />,
@@ -1439,8 +1453,8 @@ export default function AzureGatewayExplainer() {
 
   return (
     <>
-      {/* Scoped @keyframes — safe in Next.js App Router + Contentlayer2 MDX */}
-      {mounted && <style dangerouslySetInnerHTML={{ __html: ANIMATION_STYLES }} />}
+      {/* Scoped @keyframes — injected client-side only, never during SSR */}
+      <style dangerouslySetInnerHTML={{ __html: ANIMATION_STYLES }} />
 
       <div className="relative my-8 overflow-hidden rounded-3xl border border-slate-700/50 bg-[#0a0e1a] p-6 shadow-2xl sm:p-8">
         {/* Ambient glow */}
@@ -1454,7 +1468,7 @@ export default function AzureGatewayExplainer() {
         />
 
         {/* Header */}
-        <div className={`relative mb-9 text-center ${mounted ? 'agx-hdr' : 'opacity-0'}`}>
+        <div className="agx-hdr relative mb-9 text-center">
           <span className="mb-3 inline-block rounded-full border border-sky-800/60 bg-sky-900/30 px-3 py-1 font-mono text-[10px] tracking-[2px] text-sky-400 uppercase">
             Azure Networking
           </span>
@@ -1467,9 +1481,7 @@ export default function AzureGatewayExplainer() {
         </div>
 
         {/* Tab bar */}
-        <div
-          className={`relative mb-7 flex gap-1 overflow-x-auto rounded-xl border border-slate-700/60 bg-slate-800/50 p-1 ${mounted ? 'agx-tabs' : 'opacity-0'}`}
-        >
+        <div className="agx-tabs relative mb-7 flex gap-1 overflow-x-auto rounded-xl border border-slate-700/60 bg-slate-800/50 p-1">
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -1486,7 +1498,7 @@ export default function AzureGatewayExplainer() {
         </div>
 
         {/* Content */}
-        <div className={`relative ${mounted ? 'agx-body' : 'opacity-0'}`}>{content[activeTab]}</div>
+        <div className="agx-body relative">{content[activeTab]}</div>
       </div>
     </>
   )
