@@ -340,62 +340,64 @@ function Overview() {
 
 function Diagrams() {
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    // Full-width stacked — each diagram gets the entire container width
+    <div className="space-y-6">
       {/* ── Internet Gateway ── */}
       <div className="agx-c1 overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900">
         <div className="flex items-center gap-3 border-b border-slate-700/60 px-6 py-4">
           <span className="agx-dot agx-dot-violet h-2.5 w-2.5 shrink-0 rounded-full bg-violet-400" />
           <span className="font-sans text-sm font-bold text-slate-100">Internet Gateway Flow</span>
-          <span className="ml-auto font-mono text-[10px] text-slate-500">Bidirectional ⬆⬇</span>
+          <span className="ml-auto font-mono text-[11px] text-slate-400">Bidirectional ⬆⬇</span>
         </div>
         <div className="p-6">
-          <svg viewBox="0 0 360 395" className="w-full" aria-label="Internet Gateway flow diagram">
+          {/* viewBox doubled in width → every element is twice as large on screen */}
+          <svg viewBox="0 0 520 420" className="w-full" aria-label="Internet Gateway flow diagram">
             {/* VNet */}
             <rect
               x="10"
-              y="96"
-              width="340"
-              height="289"
-              rx="12"
+              y="100"
+              width="500"
+              height="310"
+              rx="14"
               fill="rgba(15,23,42,0.85)"
               stroke="#1e3a5f"
-              strokeWidth="1.5"
+              strokeWidth="2"
             />
-            <text x="22" y="114" fill="#334155" fontSize="9" fontFamily="monospace">
+            <text x="28" y="122" fill="#334155" fontSize="13" fontFamily="monospace">
               Azure VNet
             </text>
             {/* Public Subnet */}
             <rect
               x="28"
-              y="124"
-              width="304"
-              height="251"
-              rx="8"
+              y="134"
+              width="464"
+              height="266"
+              rx="10"
               fill="rgba(124,58,237,0.06)"
               stroke="rgba(167,139,250,0.3)"
-              strokeWidth="1"
-              strokeDasharray="5 3"
+              strokeWidth="1.5"
+              strokeDasharray="7 4"
             />
-            <text x="40" y="141" fill="rgba(167,139,250,0.55)" fontSize="8" fontFamily="monospace">
-              Public Subnet 10.0.1.0/24
+            <text x="46" y="154" fill="rgba(167,139,250,0.65)" fontSize="12" fontFamily="monospace">
+              Public Subnet — 10.0.1.0/24
             </text>
             {/* Internet cloud */}
             <circle
-              cx="180"
-              cy="40"
-              r="30"
+              cx="260"
+              cy="42"
+              r="34"
               fill="rgba(124,58,237,0.14)"
               stroke="rgba(167,139,250,0.55)"
-              strokeWidth="1.5"
+              strokeWidth="2"
             />
-            <text x="180" y="36" fontSize="13" textAnchor="middle">
+            <text x="260" y="36" fontSize="18" textAnchor="middle">
               🌐
             </text>
             <text
-              x="180"
-              y="52"
+              x="260"
+              y="56"
               fill="#a78bfa"
-              fontSize="8"
+              fontSize="12"
               textAnchor="middle"
               fontFamily="monospace"
             >
@@ -403,30 +405,30 @@ function Diagrams() {
             </text>
             {/* Public IP pill */}
             <rect
-              x="118"
-              y="80"
-              width="124"
-              height="28"
-              rx="7"
+              x="160"
+              y="86"
+              width="200"
+              height="36"
+              rx="9"
               fill="rgba(167,139,250,0.15)"
               stroke="rgba(167,139,250,0.45)"
-              strokeWidth="1"
+              strokeWidth="1.5"
             />
             <text
-              x="180"
-              y="93"
+              x="260"
+              y="100"
               fill="#c4b5fd"
-              fontSize="7.5"
+              fontSize="11"
               textAnchor="middle"
               fontFamily="monospace"
             >
               Public IP
             </text>
             <text
-              x="180"
-              y="104"
+              x="260"
+              y="115"
               fill="#a78bfa"
-              fontSize="7.5"
+              fontSize="11"
               textAnchor="middle"
               fontFamily="monospace"
             >
@@ -435,78 +437,71 @@ function Diagrams() {
 
             {/* Animated flowing lines — bidirectional */}
             <line
-              x1="180"
-              y1="70"
-              x2="180"
-              y2="79"
+              x1="260"
+              y1="76"
+              x2="260"
+              y2="85"
               stroke="#a78bfa"
-              strokeWidth="2.2"
+              strokeWidth="3"
               className="agx-flow-fwd"
             />
             <line
-              x1="175"
-              y1="79"
-              x2="175"
-              y2="70"
+              x1="253"
+              y1="85"
+              x2="253"
+              y2="76"
               stroke="#c4b5fd"
-              strokeWidth="1.3"
+              strokeWidth="1.8"
               className="agx-flow-bwd"
               opacity="0.55"
             />
             <line
-              x1="180"
-              y1="108"
-              x2="180"
-              y2="164"
+              x1="260"
+              y1="122"
+              x2="260"
+              y2="176"
               stroke="#a78bfa"
-              strokeWidth="2"
+              strokeWidth="2.5"
               className="agx-flow-fwd"
             />
             <line
-              x1="175"
-              y1="164"
-              x2="175"
-              y2="108"
+              x1="253"
+              y1="176"
+              x2="253"
+              y2="122"
               stroke="#c4b5fd"
-              strokeWidth="1.3"
+              strokeWidth="1.8"
               className="agx-flow-bwd"
               opacity="0.5"
             />
 
             {/* Arrowheads */}
-            <polygon points="180,79  175,71  185,71" fill="#a78bfa" />
-            <polygon points="175,108 170,116 180,116" fill="#c4b5fd" opacity="0.7" />
-            <polygon points="180,164 175,156 185,156" fill="#a78bfa" />
+            <polygon points="260,85 254,76 266,76" fill="#a78bfa" />
+            <polygon points="253,122 247,131 259,131" fill="#c4b5fd" opacity="0.7" />
+            <polygon points="260,176 254,167 266,167" fill="#a78bfa" />
 
             {/* Travelling packet dot */}
-            <circle
-              cx="180"
-              cy="74"
-              r="3.8"
-              fill="#a78bfa"
-              opacity="0.85"
-              className="agx-pkt-down"
-            />
+            <circle cx="260" cy="79" r="5" fill="#a78bfa" opacity="0.85" className="agx-pkt-down" />
 
             {/* VM box */}
             <rect
-              x="85"
-              y="165"
-              width="190"
-              height="68"
-              rx="10"
+              x="100"
+              y="177"
+              width="320"
+              height="86"
+              rx="12"
               fill="rgba(15,23,42,0.95)"
               stroke="rgba(167,139,250,0.55)"
-              strokeWidth="1.5"
+              strokeWidth="2"
             />
-            <text x="180" y="190" fontSize="16" textAnchor="middle">
+            <text x="260" y="208" fontSize="22" textAnchor="middle">
               🖥️
             </text>
             <text
-              x="180"
-              y="210"
+              x="260"
+              y="232"
               fill="#e2e8f0"
-              fontSize="10"
+              fontSize="15"
               textAnchor="middle"
               fontFamily="sans-serif"
               fontWeight="600"
@@ -514,10 +509,10 @@ function Diagrams() {
               VM / Web Server
             </text>
             <text
-              x="180"
-              y="223"
-              fill="#475569"
-              fontSize="7"
+              x="260"
+              y="251"
+              fill="#64748b"
+              fontSize="11"
               textAnchor="middle"
               fontFamily="monospace"
             >
@@ -526,70 +521,71 @@ function Diagrams() {
 
             {/* NSG */}
             <rect
-              x="48"
-              y="254"
-              width="264"
-              height="36"
-              rx="8"
+              x="40"
+              y="278"
+              width="440"
+              height="46"
+              rx="10"
               fill="rgba(251,146,60,0.07)"
               stroke="rgba(251,146,60,0.3)"
-              strokeWidth="1"
+              strokeWidth="1.5"
             />
             <text
-              x="180"
-              y="269"
+              x="260"
+              y="296"
               fill="#fb923c"
-              fontSize="8"
+              fontSize="12"
               textAnchor="middle"
               fontFamily="monospace"
             >
               🛡 NSG
             </text>
             <text
-              x="180"
-              y="281"
-              fill="#475569"
-              fontSize="7"
+              x="260"
+              y="313"
+              fill="#64748b"
+              fontSize="11"
               textAnchor="middle"
               fontFamily="monospace"
             >
               Inbound: Allow 80, 443 · Outbound: Allow All
             </text>
+
             {/* Route Table */}
             <rect
-              x="48"
-              y="300"
-              width="264"
-              height="30"
-              rx="8"
+              x="40"
+              y="334"
+              width="440"
+              height="40"
+              rx="10"
               fill="rgba(96,165,250,0.07)"
               stroke="rgba(96,165,250,0.27)"
-              strokeWidth="1"
+              strokeWidth="1.5"
             />
             <text
-              x="180"
-              y="313"
+              x="260"
+              y="350"
               fill="#60a5fa"
-              fontSize="8"
+              fontSize="12"
               textAnchor="middle"
               fontFamily="monospace"
             >
               📋 Route Table
             </text>
             <text
-              x="180"
-              y="324"
-              fill="#475569"
-              fontSize="7"
+              x="260"
+              y="366"
+              fill="#64748b"
+              fontSize="11"
               textAnchor="middle"
               fontFamily="monospace"
             >
               0.0.0.0/0 → Internet (default)
             </text>
           </svg>
-          <div className="mt-3 rounded-lg border border-violet-900/40 bg-violet-950/20 p-3">
-            <p className="mb-1 font-mono text-[10px] text-violet-400">How it works in Azure</p>
-            <p className="text-[11px] leading-relaxed text-slate-500">
+          <div className="mt-4 rounded-lg border border-violet-900/40 bg-violet-950/20 p-4">
+            <p className="mb-1 font-mono text-xs text-violet-400">How it works in Azure</p>
+            <p className="text-sm leading-relaxed text-slate-400">
               No standalone "Internet Gateway" resource exists in Azure. Internet access is achieved
               by assigning a <span className="text-violet-300">Public IP</span> to a NIC or Load
               Balancer and configuring the Route Table with a default internet route. The{' '}
@@ -605,56 +601,56 @@ function Diagrams() {
         <div className="flex items-center gap-3 border-b border-slate-700/60 px-6 py-4">
           <span className="agx-dot agx-dot-cyan h-2.5 w-2.5 shrink-0 rounded-full bg-cyan-400" />
           <span className="font-sans text-sm font-bold text-slate-100">NAT Gateway Flow</span>
-          <span className="ml-auto font-mono text-[10px] text-slate-500">Outbound Only ⬆</span>
+          <span className="ml-auto font-mono text-[11px] text-slate-400">Outbound Only ⬆</span>
         </div>
         <div className="p-6">
-          <svg viewBox="0 0 360 395" className="w-full" aria-label="NAT Gateway flow diagram">
+          <svg viewBox="0 0 520 420" className="w-full" aria-label="NAT Gateway flow diagram">
             {/* VNet */}
             <rect
               x="10"
-              y="96"
-              width="340"
-              height="289"
-              rx="12"
+              y="100"
+              width="500"
+              height="310"
+              rx="14"
               fill="rgba(15,23,42,0.85)"
               stroke="#1e3a5f"
-              strokeWidth="1.5"
+              strokeWidth="2"
             />
-            <text x="22" y="114" fill="#334155" fontSize="9" fontFamily="monospace">
+            <text x="28" y="122" fill="#334155" fontSize="13" fontFamily="monospace">
               Azure VNet
             </text>
             {/* Private Subnet */}
             <rect
               x="28"
-              y="124"
-              width="304"
-              height="251"
-              rx="8"
+              y="134"
+              width="464"
+              height="266"
+              rx="10"
               fill="rgba(0,180,216,0.04)"
               stroke="rgba(34,211,238,0.22)"
-              strokeWidth="1"
-              strokeDasharray="5 3"
+              strokeWidth="1.5"
+              strokeDasharray="7 4"
             />
-            <text x="40" y="141" fill="rgba(34,211,238,0.45)" fontSize="8" fontFamily="monospace">
-              Private Subnet 10.0.2.0/24
+            <text x="46" y="154" fill="rgba(34,211,238,0.55)" fontSize="12" fontFamily="monospace">
+              Private Subnet — 10.0.2.0/24
             </text>
             {/* Internet cloud */}
             <circle
-              cx="180"
-              cy="40"
-              r="30"
+              cx="260"
+              cy="42"
+              r="34"
               fill="rgba(0,180,216,0.09)"
               stroke="rgba(34,211,238,0.4)"
-              strokeWidth="1.5"
+              strokeWidth="2"
             />
-            <text x="180" y="36" fontSize="13" textAnchor="middle">
+            <text x="260" y="36" fontSize="18" textAnchor="middle">
               🌐
             </text>
             <text
-              x="180"
-              y="52"
+              x="260"
+              y="56"
               fill="#22d3ee"
-              fontSize="8"
+              fontSize="12"
               textAnchor="middle"
               fontFamily="monospace"
             >
@@ -663,20 +659,20 @@ function Diagrams() {
 
             {/* NAT Gateway pill */}
             <rect
-              x="106"
-              y="78"
-              width="148"
-              height="32"
-              rx="8"
+              x="140"
+              y="84"
+              width="240"
+              height="40"
+              rx="10"
               fill="rgba(0,214,143,0.1)"
               stroke="rgba(0,214,143,0.52)"
-              strokeWidth="1.8"
+              strokeWidth="2"
             />
             <text
-              x="180"
-              y="93"
+              x="260"
+              y="101"
               fill="#00d68f"
-              fontSize="9"
+              fontSize="13"
               textAnchor="middle"
               fontFamily="sans-serif"
               fontWeight="700"
@@ -684,71 +680,71 @@ function Diagrams() {
               🔄 NAT Gateway
             </text>
             <text
-              x="180"
-              y="105"
-              fill="#475569"
-              fontSize="7"
+              x="260"
+              y="117"
+              fill="#64748b"
+              fontSize="11"
               textAnchor="middle"
               fontFamily="monospace"
             >
               Public IP: 20.50.200.99
             </text>
 
-            {/* Outbound-only animated line (upward) */}
+            {/* Outbound-only animated line */}
             <line
-              x1="180"
-              y1="78"
-              x2="180"
-              y2="70"
+              x1="260"
+              y1="84"
+              x2="260"
+              y2="76"
+              stroke="#00d68f"
+              strokeWidth="3"
+              className="agx-flow-bwd"
+            />
+            <polygon points="260,76 254,84 266,84" fill="#00d68f" />
+
+            {/* VM → NAT outbound */}
+            <line
+              x1="260"
+              y1="124"
+              x2="260"
+              y2="177"
               stroke="#00d68f"
               strokeWidth="2.5"
               className="agx-flow-bwd"
             />
-            <polygon points="180,70  175,77  185,77" fill="#00d68f" />
-
-            {/* VM → NAT outbound */}
-            <line
-              x1="180"
-              y1="112"
-              x2="180"
-              y2="164"
-              stroke="#00d68f"
-              strokeWidth="2"
-              className="agx-flow-bwd"
-            />
-            <polygon points="180,112 175,120 185,120" fill="#00d68f" />
+            <polygon points="260,124 254,133 266,133" fill="#00d68f" />
 
             {/* Travelling packet (upward) */}
-            <circle cx="180" cy="160" r="3.8" fill="#00d68f" opacity="0.9" className="agx-pkt-up" />
+            <circle cx="260" cy="170" r="5" fill="#00d68f" opacity="0.9" className="agx-pkt-up" />
 
             {/* Blocked inbound X */}
             <g className="agx-blocked">
-              <line x1="144" y1="50" x2="162" y2="68" stroke="#f87171" strokeWidth="2.2" />
-              <line x1="162" y1="50" x2="144" y2="68" stroke="#f87171" strokeWidth="2.2" />
-              <text x="132" y="47" fill="#f87171" fontSize="7" fontFamily="monospace">
+              <line x1="200" y1="52" x2="224" y2="76" stroke="#f87171" strokeWidth="3" />
+              <line x1="224" y1="52" x2="200" y2="76" stroke="#f87171" strokeWidth="3" />
+              <text x="186" y="48" fill="#f87171" fontSize="11" fontFamily="monospace">
                 BLOCKED
               </text>
             </g>
 
             {/* VM box */}
             <rect
-              x="85"
-              y="165"
-              width="190"
-              height="68"
-              rx="10"
+              x="100"
+              y="178"
+              width="320"
+              height="86"
+              rx="12"
               fill="rgba(15,23,42,0.95)"
               stroke="rgba(34,211,238,0.4)"
-              strokeWidth="1.5"
+              strokeWidth="2"
             />
-            <text x="180" y="190" fontSize="16" textAnchor="middle">
+            <text x="260" y="209" fontSize="22" textAnchor="middle">
               ⚙️
             </text>
             <text
-              x="180"
-              y="210"
+              x="260"
+              y="233"
               fill="#e2e8f0"
-              fontSize="10"
+              fontSize="15"
               textAnchor="middle"
               fontFamily="sans-serif"
               fontWeight="600"
@@ -756,10 +752,10 @@ function Diagrams() {
               VM / App Server
             </text>
             <text
-              x="180"
-              y="223"
-              fill="#475569"
-              fontSize="7"
+              x="260"
+              y="252"
+              fill="#64748b"
+              fontSize="11"
               textAnchor="middle"
               fontFamily="monospace"
             >
@@ -768,70 +764,71 @@ function Diagrams() {
 
             {/* NSG */}
             <rect
-              x="48"
-              y="254"
-              width="264"
-              height="36"
-              rx="8"
+              x="40"
+              y="279"
+              width="440"
+              height="46"
+              rx="10"
               fill="rgba(251,146,60,0.06)"
               stroke="rgba(251,146,60,0.24)"
-              strokeWidth="1"
+              strokeWidth="1.5"
             />
             <text
-              x="180"
-              y="269"
+              x="260"
+              y="297"
               fill="#fb923c"
-              fontSize="8"
+              fontSize="12"
               textAnchor="middle"
               fontFamily="monospace"
             >
               🛡 NSG
             </text>
             <text
-              x="180"
-              y="281"
-              fill="#475569"
-              fontSize="7"
+              x="260"
+              y="314"
+              fill="#64748b"
+              fontSize="11"
               textAnchor="middle"
               fontFamily="monospace"
             >
               Inbound: Deny All from Internet · Outbound: Allow
             </text>
+
             {/* Route Table */}
             <rect
-              x="48"
-              y="300"
-              width="264"
-              height="30"
-              rx="8"
+              x="40"
+              y="335"
+              width="440"
+              height="40"
+              rx="10"
               fill="rgba(0,214,143,0.06)"
               stroke="rgba(0,214,143,0.24)"
-              strokeWidth="1"
+              strokeWidth="1.5"
             />
             <text
-              x="180"
-              y="313"
+              x="260"
+              y="351"
               fill="#00d68f"
-              fontSize="8"
+              fontSize="12"
               textAnchor="middle"
               fontFamily="monospace"
             >
               📋 Route Table
             </text>
             <text
-              x="180"
-              y="324"
-              fill="#475569"
-              fontSize="7"
+              x="260"
+              y="367"
+              fill="#64748b"
+              fontSize="11"
               textAnchor="middle"
               fontFamily="monospace"
             >
               0.0.0.0/0 → NAT Gateway
             </text>
           </svg>
-          <div className="mt-3 rounded-lg border border-cyan-900/40 bg-cyan-950/20 p-3">
-            <p className="mb-1 font-mono text-[10px] text-cyan-400">How it works in Azure</p>
-            <p className="text-[11px] leading-relaxed text-slate-500">
+          <div className="mt-4 rounded-lg border border-cyan-900/40 bg-cyan-950/20 p-4">
+            <p className="mb-1 font-mono text-xs text-cyan-400">How it works in Azure</p>
+            <p className="text-sm leading-relaxed text-slate-400">
               <span className="text-cyan-300">Azure NAT Gateway</span> is a fully managed resource
               attached to a subnet. VMs get <span className="text-cyan-300">no public IP</span> and
               cannot be reached from the internet — but they CAN initiate outbound connections. NAT
@@ -883,81 +880,81 @@ function Production() {
       </p>
 
       <svg
-        viewBox="0 0 920 302"
+        viewBox="0 0 520 680"
         className="w-full"
         aria-label="Production 3-tier Azure architecture"
       >
-        {/* Internet */}
+        {/* ── Internet (top) ── */}
         <circle
-          cx="56"
-          cy="151"
-          r="44"
-          fill="rgba(124,58,237,0.08)"
-          stroke="rgba(167,139,250,0.4)"
-          strokeWidth="1.5"
+          cx="260"
+          cy="36"
+          r="30"
+          fill="rgba(124,58,237,0.1)"
+          stroke="rgba(167,139,250,0.45)"
+          strokeWidth="2"
         />
-        <text x="56" y="146" fontSize="16" textAnchor="middle">
+        <text x="260" y="30" fontSize="16" textAnchor="middle">
           🌐
         </text>
-        <text x="56" y="163" fill="#a78bfa" fontSize="8" textAnchor="middle" fontFamily="monospace">
-          Internet
-        </text>
-
-        {/* VNet */}
-        <rect
-          x="116"
-          y="18"
-          width="790"
-          height="266"
-          rx="14"
-          fill="rgba(15,23,42,0.6)"
-          stroke="#1e3a5f"
-          strokeWidth="1.5"
-        />
-        <text x="132" y="36" fill="#334155" fontSize="9" fontFamily="monospace">
-          Azure VNet 10.0.0.0/16
-        </text>
-
-        {/* Public Subnet */}
-        <rect
-          x="132"
-          y="46"
-          width="206"
-          height="218"
-          rx="10"
-          fill="rgba(124,58,237,0.05)"
-          stroke="rgba(167,139,250,0.28)"
-          strokeWidth="1"
-          strokeDasharray="4 3"
-        />
         <text
-          x="235"
-          y="62"
-          fill="rgba(167,139,250,0.45)"
-          fontSize="8"
+          x="260"
+          y="50"
+          fill="#a78bfa"
+          fontSize="12"
           textAnchor="middle"
           fontFamily="monospace"
         >
+          Internet
+        </text>
+
+        {/* ── VNet outer box ── */}
+        <rect
+          x="10"
+          y="76"
+          width="500"
+          height="594"
+          rx="14"
+          fill="rgba(15,23,42,0.6)"
+          stroke="#1e3a5f"
+          strokeWidth="2"
+        />
+        <text x="28" y="96" fill="#334155" fontSize="12" fontFamily="monospace">
+          Azure VNet 10.0.0.0/16
+        </text>
+
+        {/* ══ TIER 1 — Public Subnet ══ */}
+        <rect
+          x="26"
+          y="106"
+          width="468"
+          height="160"
+          rx="10"
+          fill="rgba(124,58,237,0.05)"
+          stroke="rgba(167,139,250,0.3)"
+          strokeWidth="1.5"
+          strokeDasharray="6 4"
+        />
+        <text x="44" y="124" fill="rgba(167,139,250,0.6)" fontSize="12" fontFamily="monospace">
           Public Subnet
         </text>
         <rect
-          x="158"
-          y="72"
-          width="154"
-          height="46"
-          rx="8"
+          x="150"
+          y="132"
+          width="220"
+          height="54"
+          rx="10"
           fill="rgba(15,23,42,0.95)"
-          stroke="rgba(167,139,250,0.5)"
-          strokeWidth="1.5"
+          stroke="rgba(167,139,250,0.55)"
+          strokeWidth="2"
         />
-        <text x="235" y="92" fontSize="12" textAnchor="middle">
+        <text x="260" y="153" fontSize="16" textAnchor="middle">
           ⚖️
         </text>
         <text
-          x="235"
-          y="109"
+          x="260"
+          y="174"
           fill="#c4b5fd"
-          fontSize="9"
+          fontSize="13"
           textAnchor="middle"
           fontFamily="sans-serif"
           fontWeight="600"
@@ -965,184 +962,170 @@ function Production() {
           Load Balancer
         </text>
         <rect
-          x="150"
-          y="136"
-          width="64"
-          height="46"
-          rx="6"
+          x="60"
+          y="196"
+          width="160"
+          height="58"
+          rx="8"
           fill="rgba(15,23,42,0.85)"
-          stroke="rgba(167,139,250,0.3)"
-          strokeWidth="1"
+          stroke="rgba(167,139,250,0.35)"
+          strokeWidth="1.5"
         />
-        <text x="182" y="156" fontSize="10" textAnchor="middle">
+        <text x="140" y="221" fontSize="16" textAnchor="middle">
           🖥️
         </text>
         <text
-          x="182"
-          y="172"
+          x="140"
+          y="242"
           fill="#94a3b8"
-          fontSize="7"
+          fontSize="12"
           textAnchor="middle"
           fontFamily="monospace"
         >
-          Web VM
+          Web VM 1
         </text>
         <rect
-          x="258"
-          y="136"
-          width="64"
-          height="46"
-          rx="6"
+          x="300"
+          y="196"
+          width="160"
+          height="58"
+          rx="8"
           fill="rgba(15,23,42,0.85)"
-          stroke="rgba(167,139,250,0.3)"
-          strokeWidth="1"
+          stroke="rgba(167,139,250,0.35)"
+          strokeWidth="1.5"
         />
-        <text x="290" y="156" fontSize="10" textAnchor="middle">
+        <text x="380" y="221" fontSize="16" textAnchor="middle">
           🖥️
         </text>
         <text
-          x="290"
-          y="172"
+          x="380"
+          y="242"
           fill="#94a3b8"
-          fontSize="7"
+          fontSize="12"
           textAnchor="middle"
           fontFamily="monospace"
         >
-          Web VM
+          Web VM 2
         </text>
 
-        {/* Private Subnet */}
+        {/* ══ TIER 2 — Private Subnet ══ */}
         <rect
-          x="370"
-          y="46"
-          width="206"
-          height="218"
+          x="26"
+          y="278"
+          width="468"
+          height="180"
           rx="10"
           fill="rgba(0,180,216,0.04)"
-          stroke="rgba(34,211,238,0.22)"
-          strokeWidth="1"
-          strokeDasharray="4 3"
+          stroke="rgba(34,211,238,0.25)"
+          strokeWidth="1.5"
+          strokeDasharray="6 4"
         />
-        <text
-          x="473"
-          y="62"
-          fill="rgba(34,211,238,0.45)"
-          fontSize="8"
-          textAnchor="middle"
-          fontFamily="monospace"
-        >
+        <text x="44" y="296" fill="rgba(34,211,238,0.6)" fontSize="12" fontFamily="monospace">
           Private Subnet
         </text>
         <rect
-          x="384"
-          y="72"
-          width="64"
-          height="46"
-          rx="6"
-          fill="rgba(15,23,42,0.85)"
-          stroke="rgba(34,211,238,0.32)"
-          strokeWidth="1"
-        />
-        <text x="416" y="92" fontSize="10" textAnchor="middle">
-          ⚙️
-        </text>
-        <text
-          x="416"
-          y="108"
-          fill="#94a3b8"
-          fontSize="7"
-          textAnchor="middle"
-          fontFamily="monospace"
-        >
-          App VM
-        </text>
-        <rect
-          x="494"
-          y="72"
-          width="64"
-          height="46"
-          rx="6"
-          fill="rgba(15,23,42,0.85)"
-          stroke="rgba(34,211,238,0.32)"
-          strokeWidth="1"
-        />
-        <text x="526" y="92" fontSize="10" textAnchor="middle">
-          ⚙️
-        </text>
-        <text
-          x="526"
-          y="108"
-          fill="#94a3b8"
-          fontSize="7"
-          textAnchor="middle"
-          fontFamily="monospace"
-        >
-          App VM
-        </text>
-        <rect
-          x="386"
-          y="148"
-          width="156"
-          height="44"
+          x="60"
+          y="304"
+          width="160"
+          height="58"
           rx="8"
-          fill="rgba(0,214,143,0.08)"
-          stroke="rgba(0,214,143,0.44)"
+          fill="rgba(15,23,42,0.85)"
+          stroke="rgba(34,211,238,0.35)"
           strokeWidth="1.5"
         />
-        <text x="464" y="167" fontSize="11" textAnchor="middle">
+        <text x="140" y="329" fontSize="16" textAnchor="middle">
+          ⚙️
+        </text>
+        <text
+          x="140"
+          y="350"
+          fill="#94a3b8"
+          fontSize="12"
+          textAnchor="middle"
+          fontFamily="monospace"
+        >
+          App VM 1
+        </text>
+        <rect
+          x="300"
+          y="304"
+          width="160"
+          height="58"
+          rx="8"
+          fill="rgba(15,23,42,0.85)"
+          stroke="rgba(34,211,238,0.35)"
+          strokeWidth="1.5"
+        />
+        <text x="380" y="329" fontSize="16" textAnchor="middle">
+          ⚙️
+        </text>
+        <text
+          x="380"
+          y="350"
+          fill="#94a3b8"
+          fontSize="12"
+          textAnchor="middle"
+          fontFamily="monospace"
+        >
+          App VM 2
+        </text>
+        <rect
+          x="150"
+          y="374"
+          width="220"
+          height="54"
+          rx="10"
+          fill="rgba(0,214,143,0.09)"
+          stroke="rgba(0,214,143,0.5)"
+          strokeWidth="2"
+        />
+        <text x="260" y="396" fontSize="16" textAnchor="middle">
           🔄
         </text>
         <text
-          x="464"
-          y="183"
+          x="260"
+          y="416"
           fill="#00d68f"
-          fontSize="8"
+          fontSize="13"
           textAnchor="middle"
           fontFamily="monospace"
         >
           NAT Gateway
         </text>
 
-        {/* DB Subnet */}
+        {/* ══ TIER 3 — DB Subnet ══ */}
         <rect
-          x="610"
-          y="46"
-          width="280"
-          height="218"
+          x="26"
+          y="444"
+          width="468"
+          height="212"
           rx="10"
           fill="rgba(255,209,102,0.03)"
-          stroke="rgba(255,209,102,0.18)"
-          strokeWidth="1"
-          strokeDasharray="4 3"
+          stroke="rgba(255,209,102,0.2)"
+          strokeWidth="1.5"
+          strokeDasharray="6 4"
         />
-        <text
-          x="750"
-          y="62"
-          fill="rgba(255,209,102,0.38)"
-          fontSize="8"
-          textAnchor="middle"
-          fontFamily="monospace"
-        >
+        <text x="44" y="462" fill="rgba(255,209,102,0.5)" fontSize="12" fontFamily="monospace">
           DB Subnet (fully private)
         </text>
         <rect
-          x="628"
-          y="78"
-          width="172"
-          height="56"
-          rx="8"
+          x="50"
+          y="470"
+          width="190"
+          height="72"
+          rx="10"
           fill="rgba(15,23,42,0.95)"
-          stroke="rgba(255,209,102,0.34)"
-          strokeWidth="1.5"
+          stroke="rgba(255,209,102,0.4)"
+          strokeWidth="2"
         />
-        <text x="714" y="102" fontSize="14" textAnchor="middle">
+        <text x="145" y="500" fontSize="20" textAnchor="middle">
           🗄️
         </text>
         <text
-          x="714"
-          y="122"
+          x="145"
+          y="524"
           fill="#fbbf24"
-          fontSize="9"
+          fontSize="13"
           textAnchor="middle"
           fontFamily="sans-serif"
           fontWeight="600"
@@ -1150,158 +1133,194 @@ function Production() {
           PostgreSQL Flexible
         </text>
         <rect
-          x="628"
-          y="150"
-          width="172"
-          height="54"
-          rx="8"
+          x="280"
+          y="470"
+          width="190"
+          height="72"
+          rx="10"
           fill="rgba(15,23,42,0.95)"
-          stroke="rgba(251,146,60,0.3)"
-          strokeWidth="1.5"
+          stroke="rgba(251,146,60,0.35)"
+          strokeWidth="2"
         />
-        <text x="714" y="173" fontSize="12" textAnchor="middle">
+        <text x="375" y="500" fontSize="20" textAnchor="middle">
           🔑
         </text>
         <text
-          x="714"
-          y="193"
+          x="375"
+          y="524"
           fill="#fb923c"
-          fontSize="9"
+          fontSize="13"
           textAnchor="middle"
           fontFamily="sans-serif"
           fontWeight="600"
         >
           Key Vault
         </text>
+        <text
+          x="145"
+          y="556"
+          fill="#64748b"
+          fontSize="11"
+          textAnchor="middle"
+          fontFamily="monospace"
+        >
+          Private Endpoint
+        </text>
+        <text
+          x="375"
+          y="556"
+          fill="#64748b"
+          fontSize="11"
+          textAnchor="middle"
+          fontFamily="monospace"
+        >
+          Private Endpoint
+        </text>
 
-        {/* ── Animated arrows ── */}
-
-        {/* Internet ↔ LB  (bidirectional) */}
+        {/* ══ ANIMATED ARROWS ══ */}
         <line
-          x1="100"
-          y1="140"
-          x2="156"
-          y2="106"
+          x1="260"
+          y1="66"
+          x2="260"
+          y2="131"
+          stroke="#a78bfa"
+          strokeWidth="2.5"
+          className="agx-flow-fwd"
+        />
+        <line
+          x1="253"
+          y1="131"
+          x2="253"
+          y2="66"
+          stroke="#c4b5fd"
+          strokeWidth="1.5"
+          className="agx-flow-bwd"
+          opacity="0.5"
+        />
+        <polygon points="260,131 254,120 266,120" fill="#a78bfa" />
+        <polygon points="253,66 247,77 259,77" fill="#c4b5fd" opacity="0.6" />
+        <text x="282" y="100" fill="#a78bfa" fontSize="11" fontFamily="monospace">
+          ⬆⬇ public
+        </text>
+        <line
+          x1="210"
+          y1="186"
+          x2="170"
+          y2="196"
           stroke="#a78bfa"
           strokeWidth="2"
           className="agx-flow-fwd"
         />
+        <polygon points="170,196 166,187 178,185" fill="#a78bfa" />
         <line
-          x1="103"
-          y1="145"
-          x2="159"
-          y2="111"
-          stroke="#c4b5fd"
-          strokeWidth="1.2"
-          className="agx-flow-bwd"
-          opacity="0.5"
-        />
-        <polygon points="156,106 147,107 151,115" fill="#a78bfa" />
-        <polygon points="100,140 108,133 104,142" fill="#c4b5fd" opacity="0.65" />
-
-        {/* LB → Web VMs */}
-        <line
-          x1="212"
-          y1="118"
-          x2="190"
-          y2="134"
+          x1="310"
+          y1="186"
+          x2="350"
+          y2="196"
           stroke="#a78bfa"
-          strokeWidth="1.5"
+          strokeWidth="2"
           className="agx-flow-fwd"
         />
-        <polygon points="190,134 185,126 194,126" fill="#a78bfa" />
+        <polygon points="350,196 342,186 354,185" fill="#a78bfa" />
         <line
-          x1="258"
-          y1="118"
-          x2="278"
-          y2="134"
-          stroke="#a78bfa"
-          strokeWidth="1.5"
-          className="agx-flow-fwd"
-        />
-        <polygon points="278,134 273,126 282,126" fill="#a78bfa" />
-
-        {/* Web → App  internal */}
-        <line
-          x1="338"
-          y1="97"
-          x2="382"
-          y2="97"
+          x1="140"
+          y1="254"
+          x2="140"
+          y2="304"
           stroke="#60a5fa"
           strokeWidth="2"
           className="agx-flow-fwd"
         />
-        <polygon points="382,97 374,93 374,101" fill="#60a5fa" />
-        <text x="360" y="91" fill="#60a5fa" fontSize="7" textAnchor="middle" fontFamily="monospace">
-          internal
-        </text>
-
-        {/* App → NAT */}
+        <polygon points="140,304 134,293 146,293" fill="#60a5fa" />
         <line
-          x1="437"
-          y1="118"
-          x2="437"
-          y2="146"
-          stroke="#00d68f"
-          strokeWidth="1.6"
-          className="agx-flow-bwd"
-        />
-        <polygon points="437,118 432,126 442,126" fill="#00d68f" />
-
-        {/* NAT → Internet  outbound only */}
-        <line
-          x1="384"
-          y1="166"
-          x2="120"
-          y2="158"
-          stroke="#00d68f"
-          strokeWidth="1.8"
-          className="agx-flow-bwd"
-        />
-        <polygon points="120,158 129,154 128,162" fill="#00d68f" />
-        <text
-          x="254"
-          y="178"
-          fill="#00d68f"
-          fontSize="7"
-          textAnchor="middle"
-          fontFamily="monospace"
-        >
-          outbound only
-        </text>
-
-        {/* App → DB  private link */}
-        <line
-          x1="576"
-          y1="97"
-          x2="626"
-          y2="107"
-          stroke="#fbbf24"
-          strokeWidth="1.6"
+          x1="380"
+          y1="254"
+          x2="380"
+          y2="304"
+          stroke="#60a5fa"
+          strokeWidth="2"
           className="agx-flow-fwd"
         />
-        <polygon points="626,107 618,101 618,110" fill="#fbbf24" />
-        <text x="601" y="92" fill="#fbbf24" fontSize="7" textAnchor="middle" fontFamily="monospace">
+        <polygon points="380,304 374,293 386,293" fill="#60a5fa" />
+        <text x="430" y="282" fill="#60a5fa" fontSize="11" fontFamily="monospace">
+          internal
+        </text>
+        <line
+          x1="210"
+          y1="362"
+          x2="210"
+          y2="374"
+          stroke="#00d68f"
+          strokeWidth="2"
+          className="agx-flow-bwd"
+        />
+        <polygon points="210,362 204,372 216,372" fill="#00d68f" />
+        <line
+          x1="310"
+          y1="362"
+          x2="310"
+          y2="374"
+          stroke="#00d68f"
+          strokeWidth="2"
+          className="agx-flow-bwd"
+        />
+        <polygon points="310,362 304,372 316,372" fill="#00d68f" />
+        <line
+          x1="150"
+          y1="394"
+          x2="30"
+          y2="394"
+          stroke="#00d68f"
+          strokeWidth="2"
+          className="agx-flow-bwd"
+        />
+        <line
+          x1="30"
+          y1="394"
+          x2="30"
+          y2="66"
+          stroke="#00d68f"
+          strokeWidth="2"
+          className="agx-flow-bwd"
+        />
+        <line
+          x1="30"
+          y1="66"
+          x2="230"
+          y2="66"
+          stroke="#00d68f"
+          strokeWidth="2"
+          className="agx-flow-bwd"
+        />
+        <polygon points="230,66 219,60 219,72" fill="#00d68f" />
+        <text x="48" y="440" fill="#00d68f" fontSize="11" fontFamily="monospace">
+          outbound only
+        </text>
+        <line
+          x1="140"
+          y1="362"
+          x2="140"
+          y2="444"
+          stroke="#fbbf24"
+          strokeWidth="2"
+          className="agx-flow-fwd"
+          strokeDasharray="6 4"
+        />
+        <polygon points="140,444 134,433 146,433" fill="#fbbf24" />
+        <line
+          x1="380"
+          y1="362"
+          x2="375"
+          y2="444"
+          stroke="#fb923c"
+          strokeWidth="2"
+          className="agx-flow-fwd"
+          strokeDasharray="6 4"
+        />
+        <polygon points="375,444 369,433 381,433" fill="#fb923c" />
+        <text x="430" y="410" fill="#fbbf24" fontSize="11" fontFamily="monospace">
           private link
         </text>
-
-        {/* Travelling packet dots */}
-        <circle
-          cx="128"
-          cy="149"
-          r="3.5"
-          fill="#a78bfa"
-          opacity="0.8"
-          style={{ animation: 'agx-dash-fwd 2s linear infinite' }}
-        />
-        <circle
-          cx="437"
-          cy="138"
-          r="3.2"
-          fill="#00d68f"
-          opacity="0.85"
-          style={{ animation: 'agx-travel-up 2s 0.5s ease-in-out infinite' }}
-        />
       </svg>
 
       <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
