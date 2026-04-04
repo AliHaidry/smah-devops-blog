@@ -60,6 +60,9 @@ import DocumentTypesTable, {
   CommChecklist,
 } from './learning/communication'
 
+// ── Azure / DevOps explainers ─────────────────────────────────────────────────
+import AzureGatewayExplainer from './AzureGatewayExplainer'
+
 export const components: MDXComponents = {
   Image,
   TOCInline,
@@ -68,9 +71,7 @@ export const components: MDXComponents = {
   table: TableWrapper,
   BlogNewsletterForm,
 
-  // ...your existing stuff (Image, TOCInline, a, pre, etc.)...
-
-  // ── Module 01 ────────────────────────────────────────────────────────────
+  // ── Module 01 ──────────────────────────────────────────────────────────────
   BigOVisual,
   DataStructuresTable,
   AlgorithmPatterns,
@@ -80,7 +81,7 @@ export const components: MDXComponents = {
   LinuxCommands,
   FoundationsChecklist,
 
-  // ── Module 02 ────────────────────────────────────────────────────────────
+  // ── Module 02 ──────────────────────────────────────────────────────────────
   DesignFramework,
   TradeoffExplorer,
   DistributedConceptsGrid,
@@ -89,7 +90,7 @@ export const components: MDXComponents = {
   ObservabilityPillars,
   SystemsDesignChecklist,
 
-  // ── Module 04 ────────────────────────────────────────────────────────────
+  // ── Module 04 ──────────────────────────────────────────────────────────────
   MLConceptsGrid,
   PromptPatternsTable,
   VectorDBComparison,
@@ -97,7 +98,7 @@ export const components: MDXComponents = {
   AIDecisionTree,
   AIChecklist,
 
-  // ── Module 05 ────────────────────────────────────────────────────────────
+  // ── Module 05 ──────────────────────────────────────────────────────────────
   NamingTaxonomy,
   SOLIDExplorer,
   PatternExplorer,
@@ -107,7 +108,7 @@ export const components: MDXComponents = {
   APIDesignComparison,
   CraftChecklist,
 
-  // ── Module 06 ────────────────────────────────────────────────────────────
+  // ── Module 06 ──────────────────────────────────────────────────────────────
   DocumentTypesTable,
   C4ModelDiagram,
   CodeReviewPrinciples,
@@ -115,9 +116,12 @@ export const components: MDXComponents = {
   MentoringTechniques,
   CommChecklist,
 
-  // ── Roadmap layout ────────────────────────────────────────────────────────
+  // ── Roadmap layout ─────────────────────────────────────────────────────────
   RoadmapNav,
   ModuleSection,
   RoadmapFooter,
   CAPTheoremDiagram,
+
+  // ── Azure / DevOps explainers ──────────────────────────────────────────────
+  AzureGatewayExplainer,
 }
