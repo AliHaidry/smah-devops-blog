@@ -14,116 +14,160 @@ interface Props {
 
 const skillCategories = [
   {
-    label: 'Cloud & Infrastructure',
+    label: 'Cloud Platforms & IaC',
     color: '#0078D4',
-    skills: ['Azure', 'AWS', 'GCP', 'Terraform', 'Pulumi', 'ARM Templates'],
+    skills: ['Azure', 'AWS', 'GCP', 'Terraform', 'Azure Bicep', 'CloudFormation'],
   },
   {
     label: 'Containers & Orchestration',
     color: '#326CE5',
-    skills: ['Kubernetes', 'Docker', 'Helm', 'Istio', 'ArgoCD', 'Kustomize'],
+    skills: ['Kubernetes', 'Docker', 'Helm', 'ArgoCD', 'GitOps', 'Ansible'],
   },
   {
-    label: 'CI/CD & GitOps',
+    label: 'CI/CD & Automation',
     color: '#E44C30',
-    skills: ['GitHub Actions', 'Azure DevOps', 'Jenkins', 'GitLab CI', 'FluxCD', 'Tekton'],
+    skills: ['Jenkins', 'GitHub Actions', 'Azure DevOps', 'GitLab CI', 'Bitbucket', 'PowerShell'],
   },
   {
-    label: 'Observability',
+    label: 'Observability & Reporting',
     color: '#F46800',
-    skills: ['Prometheus', 'Grafana', 'Loki', 'Jaeger', 'Datadog', 'ELK Stack'],
+    skills: ['Prometheus', 'Grafana', 'Loki', 'Datadog', 'ELK Stack', 'PowerBI'],
   },
   {
-    label: 'Scripting & Dev',
+    label: 'Scripting & Databases',
     color: '#3776AB',
-    skills: ['Python', 'Bash', 'Go', 'TypeScript', 'PowerShell', 'YAML'],
+    skills: ['Python', 'Shell', 'YAML', 'PostgreSQL', 'MongoDB', 'MySQL'],
   },
   {
-    label: 'Security & Networking',
+    label: 'Infrastructure & Virtualization',
     color: '#6B21A8',
-    skills: ['Azure NSG', 'VNet Peering', 'Zero Trust', 'RBAC', 'Vault', 'SOPS'],
+    skills: ['Hyper-V', 'VMware', 'Linux (RHEL/Debian)', 'Kafka', 'Fluent Bit', 'ServiceNow'],
   },
 ]
 
 const certifications = [
   {
+    name: 'AZ-305',
+    full: 'Azure Solutions Architect Expert',
+    issuer: 'Microsoft',
+    color: '#0078D4',
+    icon: '🏆',
+  },
+  {
+    name: 'AZ-104',
+    full: 'Azure Administrator Associate',
+    issuer: 'Microsoft',
+    color: '#0078D4',
+    icon: '⚙️',
+  },
+  {
+    name: 'AI-102',
+    full: 'Azure AI Engineer Associate',
+    issuer: 'Microsoft',
+    color: '#0078D4',
+    icon: '🤖',
+  },
+  {
+    name: 'AI-900',
+    full: 'Azure AI Fundamentals',
+    issuer: 'Microsoft',
+    color: '#0078D4',
+    icon: '🧠',
+  },
+  {
     name: 'AZ-900',
     full: 'Azure Fundamentals',
     issuer: 'Microsoft',
     color: '#0078D4',
-    year: '2022',
     icon: '☁️',
   },
   {
-    name: 'AZ-104',
-    full: 'Azure Administrator',
-    issuer: 'Microsoft',
-    color: '#0078D4',
-    year: '2023',
-    icon: '⚙️',
-  },
-  {
-    name: 'CKA',
-    full: 'Certified Kubernetes Administrator',
-    issuer: 'CNCF',
-    color: '#326CE5',
-    year: '2023',
-    icon: '☸️',
-  },
-  {
-    name: 'AZ-400',
-    full: 'DevOps Engineer Expert',
-    issuer: 'Microsoft',
-    color: '#0078D4',
-    year: '2024',
-    icon: '🚀',
+    name: 'CLF-C02',
+    full: 'AWS Cloud Practitioner',
+    issuer: 'Amazon Web Services',
+    color: '#FF9900',
+    icon: '🌩️',
   },
 ]
 
 const experience = [
   {
     role: 'Senior DevOps Engineer',
-    company: 'CDS',
-    period: '2023 – Present',
+    company: 'Curve Digital Solutions',
+    period: 'Aug 2025 – Present',
     location: 'Karachi, PK',
     highlights: [
-      'Architected multi-region AKS clusters serving 50M+ monthly requests',
-      'Built GitOps pipelines reducing deployment time by 70%',
-      'Led cloud cost optimisation saving $200K annually',
-      'Mentored 6-person platform engineering team',
+      'Architecting and designing cloud-based infrastructure and solutions for the Unified Marketing Platform',
+      'Consolidated end-to-end log aggregation pipeline (Prometheus, Fluent Bit, Kafka, Promtail, Loki) rendered in Grafana — 100% ops satisfaction',
+      'Automated Windows Server 2022 Hyper-V lifecycle (DHCP, NAT, DNS, WinRM, Firewall) via PowerShell, significantly reducing provisioning time',
+      'Developed complete VM lifecycle automation for Hyper-V: image creation, suspend/resume, deletion, and user management',
     ],
     current: true,
   },
   {
     role: 'DevOps Engineer',
-    company: 'TD Bank',
-    period: '2021 – 2023',
-    location: 'Toronto, CA',
+    company: 'Curve Digital Solutions',
+    period: 'Aug 2024 – Jul 2025',
+    location: 'Karachi, PK',
     highlights: [
-      'Delivered zero-downtime Kubernetes migrations for core banking services',
-      'Designed observability platform with Prometheus, Grafana & Loki',
-      'Automated compliance reporting, cutting audit cycle from 2 weeks to 1 day',
+      'Developed Python scripts to automate processes and execute Ansible playbooks with MySQL integration',
+      'Set up Jenkins pipelines integrated with GitHub and Docker Hub, improving release frequency by 25%',
+      'Managed 10+ server production infrastructure, contributing to a 10% improvement in system response times',
+      'Trained and mentored 5+ new team members, improving team productivity and collaboration',
     ],
     current: false,
   },
   {
-    role: 'Systems Engineer',
-    company: 'Freelance / Consulting',
-    period: '2019 – 2021',
-    location: 'Remote',
+    role: 'IT Ops Specialist',
+    company: 'TD Bank Group',
+    period: 'Feb 2022 – May 2024',
+    location: 'Toronto, CA',
     highlights: [
-      'Containerised legacy monoliths for 3 enterprise clients',
-      'Set up CI/CD pipelines using GitHub Actions and Azure DevOps',
+      'Led Azure Sandbox environment deployment, enabling LOBs to experiment with POCs at 100% success rate',
+      'Implemented telemetry dashboards for Azure VMs, App Services & ML Workspaces — 40% increase in infrastructure sustainability',
+      'Developed FinOps framework on Azure reducing $1,200 USD/month in Azure Learning Box costs',
+      'Drove a 30% improvement in business unit performance through process optimisation and automation',
     ],
     current: false,
+  },
+  {
+    role: 'Intern DevOps Engineer',
+    company: 'mobileLIVE',
+    period: 'Jan 2020 – Sep 2020',
+    location: 'Toronto, CA',
+    highlights: [
+      'Implemented CI/CD pipeline on AWS (Elastic Beanstalk, CodeDeploy, CodePipeline) — 25% improvement in deployment efficiency',
+      'Developed foundational Terraform modules for AWS infrastructure, reducing manual workload by 40%',
+      'Deployed containerised applications on GCP via Kubernetes & Helm, increasing deployment speed by 70%',
+    ],
+    current: false,
+  },
+]
+
+const education = [
+  {
+    degree: 'Master of Engineering',
+    field: 'Software Systems Engineering',
+    school: 'University of Regina',
+    location: 'Canada',
+    period: '2019 – 2021',
+    icon: '🎓',
+  },
+  {
+    degree: 'Bachelor of Science',
+    field: 'Computer Science',
+    school: 'Bahria University',
+    location: 'Pakistan',
+    period: '2013 – 2017',
+    icon: '🎓',
   },
 ]
 
 const stats = [
   { value: '5+', label: 'Years in IT' },
   { value: '13+', label: 'Blog Posts' },
-  { value: '4', label: 'Cloud Certs' },
-  { value: '50M+', label: 'Requests/mo' },
+  { value: '6', label: 'Cloud Certs' },
+  { value: '4', label: 'Companies' },
 ]
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -157,6 +201,24 @@ function SectionHeading({ children }: { children: ReactNode }) {
   )
 }
 
+function SkillPill({ skill, color }: { skill: string; color: string }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <span
+      className="cursor-default rounded-full border px-2.5 py-0.5 text-xs font-medium transition-all duration-150"
+      style={{
+        borderColor: hovered ? color : `${color}40`,
+        backgroundColor: hovered ? color : `${color}0D`,
+        color: hovered ? 'white' : undefined,
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {skill}
+    </span>
+  )
+}
+
 function SkillsSection() {
   return (
     <section>
@@ -185,29 +247,11 @@ function SkillsSection() {
   )
 }
 
-function SkillPill({ skill, color }: { skill: string; color: string }) {
-  const [hovered, setHovered] = useState(false)
-  return (
-    <span
-      className="cursor-default rounded-full border px-2.5 py-0.5 text-xs font-medium transition-all duration-150"
-      style={{
-        borderColor: hovered ? color : `${color}40`,
-        backgroundColor: hovered ? color : `${color}0D`,
-        color: hovered ? 'white' : undefined,
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {skill}
-    </span>
-  )
-}
-
 function CertificationsSection() {
   return (
     <section>
       <SectionHeading>Certifications</SectionHeading>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {certifications.map((cert) => (
           <div
             key={cert.name}
@@ -219,7 +263,14 @@ function CertificationsSection() {
             />
             <div className="mt-1 flex items-start justify-between">
               <span className="text-2xl">{cert.icon}</span>
-              <span className="text-xs text-gray-400 dark:text-gray-500">{cert.year}</span>
+              {cert.name === 'AZ-305' && (
+                <span
+                  className="rounded-full px-2 py-0.5 text-xs font-semibold text-white"
+                  style={{ backgroundColor: cert.color }}
+                >
+                  Expert
+                </span>
+              )}
             </div>
             <div
               className="mt-2 text-lg font-extrabold tracking-tight"
@@ -295,13 +346,38 @@ function ExperienceSection() {
   )
 }
 
+function EducationSection() {
+  return (
+    <section>
+      <SectionHeading>Education</SectionHeading>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {education.map((edu, idx) => (
+          <div
+            key={idx}
+            className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700/50 dark:bg-gray-800/60"
+          >
+            <div className="mb-2 text-2xl">{edu.icon}</div>
+            <div className="text-sm font-bold text-gray-900 dark:text-gray-100">{edu.degree}</div>
+            <div className="text-primary-500 mt-0.5 text-sm font-semibold">{edu.field}</div>
+            <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">{edu.school}</div>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-xs text-gray-400 dark:text-gray-500">{edu.location}</span>
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                {edu.period}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 function GitHubSection({ github }: { github?: string }) {
   const username = github?.split('/').pop() ?? 'AliHaidry'
-  // Seeded grid so it's stable across renders
   const grid = Array.from({ length: 182 }, (_, i) => {
-    const seed = (i * 2654435761) >>> 0
-    const val = (seed % 100) / 100
-    return val > 0.85 ? 4 : val > 0.65 ? 3 : val > 0.45 ? 2 : val > 0.25 ? 1 : 0
+    const seed = ((i * 2654435761) >>> 0) % 100
+    return seed > 85 ? 4 : seed > 65 ? 3 : seed > 45 ? 2 : seed > 25 ? 1 : 0
   })
   const colors = [
     'bg-gray-100 dark:bg-gray-700/40',
@@ -338,7 +414,6 @@ function GitHubSection({ github }: { github?: string }) {
             </a>
           )}
         </div>
-
         <div className="px-5 py-4">
           <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
             Contribution activity — last 26 weeks
@@ -349,7 +424,6 @@ function GitHubSection({ github }: { github?: string }) {
             ))}
           </div>
         </div>
-
         <div className="grid grid-cols-3 divide-x divide-gray-100 border-t border-gray-100 dark:divide-gray-700/50 dark:border-gray-700/50">
           {[
             { label: 'Public Repos', value: '18' },
@@ -413,7 +487,6 @@ function ContactSection({ email }: { email?: string }) {
               </div>
             </div>
           </div>
-
           <div className="p-6 lg:col-span-3">
             {status === 'sent' ? (
               <div className="flex h-full flex-col items-center justify-center py-8 text-center">
@@ -547,7 +620,7 @@ export default function AuthorLayout({ children, content }: Props) {
             <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{company}</p>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              {['Azure', 'Kubernetes', 'GitOps', 'Platform Engineering'].map((tag) => (
+              {['Azure', 'Kubernetes', 'Terraform', 'CI/CD', 'Observability'].map((tag) => (
                 <span
                   key={tag}
                   className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
@@ -575,6 +648,7 @@ export default function AuthorLayout({ children, content }: Props) {
           <SkillsSection />
           <CertificationsSection />
           <ExperienceSection />
+          <EducationSection />
           <GitHubSection github={github} />
           <ContactSection email={email} />
         </div>
