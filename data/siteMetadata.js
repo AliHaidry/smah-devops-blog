@@ -3,7 +3,7 @@ const siteMetadata = {
   title: 'Ali Haidry | DevOps Blog',
   author: 'Syed Muhammad Ali Haidry',
   headerTitle: 'DevOps Blog',
-  description: 'A blog about DevOps, Cloud Computing, and Software Development by Syed Muhammad Ali Haidry — Senior DevOps Engineer.',
+  description: 'A blog about DevOps, Cloud Computing, AI and Software Development by Syed Muhammad Ali Haidry — Senior DevOps Engineer.',
   language: 'en-us',
   theme: 'system', // system, dark or light
   siteUrl: 'https://alihaidry-devops.website',
