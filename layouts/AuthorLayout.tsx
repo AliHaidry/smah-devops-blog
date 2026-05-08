@@ -443,13 +443,30 @@ function GitHubSection({ github }: { github?: string }) {
 
 function ContactSection({ email }: { email?: string }) {
   const [form, setForm] = useState({ name: '', userEmail: '', message: '' })
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus('sending')
-    await new Promise((r) => setTimeout(r, 1200))
-    setStatus('sent')
+    setErrorMsg('')
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: form.name, email: form.userEmail, message: form.message }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setErrorMsg(data.error ?? 'Something went wrong. Please try again.')
+        setStatus('error')
+      } else {
+        setStatus('sent')
+      }
+    } catch {
+      setErrorMsg('Network error. Please check your connection and try again.')
+      setStatus('error')
+    }
   }
 
   return (
@@ -560,6 +577,11 @@ function ContactSection({ email }: { email?: string }) {
                     className="focus:border-primary-400 focus:ring-primary-100 dark:focus:border-primary-500 w-full resize-none rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 transition outline-none focus:bg-white focus:ring-2 dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-100 dark:focus:bg-gray-700"
                   />
                 </div>
+                {status === 'error' && (
+                  <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                    {errorMsg}
+                  </p>
+                )}
                 <button
                   type="submit"
                   disabled={status === 'sending'}
@@ -606,7 +628,7 @@ export default function AuthorLayout({ children, content }: Props) {
                 alt={name ?? 'avatar'}
                 width={160}
                 height={160}
-                className="ring-primary-400/30 h-36 w-36 rounded-2xl object-cover ring-4 shadow-lg sm:h-40 sm:w-40"
+                className="ring-primary-400/30 h-36 w-36 rounded-2xl object-cover shadow-lg ring-4 sm:h-40 sm:w-40"
               />
               <span className="bg-primary-500 absolute right-2 bottom-2 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-gray-900" />
             </div>
