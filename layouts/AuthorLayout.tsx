@@ -637,6 +637,14 @@ export default function AuthorLayout({ children, content }: Props) {
               <SocialIcon kind="x" href={twitter} size={5} />
               {bluesky && <SocialIcon kind="bluesky" href={bluesky} size={5} />}
             </div>
+
+            <a
+              href="/static/SyedMuhammadAliHaidry-Resume-SeniorDevOps-Engineer.pdf"
+              download
+              className="hover:border-primary-400 hover:text-primary-500 mt-4 inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+            >
+              ⬇ Download Resume
+            </a>
           </div>
         </div>
 
