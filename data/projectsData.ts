@@ -218,6 +218,45 @@ const projectsData: Project[] = [
     ],
     status: 'Completed',
   },
+  {
+    title: 'paktech-hello — GitOps CI/CD on Azure Kubernetes Service',
+    description:
+      'A end-to-end GitOps implementation on Azure — provisioning AKS, ACR, and Argo CD via Terraform, then wiring GitHub Actions CI and Argo CD pull-based delivery so every code push automatically builds, tags, and reconciles a live Flask application on Kubernetes.',
+    longDescription:
+      'Built a complete GitOps pipeline following the Microsoft Architecture Center Scenario 3 blueprint. The project demonstrates production-grade practices: two-repo separation, keyless OIDC authentication, declarative infrastructure with Terraform, and continuous reconciliation with Argo CD — all the way to a live public-IP Flask application on AKS.',
+    category: 'Personal',
+    company: 'PakTechLimited',
+    role: 'Personal Project',
+    period: '2025',
+    stack: [
+      'Azure',
+      'AKS',
+      'Terraform',
+      'Argo CD',
+      'GitHub Actions',
+      'Docker',
+      'Python',
+      'Flask',
+      'Kubernetes',
+      'ACR',
+      'Helm',
+      'OIDC',
+    ],
+    impact: 'Full GitOps Loop',
+    impactDetail: 'Code push → CI → ACR → GitOps repo → Argo CD → live AKS in ~7 minutes',
+    architecture: [
+      'Two-repo separation: paktech-hello (app code, Dockerfile, GitHub Actions CI) and paktech-hello-gitops (Kubernetes YAML manifests) — app CI and cluster state are fully independent lifecycles',
+      'Terraform provisions all Azure infrastructure in one apply: Resource Group, ACR, AKS cluster (Standard_B2s), Argo CD via Helm release, OIDC federation for GitHub Actions — no manual Azure portal clicks',
+      'GitHub Actions CI pipeline runs three jobs in sequence: lint (Ruff + Black) → build & push Docker image to ACR (tagged with run-number + short SHA) → update image tag in GitOps repo via authenticated commit',
+      'OIDC keyless authentication: GitHub Actions federates to Azure using short-lived tokens — no client secrets or passwords stored anywhere in the pipeline',
+      'Argo CD polls the GitOps repo every 3 minutes, detects image tag drift, and applies a zero-downtime rolling update to AKS automatically — cluster never exposes its API to CI',
+      'selfHeal: true enforces GitOps compliance — any manual kubectl change is reverted by Argo CD within minutes, Git remains the single source of truth',
+      'Live Flask app exposes /health, /ready, and /info endpoints with pod name, node name, version, and timestamp — Kubernetes-native health probes wired to readiness and liveness checks',
+      'Full rollback path: git revert on GitOps repo → Argo CD syncs previous deployment.yaml → previous image tag restored on cluster automatically',
+    ],
+    github: 'https://github.com/PakTechLimited/paktech-hello',
+    status: 'Completed',
+  },
 ]
 
 export default projectsData
