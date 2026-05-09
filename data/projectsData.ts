@@ -39,6 +39,42 @@ const projectsData: Project[] = [
     status: 'Production',
   },
   {
+    title: 'Ansible Playbook Orchestration — Server Deployment Automation',
+    description:
+      'A database-driven Python orchestration framework that automates the full lifecycle of a managed Linux server — from bare provisioning to a hardened, application-ready production host across multiple Linux distributions.',
+    longDescription:
+      'Built a production-grade orchestration system that replaces manual server setup with a fully automated, database-driven pipeline. A Python control plane reads deployment state from MySQL, bootstraps SSH access, and executes 21 ordered Ansible playbooks across 6 deployment stages — covering hardware validation, security hardening, service installation, and application transfer.',
+    category: 'Automation',
+    company: 'Curve Digital Solutions',
+    role: 'DevOps Engineer → Senior DevOps Engineer',
+    period: 'Aug 2024 – Present',
+    stack: [
+      'Python',
+      'Ansible',
+      'MySQL',
+      'Linux',
+      'Bash',
+      'Nginx',
+      'Redis',
+      'Prometheus',
+      'Fluentd',
+      'PowerShell',
+    ],
+    impact: '24 Automated Steps',
+    impactDetail: 'Full server lifecycle — bare metal to production-ready in one command',
+    architecture: [
+      'Operator triggers playbook_orchestrator_active.py with target server IDs — one thread spun per server',
+      'Orchestrator reads deployment state from MySQL (servers, deployment_steps, playbooks tables) and bootstraps passwordless SSH with automatic credential rotation',
+      'Per-server Ansible inventory generated dynamically; Python pre-checks and bootstraps on managed nodes automatically',
+      '21 Ansible playbooks executed in priority order across 6 stages: hardware validation → security cleanup → system config → service installation → final checks → app transfer',
+      'Every playbook result written back to MySQL (status, logs, timestamps) — full audit trail per server per step',
+      'Critical playbook failures trigger immediate abort; non-critical failures skip with warning and continue',
+      'After DS:1–5 complete, server auto-promoted to active and app-transfer orchestrator invoked automatically',
+      'Post-deployment firewall orchestrator triggered automatically on successful app transfer',
+    ],
+    status: 'Production',
+  },
+  {
     title: 'Hyper-V VM Lifecycle Automation',
     description:
       'Full automation of Windows Server 2022 Hyper-V infrastructure — covering DHCP, NAT, DNS, WinRM, firewall rules, VM provisioning, suspend/resume, and user management via PowerShell.',
