@@ -16,7 +16,7 @@ const techBadges = [
 
 const highlights = [
   { value: '5+', label: 'Years in DevOps' },
-  { value: '13+', label: 'Articles Published' },
+  { value: '13+', label: 'Blogs Published' },
   { value: '6', label: 'Cloud Certifications' },
   { value: '3', label: 'Cloud Platforms' },
 ]
@@ -103,7 +103,7 @@ export default function Home({ posts }) {
                     Syed Muhammad Ali Haidry
                   </div>
                   <div className="text-primary-500 text-xs font-medium">
-                    AZ-305 · CDS | Ex TD Bank
+                    Senior DevOps Engineer · CDS | Ex TD Bank
                   </div>
                 </div>
               </div>
