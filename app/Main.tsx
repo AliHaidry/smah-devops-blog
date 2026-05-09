@@ -63,7 +63,7 @@ export default function Home({ posts }) {
                 href="/blog"
                 className="bg-primary-500 hover:bg-primary-600 inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition"
               >
-                Read Articles →
+                Read Blogs →
               </Link>
               <Link
                 href="/about"
@@ -149,12 +149,12 @@ export default function Home({ posts }) {
         </div>
       </div>
 
-      {/* ── Latest Articles ───────────────────────────────────────────── */}
+      {/* ── Latest Blogs ───────────────────────────────────────────── */}
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
         <div className="space-y-2 pt-2 pb-6 md:space-y-5">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
-              Latest Articles
+              Latest Blogs
             </h2>
             <Link
               href="/blog"
