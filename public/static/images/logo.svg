@@ -1,25 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 52" width="220" height="52" role="img">
-  <title>alihaidry.dev</title>
-  <desc>Terminal prompt logo for Ali Haidry — alihaidry.dev</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 56" width="260" height="56" role="img">
+  <title>alihaidry.dev — Ali Haidry DevOps Blog</title>
+  <desc>Terminal prompt logo for Ali Haidry</desc>
 
   <!-- Terminal box -->
-  <rect x="0" y="2" width="48" height="48" rx="8" fill="#0f172a"/>
+  <rect x="0" y="2" width="52" height="52" rx="9" fill="#0f172a"/>
 
   <!-- Traffic lights -->
-  <circle cx="10" cy="13" r="3" fill="#ff5f57"/>
-  <circle cx="19" cy="13" r="3" fill="#ffbd2e"/>
-  <circle cx="28" cy="13" r="3" fill="#28c840"/>
+  <circle cx="12" cy="16" r="3.5" fill="#ff5f57"/>
+  <circle cx="22" cy="16" r="3.5" fill="#ffbd2e"/>
+  <circle cx="32" cy="16" r="3.5" fill="#28c840"/>
 
-  <!-- ~/AH prompt -->
-  <text x="7" y="36" font-family="'Courier New',Courier,monospace" font-size="9" fill="#00D4AA">~/</text>
-  <text x="20" y="37" font-family="'Courier New',Courier,monospace" font-size="14" font-weight="700" fill="#ffffff">AH</text>
+  <!-- ~/ prompt -->
+  <text x="8" y="40" font-family="'Courier New',Courier,monospace" font-size="11" fill="#00D4AA">~/</text>
 
-  <!-- Cursor -->
-  <rect x="39" y="25" width="5" height="12" rx="1" fill="#0078D4"/>
+  <!-- AH text -->
+  <text x="24" y="41" font-family="'Courier New',Courier,monospace" font-size="17" font-weight="700" fill="#ffffff">AH</text>
+
+  <!-- Blinking cursor -->
+  <rect x="44" y="27" width="6" height="14" rx="1.5" fill="#0078D4"/>
 
   <!-- Name -->
-  <text x="60" y="25" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="16" font-weight="800" fill="currentColor">Ali Haidry</text>
+  <text x="68" y="30" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="18" font-weight="800" fill="currentColor">Ali Haidry</text>
 
   <!-- Domain -->
-  <text x="62" y="41" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="10" font-weight="400" fill="#0078D4" letter-spacing="0.2">alihaidry.dev</text>
+  <text x="70" y="48" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12" font-weight="400" fill="#0078D4" letter-spacing="0.3">alihaidry.dev</text>
 </svg>
