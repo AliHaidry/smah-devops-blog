@@ -257,6 +257,47 @@ const projectsData: Project[] = [
     github: 'https://github.com/PakTechLimited/paktech-hello',
     status: 'Completed',
   },
+  {
+    title: 'PakTech Multi-Environment GitOps Pipeline',
+    description:
+      'Production-grade CI/CD pipeline on Azure AKS with Argo CD GitOps, GitHub Actions automation across dev/staging/prod environments, Helm, Terraform, Trivy/Checkov security scanning, manual approval gates, auto-rollback, and Slack notifications.',
+    longDescription:
+      'Built a complete multi-environment GitOps platform following the dual-repo pattern: application source in one repo, Kubernetes state in a separate GitOps repo watched by Argo CD. The CI pipeline runs unit tests, builds a hardened multi-stage Docker image, pushes to ACR with a full Git SHA tag, runs Trivy CVE and Checkov IaC scans in parallel, then auto-deploys to dev by patching the GitOps repo. A separate manual promotion pipeline walks validated SHAs through staging → human approval gate → prod, with auto-rollback scoped to the affected values file on failure. All Azure authentication is OIDC federated — no stored credentials anywhere.',
+    category: 'CI/CD',
+    company: 'PakTechLimited',
+    role: 'Personal Project',
+    period: 'May 2026',
+    stack: [
+      'Azure',
+      'AKS',
+      'Argo CD',
+      'GitHub Actions',
+      'Terraform',
+      'Helm',
+      'Docker',
+      'Python',
+      'Flask',
+      'Trivy',
+      'Checkov',
+      'Slack',
+    ],
+    impact: '3-Environment GitOps',
+    impactDetail:
+      'dev auto-deploys on every push; staging & prod promoted via manual pipeline with approval gate and auto-rollback',
+    architecture: [
+      'Dual-repo GitOps: app-paktech-prod holds source code, Dockerfile, Helm chart, and GitHub Actions pipelines; gitops-paktech-app holds per-environment Helm value overrides and Argo CD bootstrap manifests — cluster state is fully decoupled from application CI',
+      'CI pipeline (ci.yml): unit tests with pytest (parallel, dorny/test-reporter for GitHub Checks) → multi-stage Docker build pushed to paktechacr.azurecr.io tagged with the full 40-char Git SHA → Trivy CVE scan (HIGH+CRITICAL) and Checkov IaC scan run in parallel → deploy-dev patches gitops repo dev/values.yaml and pushes, triggering Argo CD auto-sync',
+      'Promotion pipeline (promote.yml): workflow_dispatch with image_tag + target_environment inputs → validate SHA exists in ACR → patch staging/values.yaml → smoke test placeholder → pause for human approval (GitHub Environments) → patch prod/values.yaml → 5-min golden signal window → Slack notification',
+      'Auto-rollback: on deploy-prod failure, rollback-prod job fires — runs git checkout HEAD~1 -- apps/paktech-app/prod/values.yaml, commits, and pushes; Argo CD reconciles cluster back to previous image tag; scoped to one file so other environments are never affected',
+      'Argo CD ApplicationSet generates three Applications (paktech-app-dev/staging/prod) from a single template using the dual-source pattern — GitOps repo for values, app repo for Helm chart; ignoreDifferences on /spec/replicas prevents HPA fighting',
+      'AppProject security boundary: only approved source repos, only paktech-* namespaces, minimal resource whitelist (Deployment, Service, ServiceAccount, Ingress, HPA, PDB); deny sync window for prod 22:00–06:00 UTC',
+      'Per-environment tuning: dev — 1 replica, minimal resources, no PDB, no AZ spread; staging — 2 replicas, soft topology spread, PDB minAvailable:1; prod — 3 replicas, HPA (3–10, CPU 70%), strict PDB minAvailable:2, hard AZ spread DoNotSchedule',
+      'Terraform pipeline (terraform.yml): Checkov scan → validate/fmt/plan on PR, plan posted as PR comment → apply on merge with prod-infra environment approval; daily drift detection alerts Slack if plan exits 2',
+      'OIDC everywhere: all three workflows authenticate to Azure via federated identity — no stored client secrets, no ACR passwords; GITOPS_APP_TOKEN is the only stored credential and is scoped to the single GitOps repo',
+    ],
+    github: 'https://github.com/PakTechLimited/app-paktech-prod',
+    status: 'Completed',
+  },
 ]
 
 export default projectsData

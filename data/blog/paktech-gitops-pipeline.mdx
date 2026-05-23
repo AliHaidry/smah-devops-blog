@@ -1,0 +1,615 @@
+---
+title: "Building a Production-Grade Multi-Environment GitOps Pipeline on Azure AKS"
+date: "2026-05-23"
+author: "Senior DevOps Engineer"
+tags: ["GitOps", "Argo CD", "GitHub Actions", "Azure", "AKS", "Terraform", "Helm", "DevSecOps", "CI/CD"]
+readTime: "20 min read"
+---
+
+import { useState } from "react";
+
+export const styles = `
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap');
+
+  :root {
+    --bg: #0b0f1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --accent3: #10b981;
+    --accent4: #f59e0b;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --border: #1e2d42;
+  }
+`;
+
+export const Callout = ({ type = "info", children }) => {
+  const colors = {
+    info:    { border: "#00e5ff", bg: "#0a1f2e" },
+    warning: { border: "#f59e0b", bg: "#1f1500" },
+    success: { border: "#10b981", bg: "#0a1e13" },
+    purple:  { border: "#7c3aed", bg: "#130d1e" },
+  };
+  const c = colors[type] || colors.info;
+  return (
+    <div style={{
+      borderLeft: `3px solid ${c.border}`,
+      background: c.bg,
+      padding: "16px 20px",
+      margin: "24px 0",
+      borderRadius: "0 8px 8px 0",
+      fontSize: "0.92rem",
+      color: "#e2e8f0",
+      lineHeight: 1.7,
+    }}>
+      {children}
+    </div>
+  );
+};
+
+export const DiagramWrap = ({ label, children }) => (
+  <div style={{
+    background: "#111827",
+    border: "1px solid #1e2d42",
+    borderRadius: "12px",
+    padding: "28px 20px",
+    margin: "32px 0",
+    position: "relative",
+    overflow: "hidden",
+  }}>
+    <div style={{
+      position: "absolute", top: 0, left: 0, right: 0, height: "2px",
+      background: "linear-gradient(90deg, #00e5ff, #7c3aed, transparent)",
+    }} />
+    <div style={{
+      fontFamily: "'DM Mono', monospace",
+      fontSize: "11px",
+      color: "#94a3b8",
+      textTransform: "uppercase",
+      letterSpacing: "0.15em",
+      marginBottom: "18px",
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+    }}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#00e5ff", boxShadow: "0 0 8px #00e5ff", display: "inline-block" }} />
+      {label}
+    </div>
+    {children}
+  </div>
+);
+
+export const PipelineStage = ({ num, color, title, detail }) => (
+  <div style={{
+    display: "flex",
+    alignItems: "flex-start",
+    gap: "14px",
+    padding: "14px 0",
+    borderBottom: "1px solid #1e2d42",
+  }}>
+    <div style={{
+      minWidth: 32,
+      height: 32,
+      borderRadius: "50%",
+      background: `${color}18`,
+      border: `1.5px solid ${color}`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: "'DM Mono', monospace",
+      fontSize: "12px",
+      fontWeight: 700,
+      color: color,
+    }}>{num}</div>
+    <div>
+      <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: "0.93rem", color: "#fff", marginBottom: 4 }}>{title}</div>
+      <div style={{ fontSize: "0.84rem", color: "#94a3b8", lineHeight: 1.6 }}>{detail}</div>
+    </div>
+  </div>
+);
+
+export const EnvCard = ({ env, color, replica, sync, gate, pdb, spread }) => (
+  <div style={{
+    background: "#1a2235",
+    border: `1px solid ${color}33`,
+    borderRadius: "10px",
+    padding: "20px",
+    flex: "1 1 220px",
+  }}>
+    <div style={{
+      fontFamily: "'DM Mono', monospace",
+      fontSize: "10px",
+      letterSpacing: "0.1em",
+      textTransform: "uppercase",
+      padding: "3px 10px",
+      borderRadius: "4px",
+      marginBottom: "14px",
+      display: "inline-block",
+      background: `${color}18`,
+      color: color,
+      border: `1px solid ${color}55`,
+    }}>{env}</div>
+    {[
+      ["Replicas", replica],
+      ["Sync", sync],
+      ["Gate", gate],
+      ["PDB", pdb],
+      ["AZ Spread", spread],
+    ].map(([k, v]) => (
+      <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid #1e2d4230", fontSize: "0.83rem" }}>
+        <span style={{ color: "#94a3b8" }}>{k}</span>
+        <span style={{ color: "#e2e8f0", fontFamily: "'DM Mono', monospace", fontSize: "0.8rem" }}>{v}</span>
+      </div>
+    ))}
+  </div>
+);
+
+export const TechRow = ({ cat, tools, note }) => (
+  <tr style={{ borderBottom: "1px solid #1e2d42" }}>
+    <td style={{ padding: "10px 14px", color: "#fff", fontWeight: 500, fontFamily: "'Syne', sans-serif", fontSize: "0.88rem" }}>{cat}</td>
+    <td style={{ padding: "10px 14px", color: "#00e5ff", fontFamily: "'DM Mono', monospace", fontSize: "0.82rem" }}>{tools}</td>
+    <td style={{ padding: "10px 14px", color: "#94a3b8", fontSize: "0.84rem" }}>{note}</td>
+  </tr>
+);
+
+<div style={{ fontFamily: "'Lora', Georgia, serif", color: "#e2e8f0", lineHeight: 1.85, maxWidth: 900, margin: "0 auto", padding: "0 24px" }}>
+
+# Building a Production-Grade Multi-Environment GitOps Pipeline on Azure AKS
+
+<div style={{ fontFamily: "'DM Mono', monospace", fontSize: "12px", color: "#94a3b8", display: "flex", gap: "20px", flexWrap: "wrap", margin: "16px 0 32px" }}>
+  <span>📅 May 2026</span>
+  <span>⏱ 20 min read</span>
+  <span>🏷 GitOps · Argo CD · GitHub Actions · Azure AKS</span>
+</div>
+
+This post documents the PakTech Multi-Environment GitOps Pipeline — a personal project I built to practise production-grade CI/CD patterns on Azure Kubernetes Service. It is not a toy. It has OIDC federation, per-environment Helm overrides, a human approval gate before production, targeted auto-rollback, Trivy + Checkov security scanning, Slack notifications, and a Terraform pipeline with drift detection. This post walks through every design decision and the concrete problems I ran into along the way.
+
+---
+
+## What the project does
+
+<Callout type="purple">
+**One-line summary:** Every push to `main` automatically deploys to dev via Argo CD. A validated image SHA can then be manually promoted through staging → human approval → production, with full auto-rollback if anything goes wrong.
+</Callout>
+
+The application itself is deliberately simple — a Flask JSON API that returns environment name, build SHA, and timestamp. That's not the point. The point is everything around it: the pipeline that gets it to a cluster safely, the mechanism that promotes it between environments without rebuilding, and the safety net that rolls it back if production health checks fail.
+
+The project spans three GitHub repositories:
+
+- **`app-paktech-prod`** — Flask source, Dockerfile, Helm chart, GitHub Actions workflows
+- **`gitops-paktech-app`** — Per-environment Helm value overrides, Argo CD ApplicationSet + AppProject bootstrap manifests
+- *(infrastructure)* — Terraform for AKS, ACR, OIDC federation
+
+---
+
+## Architecture — the dual-repo GitOps pattern
+
+<DiagramWrap label="System Architecture">
+
+```
+Developer push to main
+        │
+        ▼
+  GitHub Actions CI                      ACR
+  ┌─────────────────────────────┐        paktechacr.azurecr.io
+  │  test → build → scan        │──────► image:$SHA
+  │  → patch gitops dev/values  │
+  └─────────────────────────────┘        gitops-paktech-app
+                                         ┌─────────────────┐
+  Manual promote (workflow_dispatch)     │  dev/values.yaml │◄─── CI writes
+  ──────────────────────────────────►    │  staging/values  │◄─── promote writes
+  staging → smoke → approval → prod      │  prod/values     │◄─── promote + approval
+                                         └────────┬────────┘
+                                                  │
+                                         Argo CD watches
+                                                  │
+                                          AKS cluster
+                                  ┌───────────────┴──────────────┐
+                              paktech-dev  paktech-staging  paktech-prod
+```
+
+</DiagramWrap>
+
+The key principle is **separation of concerns**. The app repo owns *what to run* — source code, Dockerfile, Helm chart, pipelines. The GitOps repo owns *where and how* — the per-environment configuration that Argo CD reconciles against the cluster. Neither repo needs to know the details of the other. CI never touches the cluster directly. Argo CD never rebuilds images. The pipeline that promotes a SHA is completely decoupled from the pipeline that built it.
+
+This matters operationally. If Argo CD is down, CI still runs and still updates the GitOps repo. When Argo CD recovers, it reconciles. If CI is broken, the cluster keeps running whatever was last synced. The two concerns fail independently.
+
+---
+
+## The Flask application
+
+The app is minimal by design:
+
+```python
+@app.route("/")
+def index():
+    return jsonify({
+        "app": "paktech-app",
+        "environment": APP_ENV,
+        "version": APP_VERSION,
+        "build_sha": BUILD_SHA,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+
+@app.route("/health")
+def health():
+    return jsonify({"status": "healthy", "environment": APP_ENV}), 200
+
+@app.route("/info")
+def info():
+    return jsonify({
+        "environment": APP_ENV,
+        "version": APP_VERSION,
+        "build_sha": BUILD_SHA,
+    })
+```
+
+`APP_ENV`, `APP_VERSION`, and `BUILD_SHA` are injected as Docker build args by CI and baked into the image at build time. This means `/info` always tells you exactly what image is running — useful for verifying that a promotion actually landed the right SHA on the cluster.
+
+The Dockerfile is multi-stage: a builder stage installs dependencies in isolation, and the runtime stage copies only what's needed into a `python:3.12-slim` image running as a non-root user with a read-only root filesystem. Gunicorn is the production server — the Flask dev server never runs outside tests.
+
+---
+
+## The CI Pipeline (`ci.yml`)
+
+<DiagramWrap label="CI Pipeline Flow — push to main">
+  <PipelineStage num="1" color="#00e5ff"  title="test"         detail="pytest -n auto (parallel) · JUnit XML → dorny/test-reporter for GitHub Checks · permissions: checks:write" />
+  <PipelineStage num="2" color="#7c3aed"  title="build"        detail="docker/build-push-action → paktechacr.azurecr.io/paktech-app:${{ github.sha }} + :latest · ACR registry cache mode=max · build args: APP_VERSION, BUILD_SHA, APP_ENV=prod" />
+  <PipelineStage num="3a" color="#f59e0b" title="scan-image"   detail="Trivy: HIGH + CRITICAL CVEs, exit-code 0 (report without blocking) · OIDC login to pull from ACR" />
+  <PipelineStage num="3b" color="#f59e0b" title="scan-iac"     detail="Checkov: Terraform + Kubernetes + Dockerfile · soft_fail: true · runs in parallel with scan-image" />
+  <PipelineStage num="4" color="#10b981"  title="deploy-dev"   detail="yq patches gitops/apps/paktech-app/dev/values.yaml · git -C gitops commit + push · Argo CD auto-syncs paktech-dev namespace · Slack notification" />
+</DiagramWrap>
+
+The pipeline only runs the full build/scan/deploy sequence on pushes to `main`. PRs run the test job only — no point building images for work-in-progress code. This is enforced with `if: github.event_name == 'push' && github.ref == 'refs/heads/main'` on the build job, and all downstream jobs `needs: build`.
+
+### OIDC authentication
+
+All Azure operations — ACR login, AKS credentials, Terraform — authenticate via OIDC federation. The service principal has a federated credential configured for this exact repository and branch:
+
+```
+Issuer:   https://token.actions.githubusercontent.com
+Subject:  repo:PakTechLimited/app-paktech-prod:ref:refs/heads/main
+Audience: api://AzureADTokenExchange
+```
+
+No client secrets. No PATs for Azure. The only stored credential is `GITOPS_APP_TOKEN` — a classic PAT with `repo` scope on the GitOps repo — because GitHub's OIDC token can't be used to push to a different repository.
+
+### Image tagging
+
+Every image is tagged with the full 40-character Git SHA. Never a short SHA, never a semver that could collide, never `latest` as the primary tag. The `latest` tag is pushed as a convenience for humans, but the GitOps repo always pins the exact SHA. This means every running deployment is traceable to a specific commit.
+
+### The `deploy-dev` step — how it patches the GitOps repo
+
+```bash
+yq e '.image.tag = "${{ github.sha }}"' \
+  -i gitops/apps/paktech-app/dev/values.yaml
+
+git -C gitops config user.name  "github-actions[bot]"
+git -C gitops config user.email "github-actions[bot]@users.noreply.github.com"
+git -C gitops add apps/paktech-app/dev/values.yaml
+git diff --staged --quiet || git -C gitops commit -m "chore(dev): bump paktech-app to ${{ github.sha }}"
+git -C gitops push
+```
+
+The `git diff --staged --quiet || git commit` guard is important. Without it, re-running the pipeline with the same SHA (e.g. after a transient failure in a later step) would fail with "nothing to commit, working tree clean". The guard makes the step idempotent.
+
+---
+
+## The Promotion Pipeline (`promote.yml`)
+
+<Callout type="warning">
+**Design principle:** The promote pipeline never rebuilds. It takes an image SHA that was already built, scanned, and deployed to dev, and walks it through staging and prod. This ensures what hits production is byte-for-byte identical to what was tested.
+</Callout>
+
+Triggered manually via `workflow_dispatch` with two inputs: `image_tag` (the full Git SHA) and `target_environment` (`staging` or `prod`).
+
+<DiagramWrap label="Promotion Pipeline Flow">
+
+```
+workflow_dispatch
+Input: image_tag=<sha>, target_environment=staging|prod
+         │
+         ▼
+┌────────────────────┐
+│  validate          │  az acr repository show-tags
+│                    │  Aborts if SHA not found in paktechacr
+└─────────┬──────────┘
+          │
+          ▼
+┌────────────────────┐
+│  deploy-staging    │  Patches staging/values.yaml
+│                    │  Waits 90s for Argo CD sync
+└─────────┬──────────┘
+          │
+          ▼
+┌────────────────────┐
+│  smoke-test-staging│  Placeholder (ClusterIP — no public URL)
+└─────────┬──────────┘
+          │  (only if target_environment == 'prod')
+          ▼
+┌────────────────────┐
+│  deploy-prod       │  ⏸ Pauses for human approval
+│  (env: prod)       │  Patches prod/values.yaml
+│                    │  5-min monitoring window
+│                    │  Slack notification
+└─────────┬──────────┘
+          │  (on failure only)
+          ▼
+┌────────────────────┐
+│  rollback-prod     │  Targeted file revert + push
+└────────────────────┘
+```
+
+</DiagramWrap>
+
+### The validate step
+
+Before touching any environment, the pipeline confirms the SHA actually exists in ACR:
+
+```bash
+az acr repository show-tags \
+  --name ${{ vars.ACR_NAME }} \
+  --repository paktech-app \
+  --query "[?@=='${{ inputs.image_tag }}']" \
+  --output tsv | grep -q "${{ inputs.image_tag }}" || {
+    echo "Image tag not found in ACR. Aborting."
+    exit 1
+  }
+```
+
+This prevents the pipeline from patching the GitOps repo with a SHA that can't be pulled — which would leave the cluster in a `ImagePullBackOff` state.
+
+### Manual approval gate
+
+The `deploy-prod` job is assigned to the `prod` GitHub Environment, which has required reviewers configured. When the job reaches this point, GitHub pauses the workflow and sends a notification to the designated reviewer. Only after explicit approval does the job execute.
+
+This is the right level to put the gate — not in a shell script, not in a Slack bot, but in GitHub's native environment protection, which is audited and visible in the deployment history.
+
+---
+
+## Auto-Rollback — Why `git checkout HEAD~1 -- file` and not `git revert`
+
+The auto-rollback job fires when `deploy-prod` fails:
+
+```yaml
+rollback-prod:
+  if: failure() && inputs.target_environment == 'prod' && needs.deploy-prod.result == 'failure'
+```
+
+The rollback command:
+
+```bash
+git checkout HEAD~1 -- apps/paktech-app/prod/values.yaml
+git commit -m "revert(prod): roll back paktech-app image tag"
+git push
+```
+
+<Callout type="warning">
+**Why not `git revert HEAD`?**
+
+`git revert HEAD` undoes *every file changed in the last commit*. In a busy GitOps repo, the last commit might have touched staging or bootstrap manifests in addition to prod. You'd be reverting work that had nothing to do with the failed deployment. `git checkout HEAD~1 -- prod/values.yaml` is surgical: it restores exactly one file to exactly the version it held before the promotion. Nothing else is touched.
+</Callout>
+
+This was one of the more interesting design decisions in the project. The naive approach (`git revert`) is unsafe in a shared repo. The targeted approach is safe and composable — even if multiple files were changed in a single commit, you can roll back each independently.
+
+---
+
+## Argo CD Configuration — ApplicationSet with Dual-Source
+
+The ApplicationSet generates three Argo CD Applications from a single YAML template:
+
+```yaml
+generators:
+  - list:
+      elements:
+        - env: dev
+          namespace: paktech-dev
+        - env: staging
+          namespace: paktech-staging
+        - env: prod
+          namespace: paktech-prod
+
+template:
+  spec:
+    sources:
+      - repoURL: https://github.com/PakTechLimited/gitops-paktech-app
+        targetRevision: main
+        ref: gitopsValues
+
+      - repoURL: https://github.com/PakTechLimited/app-paktech-prod
+        targetRevision: main
+        path: helm
+        helm:
+          valueFiles:
+            - $gitopsValues/apps/paktech-app/{{env}}/values.yaml
+```
+
+The dual-source pattern lets the Helm chart live in the app repo (where it belongs — alongside the code that uses it) while the per-environment values live in the GitOps repo (where they belong — versioned separately from the application). This requires Argo CD v2.6+.
+
+### `ignoreDifferences` for HPA
+
+```yaml
+ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+      - /spec/replicas
+```
+
+Without this, Argo CD fights the Horizontal Pod Autoscaler. HPA scales replicas up under load; Argo CD sees drift from the Helm-rendered value and resets them. The `ignoreDifferences` block tells Argo CD: "don't touch `/spec/replicas`, HPA owns that." The `replicaCount` in values.yaml still sets the initial baseline when HPA is off or when the Deployment is first created.
+
+---
+
+## Per-Environment Configuration
+
+<div style={{ display: "flex", gap: "16px", flexWrap: "wrap", margin: "24px 0" }}>
+  <EnvCard
+    env="dev"
+    color="#00e5ff"
+    replica="1"
+    sync="Auto (Argo CD)"
+    gate="None"
+    pdb="Disabled"
+    spread="None"
+  />
+  <EnvCard
+    env="staging"
+    color="#7c3aed"
+    replica="2"
+    sync="Auto (Argo CD)"
+    gate="Manual promote"
+    pdb="minAvailable: 1"
+    spread="ScheduleAnyway"
+  />
+  <EnvCard
+    env="prod"
+    color="#10b981"
+    replica="3 → HPA max 10"
+    sync="Auto (Argo CD)"
+    gate="Manual + approval"
+    pdb="minAvailable: 2"
+    spread="DoNotSchedule"
+  />
+</div>
+
+The key difference between staging and prod topology spread: staging uses `whenUnsatisfiable: ScheduleAnyway` (a soft constraint — it will schedule pods even if it can't spread them across zones, which matters when staging may not have node capacity across all AZs). Prod uses `whenUnsatisfiable: DoNotSchedule` — a hard constraint that refuses to schedule a pod if it would violate the spread. This is intentional: better to have prod reject a rollout than to silently deploy all pods to a single AZ.
+
+The AppProject also enforces a deny sync window for prod: no Argo CD syncs — including manual triggers — between 22:00 and 06:00 UTC. A promotion committed just before that window queues and syncs when it opens.
+
+---
+
+## Problems I Ran Into (And How I Solved Them)
+
+### 1. GitOps checkout silently failing
+
+The CI deploy-dev job was failing with `stat apps/paktech-app/dev/values.yaml: no such file or directory`. After several iterations of `cd gitops` + `working-directory: gitops` approaches, I added a debug step that dumped `$GITHUB_WORKSPACE`:
+
+```bash
+echo "Workspace: $GITHUB_WORKSPACE"
+ls -la $GITHUB_WORKSPACE/
+ls -la $GITHUB_WORKSPACE/gitops/ 2>/dev/null || echo "gitops dir not found"
+find $GITHUB_WORKSPACE -name "values.yaml" 2>/dev/null
+```
+
+The output showed the `gitops/` folder existed but contained only `.git` — the checkout had failed silently (the `GITOPS_APP_TOKEN` wasn't propagating credentials properly). The fix was adding `persist-credentials: true` to the checkout step. Once credentials persisted, the full clone succeeded.
+
+### 2. Working directory ambiguity
+
+Several iterations of the yq command failed because of conflicting `cd gitops` and `working-directory: gitops` approaches. The cleanest fix was to drop both and use explicit paths everywhere:
+
+```bash
+yq e '.image.tag = "..."' -i gitops/apps/paktech-app/dev/values.yaml
+git -C gitops config user.name "github-actions[bot]"
+git -C gitops add apps/paktech-app/dev/values.yaml
+git -C gitops push
+```
+
+`git -C <dir>` tells git to operate from that directory without changing the shell's working directory. No `cd`, no `working-directory:`, no ambiguity.
+
+### 3. Rollback firing on staging-only runs
+
+The original rollback condition was:
+
+```yaml
+if: failure() && inputs.target_environment == 'prod'
+```
+
+When a `staging`-only promotion failed (target was staging, so `deploy-prod` was skipped), `failure()` was still true — a skipped job counts as "not success". The rollback fired unnecessarily. The fix:
+
+```yaml
+if: failure() && inputs.target_environment == 'prod' && needs.deploy-prod.result == 'failure'
+```
+
+The third clause ensures rollback only fires when `deploy-prod` actually ran and actually failed, not when it was skipped.
+
+### 4. `git revert` scoping
+
+The original rollback used `git revert HEAD --no-edit`. During testing I noticed this reverted staging changes that happened to be in the same commit as the prod promotion. Switching to `git checkout HEAD~1 -- prod/values.yaml` + explicit commit fixed the scope.
+
+---
+
+## Tech Stack
+
+<table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.87rem", margin: "24px 0" }}>
+  <thead>
+    <tr>
+      {["Layer", "Technology", "Role in this project"].map(h => (
+        <th key={h} style={{
+          fontFamily: "'DM Mono', monospace", fontSize: "10px", letterSpacing: "0.12em",
+          textTransform: "uppercase", color: "#00e5ff", borderBottom: "1px solid #1e2d42",
+          padding: "10px 14px", textAlign: "left",
+        }}>{h}</th>
+      ))}
+    </tr>
+  </thead>
+  <tbody>
+    <TechRow cat="Application" tools="Python 3.12, Flask 3.0.3" note="App factory pattern, structured JSON logging, 4 endpoints" />
+    <TechRow cat="Server" tools="Gunicorn 22.0.0" note="2 workers × 4 threads in every environment, never Flask dev server" />
+    <TechRow cat="Container" tools="Docker multi-stage" note="python:3.12-slim, non-root user, read-only FS, emptyDir /tmp" />
+    <TechRow cat="Registry" tools="Azure Container Registry" note="paktechacr.azurecr.io — ACR cache, OIDC push auth" />
+    <TechRow cat="Orchestration" tools="AKS (East US)" note="aks-paktech-prod — rolling update, PDB, AZ topology spread" />
+    <TechRow cat="GitOps" tools="Argo CD v3.4.2" note="ApplicationSet dual-source, AppProject security boundary, sync window" />
+    <TechRow cat="Package manager" tools="Helm 3" note="Chart in app repo; per-env values in GitOps repo" />
+    <TechRow cat="CI/CD" tools="GitHub Actions" note="ci.yml · promote.yml · terraform.yml — 3 separate pipelines" />
+    <TechRow cat="Infrastructure" tools="Terraform 1.7.5" note="AKS, ACR, OIDC federation — OIDC auth, Azure Storage backend" />
+    <TechRow cat="CVE scanning" tools="Trivy" note="Image scan on every build — HIGH + CRITICAL" />
+    <TechRow cat="IaC scanning" tools="Checkov" note="Terraform + Kubernetes + Dockerfile on every push" />
+    <TechRow cat="Auth" tools="Azure OIDC Federation" note="No stored Azure credentials anywhere in any pipeline" />
+    <TechRow cat="Notifications" tools="Slack Webhooks" note="Deploy, failure, rollback, Terraform drift" />
+  </tbody>
+</table>
+
+---
+
+## Key Learnings
+
+<Callout type="success">
+**1. Dual-repo GitOps is the right call, even for a personal project.** Mixing app code and cluster state in one repo feels simpler until you need to diff what changed on the cluster versus what changed in the application. Keeping them separate makes the history of each clean and auditable.
+</Callout>
+
+<Callout type="info">
+**2. `git -C <dir>` is better than `cd <dir>` in CI.** Shell `cd` in a multi-line run block is fine normally, but combining it with GitHub Actions' `working-directory:` step property creates ambiguity. `git -C` is explicit, operates on the repo in the named directory, and doesn't touch the shell's CWD at all. Use it.
+</Callout>
+
+<Callout type="purple">
+**3. `git diff --staged --quiet || git commit` is essential for idempotency.** Any CI step that commits to a Git repo should be re-runnable without failing. The `||` guard makes it a no-op when there's nothing to commit — re-promoting the same SHA is safe.
+</Callout>
+
+<Callout type="warning">
+**4. Rollback scope matters.** `git revert HEAD` is the wrong tool for targeted environment rollback. Use `git checkout HEAD~1 -- path/to/file` to restore exactly the file you mean to restore. In a shared GitOps repo where multiple environments are managed, a broad revert can silently undo unrelated work.
+</Callout>
+
+<Callout type="info">
+**5. `needs.deploy-prod.result == 'failure'` is not the same as `failure()`.** GitHub Actions' `failure()` function returns true if *any* upstream job failed or was cancelled — including skipped jobs in some contexts. Always be explicit about which job failed and what result you're checking.
+</Callout>
+
+<Callout type="success">
+**6. OIDC federation eliminates a whole class of secret rotation toil.** Once set up, it's invisible. No expiry reminders, no accidental commits with credentials, no "my pipeline broke because someone rotated the service principal and forgot to update the secret." The only credential that still needs a PAT is cross-repo Git push — Azure's OIDC token can't push to a different GitHub repo.
+</Callout>
+
+---
+
+## What I'd Add Next
+
+If this were a real production system (rather than a personal project whose infrastructure was torn down post-demo to avoid Azure costs), the next things I'd wire up:
+
+- **Real smoke tests** — the current staging smoke test is a placeholder. In a real cluster with internal ingress, this would run `curl` against the internal ingress URL or use a self-hosted runner with VNet access.
+- **Argo CD Notifications controller** — the ApplicationSet has notification annotations ready; the controller just needs to be deployed and wired to the Slack webhook.
+- **HPA in staging** — currently only prod has HPA. Staging should mirror prod's autoscaling config to catch scaling-related issues before they reach production.
+- **Argo CD Image Updater** — the current pattern polls on commit. Image Updater can watch the registry directly and commit the tag update to the GitOps repo automatically, removing the need for the CI pipeline to write to the GitOps repo at all.
+- **OPA/Kyverno policy gates** — the Terraform pipeline has a stub for OPA policy checks. Wiring real policies (e.g. "all prod images must have a Trivy scan result in the last 24 hours") would add a meaningful security gate before prod syncs.
+
+---
+
+## Source Code
+
+The full source is on GitHub:
+
+- **App repo (source, CI, Helm):** [github.com/PakTechLimited/app-paktech-prod](https://github.com/PakTechLimited/app-paktech-prod)
+- **GitOps state repo:** [github.com/PakTechLimited/gitops-paktech-app](https://github.com/PakTechLimited/gitops-paktech-app)
+
+Both repos have comprehensive READMEs covering setup, configuration, and operational runbooks.
+
+</div>
