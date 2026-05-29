@@ -12,10 +12,38 @@ export interface Project {
   architecture?: string[]
   href?: string
   github?: string
-  status: 'Production' | 'Completed' | 'In Progress'
+  status: 'Production' | 'Completed' | 'In Progress' | 'Live'
 }
 
 const projectsData: Project[] = [
+  {
+    title: 'Azure FinOps Dashboard',
+    description:
+      'Production-grade multi-subscription Azure cost monitoring system. Python collector feeds PostgreSQL, visualised via Grafana and a Next.js stakeholder UI, with automated Slack alerting via GitHub Actions.',
+    longDescription:
+      'Built to solve real cloud cost visibility gaps experienced at TD Bank. A Python collector authenticates via OIDC, queries the Azure Cost Management API across 4 subscriptions daily, enriches records with resource tags, and writes to PostgreSQL. Engineers use Grafana dashboards; stakeholders use the Next.js UI deployed to Azure App Service. Budget breach and cost spike alerts fire to Slack every 6 hours automatically.',
+    category: 'Personal',
+    company: 'Personal Project',
+    role: 'Solo — Architecture, IaC, Backend, Frontend, DevOps',
+    period: 'May 2026',
+    stack: [
+      'Python', 'PostgreSQL', 'Prometheus', 'Grafana',
+      'Next.js', 'Terraform', 'GitHub Actions', 'Azure',
+      'Docker', 'Slack API'
+    ],
+    impact: '$1,200/mo Saved',
+    impactDetail: 'Proven FinOps pattern from TD Bank — now open source',
+    architecture: [
+      'Python collector authenticates via OIDC — zero stored secrets',
+      'Azure Cost Management API queried across 4 subscriptions daily',
+      'PostgreSQL stores enriched cost records with team/owner tags',
+      'Grafana dashboards for anomaly detection and burn rate tracking',
+      'Next.js stakeholder UI deployed to Azure App Service via GitHub Actions',
+      'Slack alerts fire every 6h for budget breaches and cost spikes',
+    ],
+    status: 'Live',
+    href: 'https://github.com/AliHaidry/azure-finops-dashboard',
+  },
   {
     title: 'Unified Marketing Platform — Observability & Monitoring Stack',
     description:

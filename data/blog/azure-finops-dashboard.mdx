@@ -1,0 +1,230 @@
+---
+title: 'Building a Multi-Subscription Azure FinOps Dashboard'
+date: '2026-05-29'
+tags: ['Azure', 'FinOps', 'Python', 'Terraform', 'Next.js', 'Grafana', 'DevOps']
+draft: false
+summary: 'How I built a production-grade Azure cost monitoring system from scratch — covering Terraform infrastructure, a Python cost collector, Grafana dashboards, a Next.js stakeholder UI, and automated Slack alerting.'
+images: ['/static/images/finops-dashboard.png']
+authors: ['default']
+---
+
+## Why I Built This
+
+At TD Bank, I owned the Azure Sandbox environment for Lines of Business running proof-of-concepts.
+The problem was always the same: no one knew what anything cost until the bill arrived.
+I built a FinOps framework there that saved $1,200/month — but it was proprietary, internal, and I couldn't show it to anyone.
+
+This project is the open-source version. A real, working, multi-subscription Azure cost monitoring
+system I can point to and say: *this is how I think about cloud cost visibility.*
+
+---
+
+## Architecture Overview
+
+```
+Azure Cost Management API
+        ↓
+Python Collector (GitHub Actions — daily)
+        ↓
+PostgreSQL (Azure Flexible Server)
+        ↓
+├── Prometheus + Grafana (ops team)
+└── Next.js Dashboard (stakeholders)
+        ↓
+GitHub Actions Alert Checks (every 6h)
+        ↓
+Slack #finops-alerts
+```
+
+Four layers — collection, storage, visualisation, and alerting. Each independently useful,
+together forming a complete FinOps platform.
+
+---
+
+## Phase 1 — Terraform Infrastructure
+
+Everything is infrastructure-as-code. No clicking in the portal.
+
+```hcl
+module "database" {
+  source              = "./modules/database"
+  resource_group_name = azurerm_resource_group.main.name
+  environment         = var.environment
+  sku_name            = var.pg_sku_name
+}
+
+module "keyvault" {
+  source               = "./modules/keyvault"
+  pg_connection_string = module.database.connection_string
+}
+```
+
+Key decisions:
+- **Azure Storage remote backend** — state is versioned and team-safe
+- **OIDC federation** — GitHub Actions authenticates to Azure without storing credentials
+- **Key Vault** — connection strings never touch environment variables directly
+- **4 subscriptions** — simulates a real enterprise multi-subscription topology
+
+The OIDC setup was the most satisfying part. No service principal secrets rotated manually —
+GitHub exchanges a short-lived token with Azure AD on every run.
+
+---
+
+## Phase 2 — Python Cost Collector
+
+The collector is a single Python script that runs daily via GitHub Actions:
+
+```python
+def collect_subscription(subscription_id: str, start_date: str, end_date: str):
+    credential = DefaultAzureCredential()
+    client = CostManagementClient(credential)
+
+    query = QueryDefinition(
+        type=ExportType.ACTUAL_COST,
+        timeframe=TimeframeType.CUSTOM,
+        time_period=QueryTimePeriod(from_property=start_date, to=end_date),
+        dataset=QueryDataset(
+            granularity=GranularityType.DAILY,
+            grouping=[
+                QueryGrouping(type=QueryColumnType.DIMENSION, name="ResourceGroup"),
+                QueryGrouping(type=QueryColumnType.DIMENSION, name="ServiceName"),
+            ]
+        )
+    )
+    return client.query.usage(f"/subscriptions/{subscription_id}", query)
+```
+
+It loops through all 4 subscriptions, enriches records with resource tags (team, environment, owner),
+and writes to PostgreSQL. A `--backfill N` flag lets you seed historical data.
+
+The GitHub Actions schedule:
+```yaml
+on:
+  schedule:
+    - cron: '0 6 * * *'  # 06:00 UTC daily
+```
+
+PostgreSQL starts before collection, the collector runs, done. Clean and cheap.
+
+---
+
+## Phase 3 — Grafana Dashboards
+
+Four dashboards, each answering a different question:
+
+| Dashboard | Question |
+|---|---|
+| FinOps Overview | Where is all the money going? |
+| Budget Burn Rate | Are we on track this month? |
+| Cost by Team | Which team is spending what? |
+| Anomaly Detection | Is anything spiking unexpectedly? |
+
+The anomaly detection panel was the most interesting to build. It uses PromQL to compare
+today's spend against a 7-day rolling average:
+
+```promql
+finops_daily_cost_usd > (avg_over_time(finops_daily_cost_usd[7d]) * 2)
+```
+
+If any subscription spends more than 2x its weekly average in a single day, an alert fires.
+
+---
+
+## Phase 4 — Next.js Stakeholder Dashboard
+
+Grafana is great for engineers. Finance teams and managers need something simpler.
+
+The Next.js dashboard reads directly from PostgreSQL and shows:
+- **Total MTD spend** across all subscriptions
+- **Projected month-end** based on daily run rate
+- **Budget utilisation bars** — green/amber/red
+- **Cost by service** — donut chart
+- **Cost by team** — bar chart (tag-driven)
+- **Daily spend trend** — 30-day line chart
+- **Service breakdown table** — sortable, exportable CSV
+
+Deployed to Azure App Service via GitHub Actions with OIDC authentication.
+Zero secrets stored in the repository.
+
+---
+
+## Phase 5 — Alerting
+
+### Slack alerts via GitHub Actions
+
+Rather than running Alertmanager as a separate service, I built a lightweight Python
+alert checker that runs every 6 hours:
+
+```python
+def check_budget():
+    # Query MTD spend per resource group
+    # Compare against defined budgets
+    # Send Slack alert if > 80% (warning) or > 100% (critical)
+
+def check_cost_spike():
+    # Compare yesterday's spend against 7-day average
+    # Alert if > 2x normal
+
+def check_collector_health():
+    # Alert if no data collected in > 24 hours
+```
+
+Three checks, one script, fully serverless. When `finops-rg-dev` exceeded its $5.00 budget
+at 117.8%, Slack received a critical alert within minutes:
+
+> 🔴 **FinOps Alert — CRITICAL**
+> finops-rg-dev has exceeded its monthly budget!
+> Spent: $5.89 / Budget: $5.00 (117.8%)
+
+---
+
+## Challenges & Lessons Learned
+
+**Azure App Service quota** — My personal tenant had `Total VMs: 0` quota for App Service
+in every region. Opened a support ticket, escalated twice, eventually resolved by switching
+to a Pay-as-you-go subscription. Lesson: always check quota before designing around a service.
+
+**OIDC subject claim mismatch** — Spent time debugging why `environment:app` credentials
+weren't matching. Root cause: the federated credential existed on a different app registration
+than the one `AZURE_CLIENT_ID` pointed to. Always verify with `az ad app federated-credential list`.
+
+**psycopg2 decimal types** — PostgreSQL returns `NUMERIC` columns as Python `decimal.Decimal`.
+Dividing by a float raises `TypeError`. Simple fix: `float(mtd_cost)`. Easy to miss, annoying to debug.
+
+**URL-encoding special characters in connection strings** — The PostgreSQL password contained
+`#` and `&` which broke URL parsing in Node.js. Had to percent-encode every special character.
+`#` → `%23`, `&` → `%26`, `%` → `%25`.
+
+---
+
+## What It Costs to Run
+
+| Resource | Monthly cost |
+|---|---|
+| PostgreSQL Flexible Server (B1ms, stopped when idle) | ~$8 |
+| Container Registry (Basic) | ~$5 |
+| App Service (B1) | ~$13 |
+| Key Vault | ~$0 |
+| Storage (tfstate) | ~$0 |
+| **Total** | **~$26/month** |
+
+For a personal portfolio project monitoring 4 subscriptions — reasonable.
+In production at enterprise scale, the collector and alerting cost nothing extra
+(GitHub Actions free tier covers it), and you'd likely already have PostgreSQL.
+
+---
+
+## What's Next
+
+- **Terraform cost forecasting** — integrate Infracost to estimate cost of infrastructure changes before `terraform apply`
+- **Anomaly ML** — replace the simple 2x multiplier with a proper anomaly detection model
+- **Multi-tenant** — extend to support multiple Azure AD tenants
+- **Cost allocation** — chargeback reports per team exported monthly to SharePoint
+
+---
+
+## Source Code
+
+The full project is on GitHub: [azure-finops-dashboard](https://github.com/AliHaidry/azure-finops-dashboard)
+
+Built with: Python · PostgreSQL · Prometheus · Grafana · Next.js · Terraform · GitHub Actions · Azure
