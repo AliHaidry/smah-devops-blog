@@ -83,6 +83,7 @@ export default function ListLayoutWithTags({
 
   return (
     <>
+      <div className="mx-auto max-w-6xl px-4">
       <div className="pt-6 pb-6">
         <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-6xl md:leading-14 dark:text-gray-100">
           {title}
@@ -120,7 +121,7 @@ export default function ListLayoutWithTags({
       </div>
 
       {/* Card grid */}
-      <ul className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-3">
+      <ul className="grid grid-cols-1 gap-10 sm:grid-cols-2 xl:grid-cols-3">
         {displayPosts.map((post) => {
           const { path, date, title, summary, tags, images } = post
           return (
@@ -128,7 +129,7 @@ export default function ListLayoutWithTags({
               <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-900">
                 {images?.[0] ? (
                   <Link href={`/${path}`} aria-label={`Read "${title}"`}>
-                    <div className="relative h-52 w-full overflow-hidden">
+                    <div className="relative h-56 w-full overflow-hidden">
                       <Image
                         src={images[0]}
                         alt={title}
@@ -184,6 +185,7 @@ export default function ListLayoutWithTags({
       {pagination && pagination.totalPages > 1 && (
         <Pagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} />
       )}
+      </div>
     </>
   )
 }
