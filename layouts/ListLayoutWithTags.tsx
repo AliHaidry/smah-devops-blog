@@ -6,7 +6,6 @@ import { slug } from 'github-slugger'
 import { formatDate } from 'pliny/utils/formatDate'
 import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog } from 'contentlayer/generated'
-import Image from 'next/image'
 import Link from '@/components/Link'
 import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
@@ -128,12 +127,11 @@ export default function ListLayoutWithTags({
               <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-900">
                 {images?.[0] ? (
                   <Link href={`/${path}`} aria-label={`Read "${title}"`}>
-                    <div className="relative h-56 w-full overflow-hidden">
-                      <Image
+                    <div className="h-52 w-full overflow-hidden">
+                      <img
                         src={images[0]}
                         alt={title}
-                        fill
-                        className="object-cover object-top transition-transform duration-300 hover:scale-105"
+                        className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-105"
                       />
                     </div>
                   </Link>
