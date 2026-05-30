@@ -7,19 +7,22 @@
  *   npm install sharp --save-dev
  *
  * Usage:
- *   node generate-thumbnails.js
- *   # → creates thumbnails/ folder with all 14 PNGs
- *   # → copy to: public/static/images/
+ *   node generate-thumbnails.js                        # regenerate ALL thumbnails
+ *   node generate-thumbnails.js --slug my-new-post     # generate ONE thumbnail
+ *   node generate-thumbnails.js --list                 # list all available slugs
  *
  * Or add to package.json scripts:
- *   "thumbnails": "node generate-thumbnails.js && cp thumbnails/*.png public/static/images/"
+ *   "thumbnails":     "node generate-thumbnails.js && cp thumbnails/*.png public/static/images/"
+ *   "thumbnail:new":  "node generate-thumbnails.js --slug"
  *   Then run: npm run thumbnails
+ *           : npm run thumbnail:new -- --slug your-new-post-slug
  *
  * Adding a new blog post:
  *   1. Add a new { slug, svg: () => `...` } entry to the posts array below
- *   2. Run: node generate-thumbnails.js
- *   3. Add to MDX frontmatter: images: ['/static/images/<slug>-thumb.png']
- *   4. git push — Vercel redeploys automatically
+ *   2. Run: node generate-thumbnails.js --slug your-new-post-slug
+ *   3. Run: cp thumbnails/your-new-post-slug-thumb.png public/static/images/
+ *   4. Add to MDX frontmatter: images: ['/static/images/your-new-post-slug-thumb.png']
+ *   5. git push — Vercel redeploys automatically
  */
 
 const sharp = require('sharp');
@@ -896,7 +899,51 @@ async function render(post) {
 }
 
 async function main() {
-  console.log(`\nGenerating ${posts.length} blog thumbnails → ${OUT_DIR}\n`);
+  const args = process.argv.slice(2);
+  const slugIdx = args.indexOf('--slug');
+  const listMode = args.includes('--list');
+
+  // ── --list: show all available slugs ───────────────────────────────────────
+  if (listMode) {
+    console.log('\nAvailable slugs:\n');
+    posts.forEach((p, i) =>
+      console.log(`  ${String(i + 1).padStart(2, ' ')}. ${p.slug}`)
+    );
+    console.log('\nUsage: node generate-thumbnails.js --slug <slug>');
+    return;
+  }
+
+  // ── --slug <name>: generate a single thumbnail ─────────────────────────────
+  if (slugIdx !== -1) {
+    const targetSlug = args[slugIdx + 1];
+    if (!targetSlug) {
+      console.error('\n❌  Please provide a slug: --slug your-post-slug');
+      console.error('    Run --list to see all available slugs.\n');
+      process.exit(1);
+    }
+    const post = posts.find((p) => p.slug === targetSlug);
+    if (!post) {
+      console.error(`\n❌  No post found with slug: "${targetSlug}"`);
+      console.error('    Run --list to see all available slugs.\n');
+      process.exit(1);
+    }
+    console.log(`\nGenerating thumbnail for: ${targetSlug}\n`);
+    try {
+      await render(post);
+      console.log('\n✅ Done!');
+      console.log(`\nNext steps:`);
+      console.log(`  cp thumbnails/${targetSlug}-thumb.png public/static/images/`);
+      console.log(`  Add to ${targetSlug}.mdx frontmatter:`);
+      console.log(`  images: ['/static/images/${targetSlug}-thumb.png']\n`);
+    } catch (e) {
+      console.error(`❌  ${e.message}`);
+      process.exit(1);
+    }
+    return;
+  }
+
+  // ── default: generate ALL thumbnails ───────────────────────────────────────
+  console.log(`\nGenerating all ${posts.length} blog thumbnails → ${OUT_DIR}\n`);
   for (const post of posts) {
     try {
       await render(post);
@@ -907,11 +954,11 @@ async function main() {
   console.log('\n✅ All done!');
   console.log('\nNext steps:');
   console.log('  cp thumbnails/*.png public/static/images/');
-  console.log('  (or run: npm run thumbnails)\n');
-  console.log('Add to each MDX frontmatter:');
-  console.log('  images: [\'/static/images/<slug>-thumb.png\']\n');
+  console.log('  (or: npm run thumbnails)\n');
   console.log('Slugs generated:');
-  posts.forEach((p, i) => console.log(`  ${String(i + 1).padStart(2, ' ')}. ${p.slug}-thumb.png`));
+  posts.forEach((p, i) =>
+    console.log(`  ${String(i + 1).padStart(2, ' ')}. ${p.slug}-thumb.png`)
+  );
 }
 
 main();
