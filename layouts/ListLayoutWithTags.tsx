@@ -126,10 +126,20 @@ export default function ListLayoutWithTags({
           <div>
             <ul>
               {displayPosts.map((post) => {
-                const { path, date, title, summary, tags } = post
+                const { path, date, title, summary, tags, images } = post
                 return (
                   <li key={path} className="py-5">
                     <article className="flex flex-col space-y-2 xl:space-y-0">
+                      {images?.[0] && (
+                        <Link href={`/${path}`} aria-label={`Read "${title}"`}>
+                          <img
+                            src={images[0]}
+                            alt={title}
+                            className="w-full rounded-lg object-cover"
+                            style={{ maxHeight: '220px' }}
+                          />
+                        </Link>
+                      )}
                       <dl>
                         <dt className="sr-only">Published on</dt>
                         <dd className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400">
