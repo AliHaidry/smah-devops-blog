@@ -5,6 +5,7 @@ import { slug } from 'github-slugger'
 import { formatDate } from 'pliny/utils/formatDate'
 import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog } from 'contentlayer/generated'
+import Image from 'next/image'
 import Link from '@/components/Link'
 import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
@@ -132,26 +133,29 @@ export default function ListLayoutWithTags({
                     <article className="flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
                       {images?.[0] && (
                         <Link href={`/${path}`} aria-label={`Read "${title}"`}>
-                          <img
-                            src={images[0]}
-                            alt={title}
-                            className="h-48 w-full object-cover object-top"
-                          />
+                          <div className="relative h-48 w-full">
+                            <Image
+                              src={images[0]}
+                              alt={title}
+                              fill
+                              className="object-cover object-top"
+                            />
+                          </div>
                         </Link>
                       )}
                       <div className="flex flex-1 flex-col justify-between p-4">
                         <div>
-                          <div className="flex flex-wrap gap-1 mb-2">
+                          <div className="mb-2 flex flex-wrap gap-1">
                             {tags?.map((tag) => (
                               <Tag key={tag} text={tag} />
                             ))}
                           </div>
-                          <h2 className="mb-2 text-lg font-bold leading-tight tracking-tight">
+                          <h2 className="mb-2 text-lg leading-tight font-bold tracking-tight">
                             <Link href={`/${path}`} className="text-gray-900 dark:text-gray-100">
                               {title}
                             </Link>
                           </h2>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3">
+                          <p className="line-clamp-3 text-sm text-gray-500 dark:text-gray-400">
                             {summary}
                           </p>
                         </div>
