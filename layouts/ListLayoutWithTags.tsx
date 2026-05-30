@@ -82,100 +82,107 @@ export default function ListLayoutWithTags({
 
   return (
     <>
-      <div>
-        <div className="pt-6 pb-6">
-          <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:hidden sm:text-4xl sm:leading-10 md:text-6xl md:leading-14 dark:text-gray-100">
-            {title}
-          </h1>
-        </div>
-        <div className="flex sm:space-x-24">
-          <div className="hidden h-full max-h-screen max-w-[280px] min-w-[280px] flex-wrap overflow-auto rounded-sm bg-gray-50 pt-5 shadow-md sm:flex dark:bg-gray-900/70 dark:shadow-gray-800/40">
-            <div className="px-6 py-4">
-              {pathname.startsWith('/blog') ? (
-                <h3 className="text-primary-500 font-bold uppercase">All Posts</h3>
-              ) : (
-                <Link
-                  href={`/blog`}
-                  className="hover:text-primary-500 dark:hover:text-primary-500 font-bold text-gray-700 uppercase dark:text-gray-300"
-                >
-                  All Posts
-                </Link>
-              )}
-              <ul>
-                {sortedTags.map((t) => {
-                  return (
-                    <li key={t} className="my-3">
-                      {decodeURI(pathname.split('/tags/')[1]) === slug(t) ? (
-                        <h3 className="text-primary-500 inline px-3 py-2 text-sm font-bold uppercase">
-                          {`${t} (${tagCounts[t]})`}
-                        </h3>
-                      ) : (
-                        <Link
-                          href={`/tags/${slug(t)}`}
-                          className="hover:text-primary-500 dark:hover:text-primary-500 px-3 py-2 text-sm font-medium text-gray-500 uppercase dark:text-gray-300"
-                          aria-label={`View posts tagged ${t}`}
-                        >
-                          {`${t} (${tagCounts[t]})`}
-                        </Link>
-                      )}
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          </div>
-          <div>
-            <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {displayPosts.map((post) => {
-                const { path, date, title, summary, tags, images } = post
-                return (
-                  <li key={path}>
-                    <article className="flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
-                      {images?.[0] && (
-                        <Link href={`/${path}`} aria-label={`Read "${title}"`}>
-                          <div className="relative h-48 w-full">
-                            <Image
-                              src={images[0]}
-                              alt={title}
-                              fill
-                              className="object-cover object-top"
-                            />
-                          </div>
-                        </Link>
-                      )}
-                      <div className="flex flex-1 flex-col justify-between p-4">
-                        <div>
-                          <div className="mb-2 flex flex-wrap gap-1">
-                            {tags?.map((tag) => (
-                              <Tag key={tag} text={tag} />
-                            ))}
-                          </div>
-                          <h2 className="mb-2 text-lg leading-tight font-bold tracking-tight">
-                            <Link href={`/${path}`} className="text-gray-900 dark:text-gray-100">
-                              {title}
-                            </Link>
-                          </h2>
-                          <p className="line-clamp-3 text-sm text-gray-500 dark:text-gray-400">
-                            {summary}
-                          </p>
-                        </div>
-                        <div className="mt-3 text-xs text-gray-400 dark:text-gray-500">
-                          <time dateTime={date} suppressHydrationWarning>
-                            {formatDate(date, siteMetadata.locale)}
-                          </time>
-                        </div>
-                      </div>
-                    </article>
-                  </li>
-                )
-              })}
-            </ul>
-            {pagination && pagination.totalPages > 1 && (
-              <Pagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} />
-            )}
-          </div>
-        </div>
+      <div className="pt-6 pb-6">
+        <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-6xl md:leading-14 dark:text-gray-100">
+          {title}
+        </h1>
       </div>
+
+      {/* Tags row — horizontal scrollable strip across the top */}
+      <div className="mb-8 flex flex-wrap gap-2">
+        {pathname.startsWith('/blog') ? (
+          <span className="rounded-full bg-primary-500 px-4 py-1.5 text-sm font-bold text-white uppercase">
+            All Posts
+          </span>
+        ) : (
+          <Link
+            href="/blog"
+            className="rounded-full border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-600 uppercase hover:border-primary-500 hover:text-primary-500 dark:border-gray-600 dark:text-gray-300"
+          >
+            All Posts
+          </Link>
+        )}
+        {sortedTags.map((t) => (
+          <Link
+            key={t}
+            href={`/tags/${slug(t)}`}
+            className={`rounded-full border px-4 py-1.5 text-sm font-medium uppercase transition-colors ${
+              decodeURI(pathname.split('/tags/')[1]) === slug(t)
+                ? 'border-primary-500 bg-primary-500 text-white'
+                : 'border-gray-300 text-gray-600 hover:border-primary-500 hover:text-primary-500 dark:border-gray-600 dark:text-gray-300'
+            }`}
+            aria-label={`View posts tagged ${t}`}
+          >
+            {t} ({tagCounts[t]})
+          </Link>
+        ))}
+      </div>
+
+      {/* Card grid */}
+      <ul className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-3">
+        {displayPosts.map((post) => {
+          const { path, date, title, summary, tags, images } = post
+          return (
+            <li key={path}>
+              <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-900">
+                {images?.[0] ? (
+                  <Link href={`/${path}`} aria-label={`Read "${title}"`}>
+                    <div className="relative h-52 w-full overflow-hidden">
+                      <Image
+                        src={images[0]}
+                        alt={title}
+                        fill
+                        className="object-cover object-top transition-transform duration-300 hover:scale-105"
+                      />
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="h-52 w-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-gray-800 dark:to-gray-700" />
+                )}
+                <div className="flex flex-1 flex-col justify-between p-5">
+                  <div>
+                    <div className="mb-3 flex flex-wrap gap-1.5">
+                      {tags?.map((tag) => (
+                        <Tag key={tag} text={tag} />
+                      ))}
+                    </div>
+                    <h2 className="mb-2 text-xl font-bold leading-snug tracking-tight">
+                      <Link
+                        href={`/${path}`}
+                        className="text-gray-900 hover:text-primary-500 dark:text-gray-100 dark:hover:text-primary-400"
+                      >
+                        {title}
+                      </Link>
+                    </h2>
+                    <p className="line-clamp-2 text-sm text-gray-500 dark:text-gray-400">
+                      {summary}
+                    </p>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <time
+                      dateTime={date}
+                      suppressHydrationWarning
+                      className="text-xs text-gray-400 dark:text-gray-500"
+                    >
+                      {formatDate(date, siteMetadata.locale)}
+                    </time>
+                    <Link
+                      href={`/${path}`}
+                      className="text-xs font-medium text-primary-500 hover:text-primary-600"
+                    >
+                      Read more →
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            </li>
+          )
+        })}
+      </ul>
+
+      {pagination && pagination.totalPages > 1 && (
+        <Pagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} />
+      )}
     </>
   )
 }
