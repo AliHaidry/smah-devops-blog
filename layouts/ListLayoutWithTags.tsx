@@ -124,45 +124,41 @@ export default function ListLayoutWithTags({
             </div>
           </div>
           <div>
-            <ul>
+            <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
               {displayPosts.map((post) => {
                 const { path, date, title, summary, tags, images } = post
                 return (
-                  <li key={path} className="py-5">
-                    <article className="flex flex-col space-y-2 xl:space-y-0">
+                  <li key={path}>
+                    <article className="flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
                       {images?.[0] && (
                         <Link href={`/${path}`} aria-label={`Read "${title}"`}>
                           <img
                             src={images[0]}
                             alt={title}
-                            className="w-full rounded-lg object-cover"
-                            style={{ maxHeight: '220px' }}
+                            className="h-48 w-full object-cover object-top"
                           />
                         </Link>
                       )}
-                      <dl>
-                        <dt className="sr-only">Published on</dt>
-                        <dd className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400">
-                          <time dateTime={date} suppressHydrationWarning>
-                            {formatDate(date, siteMetadata.locale)}
-                          </time>
-                        </dd>
-                      </dl>
-                      <div className="space-y-3">
+                      <div className="flex flex-1 flex-col justify-between p-4">
                         <div>
-                          <h2 className="text-2xl leading-8 font-bold tracking-tight">
-                            <Link href={`/${path}`} className="text-gray-900 dark:text-gray-100">
-                              {title}
-                            </Link>
-                          </h2>
-                          <div className="flex flex-wrap">
+                          <div className="flex flex-wrap gap-1 mb-2">
                             {tags?.map((tag) => (
                               <Tag key={tag} text={tag} />
                             ))}
                           </div>
+                          <h2 className="mb-2 text-lg font-bold leading-tight tracking-tight">
+                            <Link href={`/${path}`} className="text-gray-900 dark:text-gray-100">
+                              {title}
+                            </Link>
+                          </h2>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3">
+                            {summary}
+                          </p>
                         </div>
-                        <div className="prose max-w-none text-gray-500 dark:text-gray-400">
-                          {summary}
+                        <div className="mt-3 text-xs text-gray-400 dark:text-gray-500">
+                          <time dateTime={date} suppressHydrationWarning>
+                            {formatDate(date, siteMetadata.locale)}
+                          </time>
                         </div>
                       </div>
                     </article>
