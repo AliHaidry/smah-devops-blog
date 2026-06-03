@@ -808,6 +808,99 @@ const posts = [
       ${footer()}`
   },
 
+  // 15. Ansible on Azure
+  {
+    slug: 'ansible-azure-from-zero-to-production',
+    svg: () => `
+      ${accentBar(GREEN)}
+      <!-- Terminal pill -->
+      <rect x="48" y="48" width="340" height="34" rx="6" fill="${DARK2}" stroke="${BORDER}" stroke-width="1"/>
+      <text x="68" y="71" font-family="monospace" font-size="15" fill="${GREEN}">$ ansible-playbook 01-provision-vm.yml -v</text>
+      <!-- Title -->
+      <text x="48" y="158" font-family="Arial,sans-serif" font-size="52" font-weight="700" fill="#E6EDF3">Ansible on Azure —</text>
+      <text x="48" y="220" font-family="Arial,sans-serif" font-size="52" font-weight="700" fill="${GREEN}">Zero to Production</text>
+      <text x="48" y="264" font-family="Arial,sans-serif" font-size="20" fill="${MUTED}">Control node · Managed Identity · Nginx role · Slack alerts · Idempotency</text>
+      <line x1="48" y1="290" x2="${W - 48}" y2="290" stroke="${DARK3}" stroke-width="1"/>
+
+      <!-- Architecture flow -->
+      <rect x="48" y="308" width="180" height="64" rx="8" fill="${FILL_BLUE}" stroke="${ACCENT_BLUE}" stroke-width="1.5"/>
+      <text x="138" y="333" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="${BLUE}" text-anchor="middle">Your Machine</text>
+      <text x="138" y="354" font-family="monospace" font-size="12" fill="${MUTED}" text-anchor="middle">Windows + MobaXterm</text>
+      <text x="138" y="370" font-family="monospace" font-size="11" fill="${MUTED}" text-anchor="middle">SSH</text>
+
+      <line x1="228" y1="340" x2="268" y2="340" stroke="${GREEN}" stroke-width="2"/>
+      <polygon points="260,333 272,340 260,347" fill="${GREEN}"/>
+
+      <rect x="272" y="308" width="220" height="64" rx="8" fill="${FILL_GREEN}" stroke="${GREEN}" stroke-width="1.5"/>
+      <text x="382" y="330" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="${GREEN}" text-anchor="middle">ansible-control-node</text>
+      <text x="382" y="350" font-family="monospace" font-size="12" fill="${MUTED}" text-anchor="middle">Azure VM · Ubuntu 22.04</text>
+      <text x="382" y="366" font-family="monospace" font-size="11" fill="${GREEN}" text-anchor="middle">Managed Identity</text>
+
+      <line x1="492" y1="340" x2="532" y2="340" stroke="${ORANGE}" stroke-width="2"/>
+      <polygon points="524,333 536,340 524,347" fill="${ORANGE}"/>
+
+      <rect x="536" y="308" width="200" height="64" rx="8" fill="${FILL_ORANGE}" stroke="${ORANGE}" stroke-width="1.5"/>
+      <text x="636" y="330" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="${ORANGE}" text-anchor="middle">Azure API</text>
+      <text x="636" y="350" font-family="monospace" font-size="12" fill="${MUTED}" text-anchor="middle">Provision VNet · NSG</text>
+      <text x="636" y="366" font-family="monospace" font-size="11" fill="${ORANGE}" text-anchor="middle">NIC · VM · Public IP</text>
+
+      <line x1="736" y1="340" x2="776" y2="340" stroke="${BLUE}" stroke-width="2"/>
+      <polygon points="768,333 780,340 768,347" fill="${BLUE}"/>
+
+      <rect x="780" y="308" width="200" height="64" rx="8" fill="${FILL_BLUE}" stroke="${ACCENT_BLUE}" stroke-width="1.5"/>
+      <text x="880" y="330" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="${BLUE}" text-anchor="middle">ansible-demo-vm</text>
+      <text x="880" y="350" font-family="monospace" font-size="12" fill="${MUTED}" text-anchor="middle">Ubuntu 22.04 LTS</text>
+      <text x="880" y="366" font-family="monospace" font-size="11" fill="${BLUE}" text-anchor="middle">Nginx installed</text>
+
+      <line x1="980" y1="340" x2="1020" y2="340" stroke="${PURPLE}" stroke-width="2"/>
+      <polygon points="1012,333 1024,340 1012,347" fill="${PURPLE}"/>
+
+      <rect x="1024" y="308" width="128" height="64" rx="8" fill="${FILL_PURPLE}" stroke="${PURPLE}" stroke-width="1.5"/>
+      <text x="1088" y="333" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="${PURPLE}" text-anchor="middle">Slack</text>
+      <text x="1088" y="353" font-family="monospace" font-size="12" fill="${MUTED}" text-anchor="middle">#azure-ansible</text>
+      <text x="1088" y="369" font-family="monospace" font-size="11" fill="${PURPLE}" text-anchor="middle">-alerts</text>
+
+      <!-- Playbook output block -->
+      <rect x="48" y="390" width="580" height="148" rx="8" fill="${DARK2}" stroke="${DARK3}" stroke-width="1"/>
+      <rect x="48" y="390" width="580" height="26" rx="8" fill="#1C2128"/>
+      <rect x="48" y="404" width="580" height="12" fill="#1C2128"/>
+      <circle cx="72" cy="403" r="6" fill="${RED}" opacity="0.7"/>
+      <circle cx="92" cy="403" r="6" fill="${ORANGE}" opacity="0.7"/>
+      <circle cx="112" cy="403" r="6" fill="${GREEN}" opacity="0.7"/>
+      <text x="320" y="407" font-family="monospace" font-size="12" fill="${MUTED}" text-anchor="middle">01-provision-vm.yml — PLAY RECAP</text>
+      <text x="68" y="433" font-family="monospace" font-size="13" fill="${MUTED}">TASK [1/7 - Create Virtual Network]</text>
+      <text x="498" y="433" font-family="monospace" font-size="13" fill="${ORANGE}" text-anchor="end">changed</text>
+      <text x="68" y="452" font-family="monospace" font-size="13" fill="${MUTED}">TASK [5/7 - Create Network Interface]</text>
+      <text x="498" y="452" font-family="monospace" font-size="13" fill="${ORANGE}" text-anchor="end">changed</text>
+      <text x="68" y="471" font-family="monospace" font-size="13" fill="${MUTED}">TASK [6/7 - Create Linux VM]</text>
+      <text x="498" y="471" font-family="monospace" font-size="13" fill="${ORANGE}" text-anchor="end">changed</text>
+      <text x="68" y="490" font-family="monospace" font-size="13" fill="${MUTED}">TASK [7/7 - Wait for SSH to be ready]</text>
+      <text x="498" y="490" font-family="monospace" font-size="13" fill="${GREEN}" text-anchor="end">ok</text>
+      <text x="68" y="514" font-family="monospace" font-size="14" fill="${GREEN}">PLAY RECAP: localhost  ok=10  changed=7  failed=0</text>
+
+      <!-- Role card -->
+      <rect x="648" y="390" width="504" height="148" rx="8" fill="${DARK2}" stroke="${DARK3}" stroke-width="1"/>
+      <text x="900" y="418" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="${GREEN}" text-anchor="middle">Nginx Role Structure</text>
+      <text x="668" y="446" font-family="monospace" font-size="13" fill="${MUTED}">roles/nginx/</text>
+      <text x="668" y="466" font-family="monospace" font-size="13" fill="${BLUE}">  defaults/main.yml</text>
+      <text x="820" y="466" font-family="monospace" font-size="12" fill="${MUTED}">port · workers</text>
+      <text x="668" y="484" font-family="monospace" font-size="13" fill="${ORANGE}">  templates/nginx.conf.j2</text>
+      <text x="668" y="502" font-family="monospace" font-size="13" fill="${GREEN}">  tasks/main.yml</text>
+      <text x="820" y="502" font-family="monospace" font-size="12" fill="${MUTED}">5 tasks</text>
+      <text x="668" y="520" font-family="monospace" font-size="13" fill="${PURPLE}">  handlers/main.yml</text>
+      <text x="820" y="520" font-family="monospace" font-size="12" fill="${MUTED}">reload on change</text>
+
+      ${tagRow([
+        { label: 'Ansible', color: GREEN, fill: FILL_GREEN },
+        { label: 'Azure', color: BLUE, fill: FILL_BLUE },
+        { label: 'Nginx', color: GREEN, fill: FILL_GREEN },
+        { label: 'IaC', color: ORANGE, fill: FILL_ORANGE },
+        { label: 'Python', color: BLUE, fill: FILL_BLUE },
+        { label: 'Slack', color: PURPLE, fill: FILL_PURPLE },
+      ], 48, 556)}
+      ${footer()}`
+  },
+
   // 14. Kubernetes Troubleshooting
   {
     slug: 'Kubernetes-troubleshoot',

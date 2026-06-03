@@ -1,0 +1,545 @@
+---
+title: 'Ansible on Azure — From Zero to Production in One Session'
+date: '2026-06-03'
+lastmod: '2026-06-03'
+tags:
+  [
+    'ansible',
+    'azure',
+    'devops',
+    'infrastructure-as-code',
+    'automation',
+    'cloud',
+    'nginx',
+    'python',
+    'slack',
+  ]
+draft: false
+summary: 'How I set up a complete Ansible control node on Azure, provisioned a demo VM from scratch using playbooks, installed Nginx via a proper role with Jinja2 templates, and sent a Slack deployment alert — all from a single Ubuntu VM running in Azure.'
+images: ['/static/images/ansible-azure-from-zero-to-production-thumb.png']
+authors: ['default']
+---
+
+I recently took on a mentorship engagement on Upwork — a senior DevOps engineer
+helping a client (AWS background) build strong Azure operations judgment.
+The first session was a live, hands-on Ansible on Azure demo.
+
+This is the complete writeup of what we built, the issues we hit, and the
+fixes that actually worked in production.
+
+---
+
+## Why Ansible on Azure from a VM, Not Your Laptop
+
+The first design decision was where to run Ansible from.
+
+Most tutorials say: install Ansible on your laptop, run playbooks locally.
+That works for a weekend project. It does not work when:
+
+- You are on Windows (Ansible does not run natively on Windows — it uses Linux
+  system calls like `os.get_blocking()` that simply do not exist on Windows)
+- You want zero credential management (Managed Identity over Service Principal)
+- You want a stable, reproducible environment that works identically every session
+
+The solution: provision a small Ubuntu VM on Azure (`Standard_B1s`, ~$0.44/day),
+configure it as the Ansible control node, and run everything from inside Azure.
+
+This is actually the production pattern — a dedicated Linux control node
+managing remote servers. Not Ansible from a laptop.
+
+---
+
+## Architecture
+
+```
+Your Machine (Windows + MobaXterm)
+        ↓ SSH
+ansible-control-node (Azure VM, East US)
+  - Ansible 2.17.14
+  - azure.azcollection 3.19.0
+  - Azure CLI
+  - Managed Identity (Contributor)
+        ↓ Azure API + SSH
+ansible-demo-vm (provisioned during session)
+  - Ubuntu 22.04 LTS
+  - Nginx (installed by Ansible)
+        ↓ Slack webhook
+#azure-ansible-alerts
+```
+
+The control node talks to Azure via Managed Identity — no credentials stored
+anywhere. The control node SSHes into the demo VM to configure it.
+Everything is logged. Slack gets notified.
+
+---
+
+## Phase 1 — Control Node Setup
+
+### Create the VM with Managed Identity
+
+```bash
+az vm create \
+  --resource-group ansible-control-rg \
+  --name ansible-control-node \
+  --image Ubuntu2204 \
+  --size Standard_B1s \
+  --admin-username azureuser \
+  --generate-ssh-keys \
+  --assign-identity \
+  --output table
+```
+
+The `--assign-identity` flag gives the VM a System-assigned Managed Identity —
+an automatic ID card baked into the VM itself. No credentials to store,
+rotate, or accidentally leak.
+
+### Install Ansible
+
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install python3 python3-pip -y
+pip3 install --upgrade pip
+echo 'export PATH=$PATH:~/.local/bin' >> ~/.bashrc
+source ~/.bashrc
+pip3 install ansible
+```
+
+### The Python Path Problem (and Fix)
+
+This is the issue that catches everyone. Ansible uses `/usr/bin/python3`
+(system Python) but pip3 installs packages to `~/.local/lib/python3.10/site-packages`
+(user directory). They do not talk to each other.
+
+Fix — bridge the gap permanently:
+
+```bash
+echo 'export PYTHONPATH=/home/azureuser/.local/lib/python3.10/site-packages:$PYTHONPATH' >> ~/.bashrc
+source ~/.bashrc
+```
+
+And in `ansible.cfg`:
+
+```ini
+[defaults]
+interpreter_python = /usr/bin/python3
+```
+
+### Install the Azure Collection
+
+```bash
+ansible-galaxy collection install azure.azcollection --force
+
+# Install ALL required modules — the file is requirements.txt, not requirements-azure.txt
+pip3 install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements.txt
+```
+
+One of the modules (`azure-mgmt-resource`) installs in version 25.x by default,
+which removes the `subscriptions` submodule. Downgrade it:
+
+```bash
+pip3 uninstall azure-mgmt-resource -y
+pip3 install "azure-mgmt-resource==13.0.0"
+```
+
+### Assign Managed Identity the Contributor Role
+
+Via the Azure Portal:
+`Subscriptions → Azure subscription poc → Access control (IAM) → Add role assignment → Contributor → Managed identity → ansible-control-node`
+
+Verify it works:
+
+```bash
+export ANSIBLE_AZURE_AUTH_SOURCE=msi
+
+ansible localhost \
+  -m azure.azcollection.azure_rm_resourcegroup_info \
+  -a "name=ansible-control-rg"
+```
+
+```
+localhost | SUCCESS => {
+    "changed": false,
+    "resourcegroups": [...]
+}
+```
+
+Zero credentials. Ansible authenticates to Azure using the VM's identity.
+
+---
+
+## Phase 2 — Project Setup
+
+### ansible.cfg
+
+```ini
+[defaults]
+interpreter_python = /usr/bin/python3
+host_key_checking = False
+stdout_callback = yaml
+remote_user = azureuser
+private_key_file = ~/.ssh/ansible_azure_demo
+
+[ssh_connection]
+ssh_args = -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+pipelining = True
+```
+
+### Variables File (group_vars/all.yml)
+
+```yaml
+resource_group: 'ansible-demo-rg'
+location: 'eastus'
+vnet_name: 'ansible-demo-vnet'
+subnet_name: 'ansible-demo-subnet'
+vnet_cidr: '10.0.0.0/16'
+subnet_cidr: '10.0.1.0/24'
+vm_name: 'ansible-demo-vm'
+vm_size: 'Standard_B1s'
+admin_user: 'azureuser'
+ssh_public_key_path: '~/.ssh/ansible_azure_demo.pub'
+ssh_private_key_path: '~/.ssh/ansible_azure_demo'
+slack_webhook_url: 'https://hooks.slack.com/services/...'
+```
+
+### Dynamic Inventory (inventory/azure_rm.yml)
+
+```yaml
+plugin: azure.azcollection.azure_rm
+
+include_vm_resource_groups:
+  - ansible-demo-rg
+
+conditional_groups:
+  webservers: "'role' in tags and tags['role'] == 'webserver'"
+  managed: "'managed' in tags and tags['managed'] == 'true'"
+
+hostvar_expressions:
+  ansible_host: public_ipv4_address[0] if public_ipv4_address else private_ipv4_addresses[0]
+
+plain_host_vars:
+  ansible_user: azureuser
+  ansible_ssh_private_key_file: ~/.ssh/ansible_azure_demo
+  ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+```
+
+Note: The variable is `public_ipv4_address` (singular list) — NOT
+`public_ipv4_addresses` (plural). The plural version is undefined in
+`azure.azcollection 3.19.0` and throws an exception. Check available
+host variables with `ansible-inventory --host <hostname>` if you hit this.
+
+---
+
+## Phase 3 — Provisioning the Demo VM
+
+The provisioning playbook creates 7 Azure resources in sequence:
+VNet → Subnet → Public IP → NSG → NIC → VM → waits for SSH.
+
+Two issues hit during implementation:
+
+### Fix 1 — Network Interface Parameters Changed
+
+In `azure.azcollection 3.19.0`, the `public_ip_name` and `subnet` parameters
+on `azure_rm_networkinterface` were replaced. The correct parameters:
+
+```yaml
+- name: '5/7 - Create Network Interface'
+  azure.azcollection.azure_rm_networkinterface:
+    resource_group: '{{ resource_group }}'
+    name: '{{ vm_name }}-nic'
+    virtual_network: '{{ vnet_name }}'
+    subnet_name: '{{ subnet_name }}' # NOT subnet:
+    security_group: '{{ vm_name }}-nsg'
+    ip_configurations: # NOT public_ip_name:
+      - name: ipconfig1
+        public_ip_address_name: '{{ vm_name }}-pip'
+        primary: true
+```
+
+### Fix 2 — Managed Disks Required for Ubuntu 22.04 Gen2
+
+```yaml
+- name: '6/7 - Create Linux VM (Ubuntu 22.04)'
+  azure.azcollection.azure_rm_virtualmachine:
+    managed_disk_type: Standard_LRS # Required — not optional
+    image:
+      offer: 0001-com-ubuntu-server-jammy
+      publisher: Canonical
+      sku: '22_04-lts-gen2'
+      version: latest
+```
+
+### Run It
+
+```bash
+ansible-playbook 01-provision-vm.yml -v
+```
+
+```
+TASK [1/7 - Create Virtual Network]    changed: [localhost]
+TASK [2/7 - Create Subnet]             changed: [localhost]
+TASK [3/7 - Create Public IP]          changed: [localhost]
+TASK [4/7 - Create NSG]                changed: [localhost]
+TASK [5/7 - Create Network Interface]  changed: [localhost]
+TASK [6/7 - Create Linux VM]           changed: [localhost]
+TASK [7/7 - Wait for SSH to be ready]  ok: [localhost]
+
+PLAY RECAP: localhost ok=10  changed=7  failed=0
+```
+
+### Create Static Inventory After Every Provision
+
+The demo VM gets a new public IP every time it is provisioned. The IP is
+automatically saved by the playbook to `/tmp/demo-vm-ip.txt`. After every
+provision, regenerate `hosts.ini`:
+
+```bash
+VM_IP=$(cat /tmp/demo-vm-ip.txt)
+
+cat > inventory/hosts.ini << EOF
+[azure_vms]
+ansible-demo-vm ansible_host=$VM_IP
+
+[azure_vms:vars]
+ansible_user=azureuser
+ansible_ssh_private_key_file=~/.ssh/ansible_azure_demo
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+EOF
+
+ansible azure_vms -i inventory/hosts.ini -m ping
+```
+
+---
+
+## Phase 4 — Installing Nginx via a Role
+
+The Nginx installation uses a proper Ansible role with defaults, Jinja2 templates, tasks, and handlers.
+
+### Role Structure
+
+```
+roles/nginx/
+  defaults/main.yml       <- nginx_port:80, nginx_worker_processes:auto
+  tasks/main.yml          <- 5 tasks
+  handlers/main.yml       <- Restart + Reload (zero downtime)
+  templates/nginx.conf.j2 <- Jinja2 config template
+```
+
+### The Jinja2 Template
+
+```nginx
+# Managed by Ansible - DO NOT EDIT MANUALLY
+worker_processes {{ nginx_worker_processes }};
+
+events {
+    worker_connections {{ nginx_worker_connections }};
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+    sendfile      on;
+    keepalive_timeout 65;
+
+    server {
+        listen {{ nginx_port }};
+        server_name {{ nginx_server_name }};
+        root {{ nginx_root }};
+        index index.html;
+    }
+}
+```
+
+Variables come from `defaults/main.yml`. Override per environment without
+touching the template.
+
+### The Handler Pattern
+
+```yaml
+- name: '3/5 - Deploy Nginx config template'
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    validate: 'nginx -t -c %s' # Validate before applying
+  notify: Reload Nginx # Only reload if config actually changed
+```
+
+```yaml
+# handlers/main.yml
+- name: Reload Nginx
+  ansible.builtin.service:
+    name: nginx
+    state: reloaded # reload = zero downtime
+```
+
+Handlers fire at the END of the playbook — not immediately when notified.
+If 3 tasks all notify Reload Nginx, Nginx reloads exactly once.
+
+### Result
+
+```bash
+ansible-playbook 02-install-nginx.yml -i inventory/hosts.ini -v
+
+PLAY RECAP: ansible-demo-vm ok=10  changed=6  failed=0
+```
+
+The custom page at `http://20.51.214.26`:
+
+```
+Ansible Demo - Ali Haidry
+Provisioned and configured by Ansible
+[Azure] [Ansible] [Nginx]
+```
+
+---
+
+## Phase 5 — Slack Alert
+
+Rather than Microsoft Teams (more complex payload), Slack webhooks are
+straightforward:
+
+```yaml
+- name: Send success alert to Slack
+  ansible.builtin.uri:
+    url: '{{ slack_webhook_url }}'
+    method: POST
+    body_format: json
+    body:
+      text: 'Ansible Deployment Successful!'
+      attachments:
+        - color: 'good'
+          title: 'Ansible on Azure — Demo Complete'
+          fields:
+            - title: 'VM Name'
+              value: '{{ vm_name }}'
+              short: true
+            - title: 'Public IP'
+              value: '{{ vm_ip }}'
+              short: true
+            - title: 'Web URL'
+              value: 'http://{{ vm_ip }}'
+              short: true
+            - title: 'Status'
+              value: 'Nginx installed and running'
+              short: true
+            - title: 'Deployed by'
+              value: 'Ali Haidry — Ansible'
+              short: true
+    status_code: 200
+```
+
+Green card in `#azure-ansible-alerts` with VM name, IP, clickable URL,
+timestamp, and deployer name. Every deployment visible to the team.
+
+---
+
+## Phase 6 — Idempotency and Drift
+
+### Idempotency Proof
+
+Run the Nginx playbook again immediately after the first run:
+
+```
+TASK [1/5 - Update apt cache]    changed  <- apt cache expired (normal after 1hr)
+TASK [2/5 - Install Nginx]       ok       <- already installed
+TASK [3/5 - Deploy Nginx config] ok       <- config unchanged
+TASK [4/5 - Deploy page]         ok       <- page unchanged
+TASK [5/5 - Ensure Nginx]        ok       <- already running
+
+PLAY RECAP: ansible-demo-vm ok=8  changed=1  failed=0
+```
+
+Only the apt cache refreshes after an hour — controlled by `cache_valid_time: 3600`.
+Everything else is already in the correct state. That is idempotency.
+
+### Drift Detection and Auto-Fix
+
+Simulate someone manually stopping Nginx:
+
+```bash
+ssh -i ~/.ssh/ansible_azure_demo azureuser@$VM_IP \
+  "sudo systemctl stop nginx"
+
+curl http://$VM_IP
+# Connection refused
+```
+
+Run Ansible:
+
+```bash
+ansible-playbook 02-install-nginx.yml -i inventory/hosts.ini
+```
+
+```
+TASK [1/5 - Update apt cache]    ok
+TASK [2/5 - Install Nginx]       ok
+TASK [3/5 - Deploy Nginx config] ok
+TASK [4/5 - Deploy page]         ok
+TASK [5/5 - Ensure Nginx]        changed  <- drift detected and fixed
+```
+
+Ansible scanned all 5 tasks. Found exactly one thing wrong. Fixed only that.
+Did not reinstall Nginx. Did not redeploy configs. One broken thing, one fix.
+
+At CDS, a variant of this runs nightly across 10+ servers. Any configuration
+drift from the previous night is detected and corrected automatically.
+
+---
+
+## Troubleshooting Reference
+
+Real issues hit during this exact setup — not hypothetical:
+
+| Issue | Error | Fix |
+| --- | --- | --- |
+| Ansible not found | `ansible: not found` | `echo 'export PATH=$PATH:~/.local/bin' >> ~/.bashrc` |
+| Azure modules missing | `No module named azure.mgmt.X` | `pip3 install -r ~/.ansible/.../requirements.txt` |
+| Wrong subscriptions module | `No module named azure.mgmt.resource.subscriptions` | `pip3 install "azure-mgmt-resource==13.0.0"` |
+| Python path mismatch | `Failed to import on /usr/bin/python3` | Add PYTHONPATH to `~/.bashrc` |
+| Git Bash MissingSubscription | CLI role assignment fails | Add `| tr -d '\r'` to all `az` captures |
+| Unsupported `public_ip_name` | Module parameter error | Use `ip_configurations` block |
+| Unmanaged disks error | Ubuntu 22.04 Gen2 fails | Add `managed_disk_type: Standard_LRS` |
+| SSH key not found | File lookup fails | Run `ssh-keygen` before provision |
+| Dynamic inventory wrong IP | Connects to private IP | Use `public_ipv4_address[0]` (singular) |
+| hosts.ini not found | Inventory parse warning | Recreate from `/tmp/demo-vm-ip.txt` after each provision |
+
+---
+
+## Cost
+
+| Resource | Daily | Monthly |
+| --- | --- | --- |
+| ansible-control-node (Standard_B1s) running | ~$0.44 | ~$13 |
+| ansible-control-node deallocated | ~$0.15 | ~$4.50 |
+| ansible-demo-vm (Standard_B1s) during session | ~$0.44 | deleted after |
+
+Deallocate the control node between sessions. All packages, SSH keys, and
+project files persist on the disk. Start it 30 minutes before the next
+session and you are ready immediately.
+
+Total cost for a weekly 1-hour mentorship session: under $10/month.
+
+---
+
+## What Is Next
+
+The next sessions will cover:
+
+- **Azure Monitor + Log Analytics** — alerting on VM health metrics to the
+  same Slack channel
+- **Terraform IaC** — migrating this infrastructure to proper Terraform modules
+  so the entire demo environment can be spun up and torn down with one command
+- **GitHub Actions CI/CD** — running Ansible playbooks from a pipeline on
+  every push to main
+
+The control node stays. The demo VM gets deleted and reprovisions fresh each
+session. Infrastructure as code means we never have to remember what we did
+last time.
+
+---
+
+## Source
+
+All playbooks, roles, inventory files, and the full session guide are
+available in the project documentation produced alongside this work.
+
+Built with: Ansible · Azure · Ubuntu 22.04 · Nginx · Python · Slack · MobaXterm
