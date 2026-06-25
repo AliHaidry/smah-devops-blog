@@ -45,6 +45,40 @@ const projectsData: Project[] = [
     href: 'https://github.com/AliHaidry/azure-finops-dashboard',
   },
   {
+    title: 'PakTech Egg Catcher',
+    description:
+      'Full-stack DevOps project deploying an HTML5 Canvas game to AKS with PostgreSQL + Redis StatefulSets, Argo CD GitOps, GitHub Actions CI/CD, cert-manager TLS, and full Prometheus/Grafana/Slack observability.',
+    longDescription:
+      'A browser-based egg catcher game is the front — the real project is everything underneath it. Flask serves an HTML5 Canvas game backed by PostgreSQL and Redis running as Kubernetes StatefulSets on AKS. Deployed via Argo CD GitOps, built by GitHub Actions with OIDC federation, monitored by Prometheus and Grafana, with Slack alerts for 8 alert conditions. Every phase documented: local development, Terraform infrastructure, GitOps with StatefulSets, CI/CD pipeline, and full observability stack.',
+    category: 'Personal',
+    company: 'PakTechLimited',
+    role: 'Solo — Architecture, IaC, Backend, DevOps',
+    period: 'June 2026',
+    stack: [
+      'Python', 'Flask', 'PostgreSQL', 'Redis',
+      'Kubernetes', 'AKS', 'Terraform', 'Argo CD',
+      'GitHub Actions', 'Helm', 'NGINX', 'cert-manager',
+      'Prometheus', 'Grafana', 'AlertManager', 'Slack',
+      'Docker', 'Azure', 'OIDC',
+    ],
+    impact: 'Full Production Stack',
+    impactDetail: 'Game live at eggscore.paktechlimited.com — StatefulSets, GitOps, observability, zero stored secrets',
+    architecture: [
+      'Flask + HTML5 Canvas game served via Gunicorn — session state in Redis (1h TTL), final scores persisted to PostgreSQL; frontend pushes score updates every 2 seconds during play',
+      'PostgreSQL and Redis run as StatefulSets with volumeClaimTemplates backed by Azure Managed Disks — stable DNS identity, init containers for permission fixing, readiness probes on both',
+      'Azure Load Balancer DSR mode silently dropped all inbound traffic — resolved with externalTrafficPolicy=Local to switch from DSR to standard DNAT; not documented clearly anywhere in Azure or NGINX docs',
+      'cert-manager ClusterIssuers applied post-terraform (CRDs must exist first) — Let\'s Encrypt HTTP01 TLS on eggscore.paktechlimited.com',
+      'Two-repo GitOps: app-eggcatcher for source/CI, gitops-eggcatcher for Helm chart/cluster state. Argo CD selfHeal=true reverts any manual kubectl change within 3 minutes',
+      'GitHub Actions pipeline: pytest (14 tests, fakeredis + SQLite) → docker buildx → ACR push → patch values.yaml image tag → Argo CD rolling update with maxUnavailable=0',
+      'OIDC federation: GitHub Actions authenticates to Azure with short-lived tokens — only IDs in GitHub Secrets, no client secrets stored anywhere',
+      'Prometheus scrapes /metrics every 15s — custom Flask metrics: active sessions, scores/min, leaderboard hits, score distribution histogram. Grafana: 10 panels covering game metrics and infrastructure',
+      '8 AlertManager rules → Slack #eggcatcher-alerts: Critical (PodCrashLooping, PostgreSQLDown, RedisDown) and Warning (HighCPU, HighMemory, PodNotReady, HighActiveSessions, NoScoresSubmitted)',
+    ],
+    href: 'https://eggscore.paktechlimited.com',
+    github: 'https://github.com/PakTechLimited/app-eggcatcher',
+    status: 'Live',
+  },
+  {
     title: 'Unified Marketing Platform — Observability & Monitoring Stack',
     description:
       'A production-grade, 4-phase observability platform built from scratch — covering infrastructure metrics, multi-service application monitoring, real-time log stream processing, and a hardened HTTPS-secured Grafana portal with intelligent alerting.',
