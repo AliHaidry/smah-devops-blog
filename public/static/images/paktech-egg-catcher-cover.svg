@@ -1,0 +1,117 @@
+<svg width="1200" viewBox="0 0 680 380" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>PakTech Egg Catcher — DevOps pipeline diagram</title>
+  <desc>End-to-end pipeline: code push through GitHub Actions CI/CD to AKS with GitOps, StatefulSets, TLS, and Prometheus observability</desc>
+
+  <style>
+    svg { background: #0f172a; }
+    .th { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 500; fill: #f1f5f9; }
+    .ts { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 400; fill: #94a3b8; }
+    .label { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 500; fill: #cbd5e1; }
+  </style>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="340" y="22" text-anchor="middle" class="label">PakTech Egg Catcher — end-to-end DevOps pipeline</text>
+
+  <!-- git push -->
+  <rect x="28" y="40" width="108" height="48" rx="4" fill="#1e293b" stroke="#475569" stroke-width="0.5"/>
+  <text x="82" y="60" text-anchor="middle" class="th">git push</text>
+  <text x="82" y="76" text-anchor="middle" class="ts">app-eggcatcher</text>
+  <line x1="136" y1="64" x2="158" y2="64" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- GitHub Actions -->
+  <rect x="160" y="40" width="120" height="48" rx="4" fill="#1e3a5f" stroke="#3b82f6" stroke-width="0.5"/>
+  <text x="220" y="60" text-anchor="middle" class="th" style="fill:#93c5fd">GitHub Actions</text>
+  <text x="220" y="76" text-anchor="middle" class="ts">test · build · push</text>
+  <line x1="280" y1="64" x2="302" y2="64" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- ACR -->
+  <rect x="304" y="40" width="100" height="48" rx="4" fill="#134e4a" stroke="#14b8a6" stroke-width="0.5"/>
+  <text x="354" y="60" text-anchor="middle" class="th" style="fill:#5eead4">ACR</text>
+  <text x="354" y="76" text-anchor="middle" class="ts">image:7-50a9fdc</text>
+  <line x1="404" y1="64" x2="426" y2="64" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- GitOps repo -->
+  <rect x="428" y="40" width="120" height="48" rx="4" fill="#2e1065" stroke="#a855f7" stroke-width="0.5"/>
+  <text x="488" y="60" text-anchor="middle" class="th" style="fill:#d8b4fe">gitops-eggcatcher</text>
+  <text x="488" y="76" text-anchor="middle" class="ts">values.yaml updated</text>
+  <line x1="488" y1="88" x2="488" y2="128" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- Argo CD -->
+  <rect x="428" y="130" width="120" height="48" rx="4" fill="#4c0519" stroke="#f43f5e" stroke-width="0.5"/>
+  <text x="488" y="150" text-anchor="middle" class="th" style="fill:#fda4af">Argo CD</text>
+  <text x="488" y="166" text-anchor="middle" class="ts">auto-sync · selfHeal</text>
+  <line x1="428" y1="154" x2="360" y2="154" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- AKS cluster dashed box -->
+  <rect x="40" y="110" width="308" height="176" rx="4" fill="none" stroke="#334155" stroke-width="0.5" stroke-dasharray="5,3"/>
+  <text x="56" y="128" class="ts">AKS — eggcatcher namespace</text>
+
+  <!-- Flask -->
+  <rect x="56" y="136" width="100" height="44" rx="4" fill="#14532d" stroke="#22c55e" stroke-width="0.5"/>
+  <text x="106" y="156" text-anchor="middle" class="th" style="fill:#86efac">Flask</text>
+  <text x="106" y="170" text-anchor="middle" class="ts">2 replicas</text>
+  <line x1="156" y1="158" x2="178" y2="158" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- PostgreSQL -->
+  <rect x="180" y="136" width="72" height="44" rx="4" fill="#1e3a5f" stroke="#3b82f6" stroke-width="0.5"/>
+  <text x="216" y="152" text-anchor="middle" class="th" style="fill:#93c5fd">Postgres</text>
+  <text x="216" y="168" text-anchor="middle" class="ts">StatefulSet</text>
+  <line x1="106" y1="180" x2="106" y2="208" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- Redis -->
+  <rect x="56" y="210" width="100" height="44" rx="4" fill="#451a03" stroke="#f59e0b" stroke-width="0.5"/>
+  <text x="106" y="230" text-anchor="middle" class="th" style="fill:#fcd34d">Redis</text>
+  <text x="106" y="246" text-anchor="middle" class="ts">StatefulSet</text>
+
+  <!-- NGINX -->
+  <rect x="180" y="210" width="72" height="44" rx="4" fill="#134e4a" stroke="#14b8a6" stroke-width="0.5"/>
+  <text x="216" y="226" text-anchor="middle" class="th" style="fill:#5eead4">NGINX</text>
+  <text x="216" y="242" text-anchor="middle" class="ts">Ingress + TLS</text>
+  <line x1="216" y1="282" x2="216" y2="304" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- DNS / Internet -->
+  <rect x="156" y="306" width="120" height="44" rx="4" fill="#1e293b" stroke="#475569" stroke-width="0.5"/>
+  <text x="216" y="323" text-anchor="middle" class="th" style="font-size:11px">eggscore.paktechlimited.com</text>
+  <text x="216" y="342" text-anchor="middle" class="ts">Azure DNS · Let's Encrypt</text>
+
+  <!-- Observability dashed box -->
+  <rect x="548" y="110" width="116" height="176" rx="4" fill="none" stroke="#334155" stroke-width="0.5" stroke-dasharray="5,3"/>
+  <text x="562" y="128" class="ts">Observability</text>
+
+  <!-- Prometheus -->
+  <rect x="558" y="136" width="96" height="40" rx="4" fill="#451a03" stroke="#f59e0b" stroke-width="0.5"/>
+  <text x="606" y="152" text-anchor="middle" class="th" style="fill:#fcd34d">Prometheus</text>
+  <text x="606" y="166" text-anchor="middle" class="ts">scrapes /metrics</text>
+
+  <!-- Grafana -->
+  <rect x="558" y="188" width="96" height="40" rx="4" fill="#1c1917" stroke="#f97316" stroke-width="0.5"/>
+  <text x="606" y="204" text-anchor="middle" class="th" style="fill:#fdba74">Grafana</text>
+  <text x="606" y="218" text-anchor="middle" class="ts">dashboard</text>
+
+  <!-- AlertManager -->
+  <rect x="558" y="240" width="96" height="40" rx="4" fill="#450a0a" stroke="#ef4444" stroke-width="0.5"/>
+  <text x="606" y="256" text-anchor="middle" class="th" style="fill:#fca5a5">AlertManager</text>
+  <text x="606" y="270" text-anchor="middle" class="ts">→ Slack alerts</text>
+
+  <!-- Scrape dashed arrow Flask→Prometheus -->
+  <line x1="548" y1="156" x2="360" y2="156" stroke="#475569" stroke-width="0.5" stroke-dasharray="4,2" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- Slack -->
+  <rect x="558" y="306" width="96" height="44" rx="4" fill="#14532d" stroke="#22c55e" stroke-width="0.5"/>
+  <text x="606" y="326" text-anchor="middle" class="th" style="fill:#86efac">Slack</text>
+  <text x="606" y="342" text-anchor="middle" class="ts">#eggcatcher-alerts</text>
+  <line x1="606" y1="280" x2="606" y2="304" stroke="#64748b" stroke-width="1" marker-end="url(#arrow)" fill="none"/>
+
+  <!-- CI → Slack dashed -->
+  <line x1="548" y1="64" x2="606" y2="64" stroke="#475569" stroke-width="0.5" stroke-dasharray="4,2" fill="none"/>
+  <line x1="606" y1="64" x2="606" y2="130" stroke="#475569" stroke-width="0.5" stroke-dasharray="4,2" marker-end="url(#arrow)" fill="none"/>
+</svg>
