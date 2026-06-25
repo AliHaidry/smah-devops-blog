@@ -1,0 +1,337 @@
+---
+title: 'Building a Production-Grade Egg Catcher Game on AKS — Flask, StatefulSets, GitOps, and Full Observability'
+date: '2026-06-25'
+lastmod: '2026-06-25'
+tags: ['AKS', 'GitOps', 'ArgoCD', 'Terraform', 'Kubernetes', 'Flask', 'StatefulSets', 'GitHub-Actions', 'Prometheus', 'Grafana', 'Slack', 'DevOps']
+draft: false
+summary: 'I built a browser-based egg catcher game and deployed it to AKS using a full DevOps stack: Flask + PostgreSQL StatefulSet + Redis StatefulSet + NGINX Ingress + cert-manager TLS + Argo CD GitOps + GitHub Actions CI/CD + Prometheus/Grafana observability + Slack alerting. This post documents every phase, every error, and every fix.'
+authors: ['default']
+---
+
+## Why Build a Game?
+
+The best way to demonstrate production DevOps depth is to deploy something real — something with stateful backends, a public URL, automated deployments, and live metrics. A browser game fits perfectly: it's visually compelling enough to screenshot for a portfolio, but the real story is everything underneath it.
+
+**Live URL:** [https://eggscore.paktechlimited.com](https://eggscore.paktechlimited.com)
+
+The stack in one sentence: a Flask app serving an HTML5 Canvas game, backed by PostgreSQL and Redis running as Kubernetes StatefulSets on AKS, deployed via Argo CD GitOps, built by GitHub Actions, monitored by Prometheus and Grafana, with Slack alerts for everything.
+
+---
+
+## Architecture Overview
+
+```
+Internet
+    │
+    ▼  DNS: eggscore.paktechlimited.com → 52.226.228.74
+Azure Load Balancer (Standard SKU)
+    │  externalTrafficPolicy: Local (critical — see Phase 2)
+    ▼
+NGINX Ingress Controller
+    │  TLS terminated — cert-manager + Let's Encrypt HTTP01
+    ▼
+Flask Deployment (2 replicas, rolling update, maxUnavailable=0)
+    ├── PostgreSQL StatefulSet (postgres-0, 5Gi Azure Disk PVC)
+    └── Redis StatefulSet (redis-0, 1Gi Azure Disk PVC)
+
+CI/CD:
+  git push → GitHub Actions → pytest → docker build → ACR push
+           → update gitops-eggcatcher/values.yaml → Argo CD syncs
+
+Observability:
+  Prometheus scrapes /metrics every 15s
+  Grafana: game metrics + infrastructure panels
+  AlertManager → Slack #eggcatcher-alerts
+```
+
+**Two repositories:**
+- [`PakTechLimited/app-eggcatcher`](https://github.com/PakTechLimited/app-eggcatcher) — Flask source, Dockerfile, Terraform, CI/CD
+- [`PakTechLimited/gitops-eggcatcher`](https://github.com/PakTechLimited/gitops-eggcatcher) — Helm chart, values.yaml, monitoring stack
+
+---
+
+## Phase 1: Local Development
+
+### The Flask App
+
+The game is a standard HTML5 Canvas browser game. Eggs fall from the top, you move the basket with your mouse, and every 10 eggs caught the speed increases. Three lives. +10 points per catch.
+
+The backend is Flask with three blueprints:
+
+- **score.py** — session lifecycle (`/api/session/start`, `/api/session/:id/update`, `/api/score/submit`)
+- **leaderboard.py** — top scores + per-player history
+- **health.py** — `/health/live` (liveness) and `/health/ready` (checks Postgres + Redis)
+
+Active game sessions live in Redis with a 1-hour TTL. The frontend pushes score updates every 2 seconds during gameplay. On game over, `/api/score/submit` atomically moves the score from Redis to PostgreSQL and deletes the session.
+
+### Docker Compose
+
+```yaml
+services:
+  db:
+    image: postgres:16-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eggcatcher -d eggcatcher_db"]
+  redis:
+    image: redis:7-alpine
+  app:
+    build: .
+    command: ["/app/start.sh"]
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+```
+
+**Issues and fixes:**
+
+The `COPY static/` in the Dockerfile failed because the `static/` directory doesn't exist — all game assets are inline in `index.html`. Removed the COPY line.
+
+The `flask db upgrade` in the startup command failed because Alembic's `env.py` called `fileConfig()` unconditionally — but `alembic.ini` wasn't in the path Alembic expected. Fixed by guarding with `os.path.exists()`, and replaced `flask db upgrade` with `db.create_all()` in `start.sh`.
+
+PostgreSQL health check was using `pg_isready -U eggcatcher` without `-d eggcatcher_db`. The check passed on the `postgres` system database before `eggcatcher_db` was created, so the Flask app started before its target database existed. Fixed by adding `-d eggcatcher_db`.
+
+### Tests
+
+14 pytest tests cover the full API — session lifecycle, score submission, leaderboard ordering, edge cases. They use `fakeredis` and SQLite in-memory so they run in CI with zero external dependencies.
+
+```bash
+PYTHONPATH=. ENVIRONMENT=testing pytest tests/ -v
+# 14 passed in 0.16s
+```
+
+---
+
+## Phase 2: Infrastructure with Terraform
+
+### AKS Cluster
+
+Terraform is split into two independent root modules:
+
+- `terraform/aks/` — provisions the AKS cluster (run first)
+- `terraform/` — extends with ACR, DNS, NGINX, cert-manager, OIDC federation
+
+**Version availability gotcha:** `az aks get-versions --location eastus -o table` revealed that almost every version available was LTS-only (requiring Premium tier). Version `1.35.5` was the correct choice — it supports `KubernetesOfficial` on the free tier.
+
+```bash
+az aks get-versions --location eastus -o table
+# Use 1.35.5 with SupportPlan: KubernetesOfficial, AKSLongTermSupport
+```
+
+### The NGINX Ingress Problem (The Hard One)
+
+This cost several hours. The symptom: `curl http://eggscore.paktechlimited.com` timed out. Port 80 was unreachable from everywhere in the world. But NGINX worked perfectly via `kubectl port-forward`.
+
+Debugging path:
+1. NSG rules ✅ — ports 80/443 allowed from Internet to `*`
+2. LB rules ✅ — port 80 → nodePort 32138, port 443 → nodePort 31272
+3. Health probe ✅ — `GET / on port 32138` returned 404 (valid HTTP response)
+4. NodePort ✅ — `kubectl exec` curl to `10.224.0.4:32138` returned NGINX response
+5. Public IP ✅ — `52.226.228.74` correctly assigned to LB frontend
+
+The root cause was `EnableFloatingIP: True` on the Azure Load Balancer rules — **Direct Server Return (DSR) mode**. In DSR mode, traffic arrives at the node still addressed to the public IP (`52.226.228.74`). For the node to accept and respond to this traffic, it needs `52.226.228.74` configured as a loopback interface. AKS nodes don't do this.
+
+**Fix:**
+
+```bash
+helm upgrade ingress-nginx ingress-nginx \
+  --repo https://kubernetes.github.io/ingress-nginx \
+  --namespace ingress-nginx \
+  --version 4.10.1 \
+  --set controller.service.externalTrafficPolicy=Local \
+  --set "controller.service.annotations.service\.beta\.kubernetes\.io/azure-disable-load-balancer-floating-ip=true"
+```
+
+`externalTrafficPolicy=Local` tells the LB to only route to nodes running the NGINX pod, which switches the LB from DSR to standard DNAT mode. Traffic now flows correctly.
+
+### cert-manager ClusterIssuers
+
+cert-manager CRDs don't exist until cert-manager is installed. Applying `ClusterIssuer` resources via Terraform causes a plan-time error because the Kubernetes API doesn't recognise the resource type yet.
+
+Solution: moved ClusterIssuers to `cluster-issuers.yaml` and applied manually after `terraform apply`:
+
+```bash
+kubectl apply -f terraform/cluster-issuers.yaml
+kubectl get clusterissuer
+# letsencrypt-prod      True
+# letsencrypt-staging   True
+```
+
+---
+
+## Phase 3: GitOps with Argo CD
+
+### StatefulSets
+
+PostgreSQL and Redis run as StatefulSets — not managed Azure services. The reason: StatefulSets give you production-grade interview talking points. PVC lifecycle, stable network identity, init containers, readiness probes.
+
+```yaml
+# PostgreSQL StatefulSet (excerpt)
+spec:
+  serviceName: postgres  # headless service — stable DNS
+  replicas: 1
+  template:
+    spec:
+      initContainers:
+        - name: fix-permissions
+          image: busybox:1.36
+          command: ["sh", "-c", "chown -R 999:999 /var/lib/postgresql/data"]
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: managed-csi
+        resources:
+          requests:
+            storage: 5Gi
+```
+
+The headless Service gives each pod a stable DNS name: `postgres-0.postgres.eggcatcher.svc.cluster.local`. Init containers run before the database process starts to fix file permissions on the Azure Disk mount.
+
+### Secrets — Never in Git
+
+The Kubernetes Secret is created via `kubectl` and referenced by pods through `secretKeyRef`. It is never in the Helm chart, never in `values.yaml`, never in Git.
+
+```bash
+kubectl create secret generic eggcatcher-secrets \
+  --namespace eggcatcher \
+  --from-literal=POSTGRES_PASSWORD='...' \
+  --from-literal=DATABASE_URL='postgresql://eggcatcher:...@postgres:5432/eggcatcher_db' \
+  --from-literal=REDIS_URL='redis://redis:6379/0' \
+  --from-literal=SECRET_KEY='...'
+```
+
+**Bash history expansion gotcha:** Using double quotes with `!` in the password (`EggCatcher2026!`) caused bash to expand `!@postgres` as a history command, corrupting the `DATABASE_URL`. Fix: use single quotes when the value contains `!`.
+
+### Migration Job Deadlock
+
+The DB migration Job had `argocd.argoproj.io/hook: PreSync`. PreSync hooks must complete before Argo CD proceeds to the main sync. But the Job's init container waited for PostgreSQL to be ready — and PostgreSQL's StatefulSet hadn't been created yet because the main sync hadn't run.
+
+Classic deadlock. Fix: remove the `PreSync` annotation so the Job runs as a normal sync resource, after StatefulSets are created.
+
+### Argo CD Application
+
+```yaml
+syncPolicy:
+  automated:
+    prune: true      # delete resources removed from Git
+    selfHeal: true   # revert manual kubectl changes
+  syncOptions:
+    - CreateNamespace=false  # namespace created by Terraform
+    - PrunePropagationPolicy=foreground
+    - PruneLast=true
+```
+
+`selfHeal: true` means any manual `kubectl` change to the cluster is automatically reverted within 3 minutes. The Git repo is the only source of truth.
+
+---
+
+## Phase 4: CI/CD with GitHub Actions
+
+```
+push to main
+    │
+    ▼
+Job 1: Test (17s)
+  pytest with fakeredis + SQLite — 14 tests pass
+    │
+    ▼
+Job 2: Build & Push (46s)
+  docker buildx → acreggcatcherdev.azurecr.io/eggcatcher:7-50a9fdc
+  also tags :latest
+    │
+    ▼
+Job 3: Update GitOps (7s)
+  checkout gitops-eggcatcher
+  sed -i "s|tag:.*|tag: \"7-50a9fdc\"|" apps/eggcatcher/values.yaml
+  git commit + push
+    │
+    ▼
+Job 4: Notify Slack (3s)
+  POST to #eggcatcher-alerts (green on success, red on failure)
+    │
+    ▼
+Argo CD detects values.yaml diff
+Rolling update: new pods start → pass /health/ready → old pods terminate
+```
+
+### OIDC Federation — Zero Stored Credentials
+
+GitHub Actions never has a stored client secret. The pipeline authenticates to Azure using a federated identity credential:
+
+- Azure App Registration created by Terraform
+- Subject: `repo:PakTechLimited/app-eggcatcher:ref:refs/heads/main`
+- At runtime: GitHub issues a JWT, Azure validates it and returns a short-lived access token
+- GitHub Secrets only contain IDs (`AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`) — no passwords
+
+---
+
+## Phase 5: Observability
+
+### Prometheus Metrics
+
+Custom metrics are exposed at `/metrics` via `prometheus-flask-exporter`:
+
+```python
+from prometheus_client import Counter, Gauge, Histogram
+from prometheus_flask_exporter import PrometheusMetrics
+
+active_sessions = Gauge("eggcatcher_active_sessions", "Live game sessions in Redis")
+scores_submitted = Counter("eggcatcher_scores_submitted_total", "Scores saved to PostgreSQL")
+leaderboard_hits = Counter("eggcatcher_leaderboard_hits_total", "Leaderboard API requests")
+session_starts = Counter("eggcatcher_session_starts_total", "Game sessions started")
+score_distribution = Histogram("eggcatcher_score_distribution", "Final score distribution",
+    buckets=[0, 50, 100, 200, 300, 500, 750, 1000, float("inf")])
+```
+
+Each route increments the relevant counter. `active_sessions` is recalculated from `redis_client.keys("game_session:*")` on every session start and score submission.
+
+### Grafana Dashboard
+
+The dashboard has 10 panels:
+- Top row: 4 stat panels (Active Sessions, Scores/min, Session Starts/min, Leaderboard Hits/min)
+- Score Distribution histogram
+- HTTP Request Rate by method/status
+- Flask Pod CPU Usage per pod
+- Flask Pod Memory Usage per pod
+- Pod Restarts (1h increase)
+- NGINX Ingress Request Rate
+
+### AlertManager → Slack
+
+8 custom alert rules route to `#eggcatcher-alerts`:
+
+- **Critical:** PodCrashLooping, PostgreSQLDown, RedisDown
+- **Warning:** HighCPU (>400m for 5m), HighMemory (>220Mi for 5m), PodNotReady, HighActiveSessions (>50), NoScoresSubmitted (none in 1h for 2h)
+
+### Monitoring Stack Issues
+
+**CPU exhaustion:** After deploying kube-prometheus-stack, Prometheus was `Pending` — the node had 93% CPU allocated. Reduced `prometheusSpec.resources.requests.cpu` from `200m` to `50m`.
+
+**Helm template conflicts:** PrometheusRule and Grafana dashboard YAML files in the Helm `templates/` folder contained `{{ }}` syntax that Helm tried to parse as Go templates. Moved both files to `apps/monitoring/raw/` and applied directly with `kubectl apply`.
+
+---
+
+## Key Learnings
+
+**externalTrafficPolicy=Local is mandatory for AKS + NGINX + Standard LB.** Without it, Azure's DSR mode silently drops all inbound traffic. This is not documented clearly anywhere and took significant debugging to identify.
+
+**StatefulSets before PreSync hooks.** If your migration Job needs the database to be ready, and the database is a StatefulSet, a PreSync hook creates a deadlock. Run migrations as a normal sync resource.
+
+**Secrets in Helm templates fail at plan time.** If a Helm template uses `{{ required "password is required" .Values.postgres.password }}` and the password isn't in `values.yaml` (because it's a secret), Argo CD can't render the template. Remove secrets from Helm entirely — pre-create them with kubectl.
+
+**Bash single quotes vs double quotes matter.** `!` in a double-quoted string triggers bash history expansion. Use single quotes for values containing `!`.
+
+**Azure Kubernetes version availability changes frequently.** Always run `az aks get-versions --location <region> -o table` to verify available versions before pinning in Terraform. In East US, many versions are LTS-only and require Premium tier.
+
+---
+
+## Interview Talking Points
+
+**On StatefulSets:** "PostgreSQL and Redis run as StatefulSets with volumeClaimTemplates backed by Azure Managed Disks. Each pod has a stable DNS identity and a dedicated PVC that persists across restarts. Init containers handle permission fixing on the mount before the database process starts. In production I'd use managed services, but StatefulSets give me concrete experience with PVC lifecycle, stable network identity, and ordering guarantees."
+
+**On GitOps:** "Two-repo pattern — app repo for source code, GitOps repo for cluster state. Argo CD watches the GitOps repo with selfHeal=true, so any manual cluster change is reverted within 3 minutes. CI/CD updates a single line in values.yaml (the image tag), Argo CD detects the diff and triggers a rolling update with maxUnavailable=0."
+
+**On the hardest production issue:** "Azure Load Balancer DSR mode silently dropped all inbound traffic. Health probes passed, NSG rules were correct, LB rules were correct — but traffic from the internet timed out. Root cause: DSR requires nodes to have the public IP as a loopback, which AKS nodes don't configure. Fix: externalTrafficPolicy=Local disables DSR and switches to standard DNAT."
+
+**On security:** "Three layers — OIDC federation means GitHub Actions never stores a client secret. Kubernetes Secrets are created via kubectl and never touch Git. ACR pulls use AcrPull role assignment on the AKS kubelet identity."
