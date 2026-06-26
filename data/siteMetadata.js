@@ -10,7 +10,7 @@ const siteMetadata = {
   siteUrl: 'https://alihaidry-devops.website',
   siteRepo: 'https://github.com/AliHaidry/smah-devops-blog',
   siteLogo: `${process.env.BASE_PATH || ''}/static/images/logo.png`,
-  socialBanner: `${process.env.BASE_PATH || ''}/static/images/twitter-card.png`,
+  socialBanner: `${process.env.BASE_PATH || ''}/static/images/og-banner.png`,
   // mastodon: 'https://mastodon.social/@mastodonuser',
   email: 'alihaidry11@gmail.com',
   github: 'https://github.com/AliHaidry',
