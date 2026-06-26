@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // Generates public/static/images/og-banner.png (1200x630) using sharp + SVG.
 // Run: node scripts/generate-og-image.js
 const sharp = require('sharp')
