@@ -109,11 +109,12 @@ export default function TechAvatar() {
       scene.add(sphere)
 
       const dotColors = [0xec4899, 0xa78bfa, 0x34d399, 0xfb923c]
-      const dots = dotColors.map((c) =>
-        new THREE.Mesh(
-          new THREE.SphereGeometry(0.07, 8, 8),
-          new THREE.MeshBasicMaterial({ color: c })
-        )
+      const dots = dotColors.map(
+        (c) =>
+          new THREE.Mesh(
+            new THREE.SphereGeometry(0.07, 8, 8),
+            new THREE.MeshBasicMaterial({ color: c })
+          )
       )
       dots.forEach((d) => scene.add(d))
 
@@ -161,12 +162,15 @@ export default function TechAvatar() {
   const [leftX, rightX] = LEG_FRAMES[frame]
 
   return (
-    <div ref={popupRef} className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+    <div ref={popupRef} className="fixed right-6 bottom-6 z-50 flex flex-col items-end gap-2">
       {/* Popup panel */}
       {open && (
         <div className="mb-2 w-72 rounded-2xl border border-pink-500 bg-[#0a0f1e] p-4 shadow-2xl">
           {/* Three.js canvas with label overlay */}
-          <div className="relative mb-4 overflow-hidden rounded-xl" style={{ height: 120, background: '#050a14' }}>
+          <div
+            className="relative mb-4 overflow-hidden rounded-xl"
+            style={{ height: 120, background: '#050a14' }}
+          >
             <div ref={canvasWrapRef} className="h-full w-full" />
             <span
               className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono text-sm font-bold"
@@ -254,7 +258,16 @@ export default function TechAvatar() {
           aria-hidden="true"
         >
           {/* Head */}
-          <rect x="14" y="2" width="24" height="22" rx="6" fill="#0a0f1e" stroke="#ec4899" strokeWidth="1.5" />
+          <rect
+            x="14"
+            y="2"
+            width="24"
+            height="22"
+            rx="6"
+            fill="#0a0f1e"
+            stroke="#ec4899"
+            strokeWidth="1.5"
+          />
           {/* </> face text */}
           <text
             x="17"
@@ -268,14 +281,57 @@ export default function TechAvatar() {
           </text>
 
           {/* Body / laptop */}
-          <rect x="10" y="26" width="32" height="14" rx="4" fill="#0f172a" stroke="#ec4899" strokeWidth="1" />
+          <rect
+            x="10"
+            y="26"
+            width="32"
+            height="14"
+            rx="4"
+            fill="#0f172a"
+            stroke="#ec4899"
+            strokeWidth="1"
+          />
           {/* Code lines */}
-          <line x1="14" y1="31" x2="28" y2="31" stroke="#ec4899" strokeWidth="1.2" strokeLinecap="round" opacity="0.8" />
-          <line x1="14" y1="35" x2="22" y2="35" stroke="#ec4899" strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
+          <line
+            x1="14"
+            y1="31"
+            x2="28"
+            y2="31"
+            stroke="#ec4899"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            opacity="0.8"
+          />
+          <line
+            x1="14"
+            y1="35"
+            x2="22"
+            y2="35"
+            stroke="#ec4899"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            opacity="0.5"
+          />
 
           {/* Arms */}
-          <line x1="10" y1="29" x2="4" y2="36" stroke="#ec4899" strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="42" y1="29" x2="48" y2="36" stroke="#ec4899" strokeWidth="1.5" strokeLinecap="round" />
+          <line
+            x1="10"
+            y1="29"
+            x2="4"
+            y2="36"
+            stroke="#ec4899"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <line
+            x1="42"
+            y1="29"
+            x2="48"
+            y2="36"
+            stroke="#ec4899"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
           {/* Tool orbs on hands */}
           <circle cx="4" cy="37" r="3" fill="#ec4899" />
           <circle cx="48" cy="37" r="3" fill="#ec4899" />
