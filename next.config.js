@@ -68,6 +68,7 @@ module.exports = () => {
     basePath,
     reactStrictMode: true,
     trailingSlash: false,
+    transpilePackages: ['three'],
     pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
     eslint: {
       dirs: ['app', 'components', 'layouts', 'scripts'],
