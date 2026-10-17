@@ -149,9 +149,9 @@ export const EnvCard = ({ env, color, replica, sync, gate, pdb, spread }) => (
 
 export const TechRow = ({ cat, tools, note }) => (
   <tr style={{ borderBottom: "1px solid #1e2d42" }}>
-    <td style={{ padding: "10px 14px", color: "#fff", fontWeight: 500, fontFamily: "'Syne', sans-serif", fontSize: "0.88rem" }}>{cat}</td>
-    <td style={{ padding: "10px 14px", color: "#00e5ff", fontFamily: "'DM Mono', monospace", fontSize: "0.82rem" }}>{tools}</td>
-    <td style={{ padding: "10px 14px", color: "#94a3b8", fontSize: "0.84rem" }}>{note}</td>
+    <td className="text-gray-900 dark:text-white" style={{ padding: "10px 14px", fontWeight: 500, fontFamily: "'Syne', sans-serif", fontSize: "0.88rem" }}>{cat}</td>
+    <td className="text-cyan-700 dark:text-cyan-300" style={{ padding: "10px 14px", fontFamily: "'DM Mono', monospace", fontSize: "0.82rem" }}>{tools}</td>
+    <td className="text-gray-600 dark:text-gray-400" style={{ padding: "10px 14px", fontSize: "0.84rem" }}>{note}</td>
   </tr>
 );
 
@@ -159,7 +159,7 @@ export const TechRow = ({ cat, tools, note }) => (
 
 # Building a Production-Grade Multi-Environment GitOps Pipeline on Azure AKS
 
-<div style={{ fontFamily: "'DM Mono', monospace", fontSize: "12px", color: "#94a3b8", display: "flex", gap: "20px", flexWrap: "wrap", margin: "16px 0 32px" }}>
+<div className="text-gray-600 dark:text-gray-400" style={{ fontFamily: "'DM Mono', monospace", fontSize: "12px", display: "flex", gap: "20px", flexWrap: "wrap", margin: "16px 0 32px" }}>
   <span>📅 May 2026</span>
   <span>⏱ 20 min read</span>
   <span>🏷 GitOps · Argo CD · GitHub Actions · Azure AKS</span>
@@ -537,9 +537,9 @@ The original rollback used `git revert HEAD --no-edit`. During testing I noticed
   <thead>
     <tr>
       {["Layer", "Technology", "Role in this project"].map(h => (
-        <th key={h} style={{
+        <th key={h} className="text-cyan-700 dark:text-cyan-300" style={{
           fontFamily: "'DM Mono', monospace", fontSize: "10px", letterSpacing: "0.12em",
-          textTransform: "uppercase", color: "#00e5ff", borderBottom: "1px solid #1e2d42",
+          textTransform: "uppercase", borderBottom: "1px solid #1e2d42",
           padding: "10px 14px", textAlign: "left",
         }}>{h}</th>
       ))}
