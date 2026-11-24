@@ -77,7 +77,14 @@ const phase1: Phase = {
     { title: 'Pull request', text: 'Into develop' },
   ],
   rollback: 'Revert the commit. Nothing outside your laptop has changed yet.',
-  figures: [],
+  figures: [
+    {
+      src: '/static/images/paktech-chat/p1-workflow.png',
+      alt: 'Phase 1 workflow: feature branch, pre-commit, tests, docker compose, pull request, and the compose startup order',
+      caption:
+        'Figure: the loop I ran for every change, and the order docker compose starts the stack.',
+    },
+  ],
   issues: [
     {
       problem: 'Two browser tabs logged each other out',
