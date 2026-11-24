@@ -1,0 +1,295 @@
+---
+title: 'DevSecOps on AKS: Building PakTech Chat in Six Phases — Terraform, GitOps, Gated CI/CD, Runtime Security and Observability'
+date: '2026-11-24'
+lastmod: '2026-11-24'
+tags: ['AKS', 'Terraform', 'GitOps', 'ArgoCD', 'GitHub-Actions', 'DevSecOps', 'Gatekeeper', 'Falco', 'Trivy', 'Prometheus', 'Grafana', 'WebSockets', 'DevOps']
+draft: false
+summary: 'I built a real-time chat app (FastAPI, WebSockets, Redis, PostgreSQL, Next.js) and took it through six phases on Azure: hardened code, Terraform infrastructure, Argo CD GitOps, a CI/CD pipeline with security gates, five layers of runtime security, and Prometheus/Grafana/Slack observability. This post covers what each phase delivered, the decisions behind it, and the problems that actually broke along the way.'
+images: ['/static/images/paktech-chat-devsecops-aks-thumb.png']
+authors: ['default']
+---
+
+## Why Build a Chat App?
+
+My previous project, the Egg Catcher game, proved I could run stateful services on AKS with GitOps and observability. PakTech Chat asks harder questions. A real-time chat app holds long-lived WebSocket connections, so you cannot restart pods casually. It needs authentication that survives page reloads and two browser tabs. It fans messages out across replicas through Redis Pub/Sub. And it has a real attack surface: logins, cookies, an AI endpoint that costs money per call.
+
+That makes it a good vehicle for the question I actually care about: **what does a production-grade, security-conscious delivery path look like, end to end, when one person builds it?** Not a diagram. A cluster where every claim has been tested, including the claims about what gets blocked.
+
+**Live URL:** [https://dev.paktechlimited.chat](https://dev.paktechlimited.chat) for the dev environment, with staging and production on the same domain. The lab cluster is stopped between working sessions to control cost, so the site is up only while I am working on it. Every screenshot below comes from a real run.
+
+The stack in one sentence: a FastAPI backend with WebSocket chat, a Next.js 16 frontend, PostgreSQL and Redis in the cluster, three environments on AKS provisioned by Terraform, delivered by Argo CD from a GitOps repo, built and scanned by GitHub Actions with no stored cloud credentials, guarded by Gatekeeper, Falco and Trivy Operator, and watched by Prometheus, Grafana and AlertManager reporting to Slack.
+
+---
+
+## Architecture Overview
+
+```
+Internet
+    │  DNS: paktechlimited.chat (Azure DNS, Terraform-managed records)
+    ▼
+Azure Load Balancer ── Envoy Gateway (Gateway API, TLS from cert-manager)
+    │    only /api and /ws reach the api; everything else goes to the web app
+    ▼
+Namespaces: paktech-chat-dev | -staging | -prod
+    ├── web   (Next.js 16, standalone, non-root)
+    ├── api   (FastAPI + gunicorn/uvicorn, WebSocket)
+    ├── postgres (StatefulSet)     redis (Pub/Sub, sessions)
+    └── migrate Job (Alembic, Argo CD sync hook)
+
+Node pools: system | apps | monitoring (tainted, Prometheus/Grafana/Trivy Operator)
+
+Delivery:
+  git push → GitHub Actions (tests, scans) → ACR Tasks build → Trivy scan by digest
+           → CI commits the digest to the GitOps repo → Argo CD syncs
+  dev and staging sync automatically; prod waits for approval and a manual sync
+```
+
+| Phase | What it delivered | Closed |
+|---|---|---|
+| 1 | The app, hardened: auth, CSRF, WebSocket security, migrations, tests, containers, UI | Nov 7 |
+| 2 | Terraform: AKS with three node pools, ACR, Key Vault, workload identity, GitHub OIDC, DNS | Nov 7 |
+| 3 | GitOps: Argo CD app-of-apps, Envoy Gateway, cert-manager, Helm chart, three environments | Nov 8 |
+| 4 | CI/CD: quality and security gates, digest-based deploys, approval gate, rollback | Nov 14 |
+| 5 | Runtime security: five layers from the API server to running processes | Nov 21 |
+| 6 | Monitoring and alerting: platform and application metrics, Slack alerts, dashboards | Nov 24 |
+
+---
+
+## Phase 1: The App, Hardened Before It Ever Ships
+
+The first phase is easy to skip and expensive to skip. Before any infrastructure existed, I hardened the code, because every later control (network policies, admission rules, scans) assumes the application is not itself the weak point.
+
+### Authentication that survives two tabs
+
+The access token lives **in memory only**. The session is restored from an httpOnly rotating refresh cookie, and cookie endpoints are protected by a custom header plus an Origin allow-list on top of SameSite. That design had a trap I only found by testing it: two tabs refreshing at the same moment each rotated the cookie and revoked the other's session. The fix is a single-flight refresh inside a tab and the Web Locks API across tabs, so only one refresh is ever in flight.
+
+### WebSocket security
+
+The first frame on a WebSocket must be an auth message. Identity comes from the verified account, never from the client, and messages are persisted before they are published to Redis. A client that leaves during the five-second auth window used to throw an unexpected ASGI error; a small `_close()` helper that ignores already-closed sockets fixed it.
+
+### Migrations, tests, containers
+
+`Base.metadata.create_all` at startup is fine on a laptop and wrong with two gunicorn workers racing each other. Schema changes moved to Alembic, run once by a migrate Job. Tests grew from 49 to 111 and later to 122, with about 96% coverage once I configured coverage for greenlet and thread concurrency (it showed 82% until then, which is a good reminder that a coverage number is only as honest as its configuration). The Next.js app builds to a standalone, non-root image.
+
+---
+
+## Phase 2: Infrastructure with Terraform
+
+Terraform provisions everything below the cluster: AKS, ACR, Key Vault, DNS and the identities that let GitHub and pods talk to Azure without secrets.
+
+![Resource map: what Terraform creates and how the pieces connect](/static/images/paktech-chat/p2-resource-map.png)
+
+The decisions that matter:
+
+- **Three node pools, not one.** `system` carries cluster add-ons behind a `CriticalAddonsOnly` taint, `apps` runs the workloads, and `monitoring` is tainted so only Prometheus, Grafana and the scanners land there. Observability load cannot starve the chat.
+- **Workload identity and GitHub OIDC.** Pods read Key Vault secrets through the CSI driver with federated identity. GitHub Actions authenticates to Azure with a short-lived OIDC token, so **no client secret exists anywhere**.
+- **ACR Basic with admin disabled**, Key Vault with RBAC and soft delete. Cost and blast radius were both deliberate choices.
+- **In-cluster PostgreSQL and Redis.** In production I would use managed services; here the StatefulSets give hands-on experience with storage and identity.
+
+The first apply planned and created **29 resources**, and a second plan showed no changes. The honest part is what went wrong:
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Bootstrap script stopped with `AADSTS50076` | Tenant requires MFA for management operations; the old login token had no MFA claim | Ran the printed `az login` claims command, completed MFA, re-ran |
+| `terraform init`: 403 listing blobs | Git Bash rewrote the `/subscriptions/...` scope into a Windows path, so a role assignment silently failed, and my script hid the error with `2>/dev/null` | `MSYS_NO_PATHCONV=1`, created the assignment by hand, and the script no longer hides errors |
+
+> [!NOTE]
+> The worst failure of the day, a missing role, was caused by a silent error handler. Hiding errors in a bootstrap script saves a line and costs an hour.
+
+---
+
+## Phase 3: GitOps with Argo CD
+
+The cluster state lives in a second repository. Argo CD watches it and reconciles, and I never apply manifests by hand.
+
+![The GitOps loop: Git is the source of truth, Argo CD reconciles the cluster](/static/images/paktech-chat/p3-gitops-loop.png)
+
+**App of apps.** One `root` Application points at a folder of child Applications: Envoy Gateway, cert-manager, the edge resources, and one app per environment. Sync waves order the work (CRDs and operators before the things that use them, the HTTPRoute last).
+
+**Envoy Gateway instead of ingress-nginx.** ingress-nginx is being retired, and the Gateway API is the direction Kubernetes is moving. Envoy Gateway runs as the only door into the namespaces and routes just `/api` and `/ws` to the api, which also means the api's `/metrics` endpoint, added in Phase 6, is never reachable from the internet.
+
+![Request path through the gateway to the app](/static/images/paktech-chat/p3-request-path.png)
+
+![Argo CD tiles: platform applications and the dev environment, all healthy](/static/images/paktech-chat/p3-argocd-tiles.png)
+
+From a stopped cluster to a trusted HTTPS chat took about two hours. The browser proof was two users in two windows, a message sent in one appearing in the other with the **Live** indicator, over `wss` through Envoy.
+
+![The login page served from AKS over HTTPS](/static/images/paktech-chat/p3-login-https.png)
+
+![Two users chatting in real time through the gateway](/static/images/paktech-chat/p3-chat-two-users.png)
+
+And the self-heal test: I scaled the web deployment to three replicas with `kubectl`. Argo CD put it back to one within seconds, with no Git change.
+
+### What broke
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `az acr build` sat on "Packing source" for 10+ minutes | Upload included about 1 GB of `node_modules` and `.next`; the CLI packer ignores trailing-slash folder rules in `.dockerignore` | Removed trailing slashes, added a frontend `.dockerignore`; builds dropped to about two minutes |
+| migrate Job `CrashLoopBackOff` with `redis_port Input should be a valid integer` | Kubernetes injects service-link variables like `REDIS_PORT=tcp://...`, and the app reads `REDIS_PORT` as a number | `enableServiceLinks: false` on every pod |
+| cert-manager permanently `OutOfSync` while `Healthy` | The AKS admissions enforcer adds namespace selectors to every webhook, so Git never matches the live object | Read the exact fields in the Argo CD diff and ignored only those, with `jqPathExpressions` |
+| Certificates `Ready` but browsers rejected them | The Gateway still used the Let's Encrypt staging issuer | Switched to the production issuer, deleted the four TLS secrets, cert-manager reissued |
+
+The lesson I keep repeating: read the error before changing anything (the Python traceback named the variable), and never ignore more than the exact field that drifts.
+
+---
+
+## Phase 4: A Pipeline That Actually Blocks Things
+
+CI/CD here is a gate before it is a conveyor belt. GitFlow branches (`feature`, `develop`, `staging`, `main`) map to the three environments, and every promotion is a pull request.
+
+![The pipeline from git push to a running pod](/static/images/paktech-chat/p4-pipeline.png)
+
+On every pull request, four jobs run in parallel: backend (tests, Bandit, pip-audit), `semgrep`, frontend (lint, build, npm audit) and `iac` (Terraform validate, Checkov, and a Trivy config scan that replaced tfsec). On a push, the `build` job logs into Azure with OIDC, builds both images **in ACR Tasks** (nothing is built on the runner), resolves each image digest, and scans `repo@digest` with Trivy. Only then does the `gitops` job commit the new digest to the GitOps repository, and Argo CD does the deployment.
+
+![A green pipeline run: four checks in parallel, then build and gitops](/static/images/paktech-chat/p4-actions-green.png)
+
+Prod is different: the `gitops` job stops at a GitHub environment gate that needs a reviewer, and even after approval, Argo CD shows the prod application `OutOfSync` until I read the two-line digest diff and run a manual sync.
+
+![The prod approval gate: gitops waits for a reviewer](/static/images/paktech-chat/p4-prod-approval-gate.png)
+
+### The gate that proved itself
+
+A security gate that has never blocked anything is unproven. Ours blocked a real one the first time it scanned an image: the Trivy scan failed the image because of **python-jose 3.3.0, CVE-2024-33663 (CRITICAL, algorithm confusion in the JWT library)**. The Debian base image had zero findings; the vulnerable code was my dependency. I merged the Dependabot bump to 3.5.0 after its checks passed, the scan went green, and a fresh login and chat worked on the new library.
+
+### Rollback you have rehearsed
+
+`rollback.yml` restores the previous values in the GitOps repo with one commit. I ran it: 12 seconds to create the commit, new pods came up before the old ones stopped (no downtime), and I rolled forward again afterwards. A rollback you have not rehearsed is a hope, not a procedure.
+
+### What broke
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| backend failed: black would reformat a file | CI installed an unpinned, newer black than pre-commit uses | Pinned `black`, `isort` and `bandit` to the pre-commit versions |
+| Bandit passed locally but failed in CI | Local Python 3.14 breaks Bandit 1.7.8, so it scanned zero files and looked clean; CI runs 3.11 | Reviewed the two real findings, added targeted `nosec` comments with rule numbers |
+| Trivy step exited 1 with no message | Install script wrote to a read-only path and `curl -s` hid the error, then the pinned release asset returned 404 after the 2026 Trivy ecosystem supply-chain compromise | Stopped piping an install script from `main`; download a pinned release by URL and verify a hard-coded SHA-256 before running it |
+| `GITOPS_TOKEN` visible on screen | Created as a repository variable, which is plain text | Deleted it, revoked the token, saved a new one under Secrets |
+| After a rollback commit the cluster ran the old tag for minutes | Argo CD polls Git every 3 minutes | Hard refresh annotation on the Application |
+
+---
+
+## Phase 5: Runtime Security in Five Layers
+
+CI keeps bad things out of the build. Phase 5 assumes something gets through anyway and asks what stops it at each step between the internet and the data.
+
+![Five layers: API server, admission, pod hardening, network policies, runtime detection](/static/images/paktech-chat/p5-layers.png)
+
+**Layer 1: the control plane.** The AKS API server accepts calls only from an explicit list of IP ranges, and the Key Vault firewall denies by default with only the AKS subnet allowed through a service endpoint. I proved the filter by calling the API from Azure Cloud Shell, an address not on the list: `context deadline exceeded`.
+
+**Layer 2: admission control with Gatekeeper.** Seven constraints: no privileged containers, no privilege escalation, drop all capabilities, read-only root filesystem, allowed registries only, required resource requests and limits, and images must carry a digest. They rolled out `dryrun`, then `warn`, then `deny`, and only after the audit list for each was empty. The rollout test used a pod that passes the built-in baseline but breaks my rules (`nginx`, no resources, no security context): warnings on `warn`, `Forbidden` on `deny`.
+
+**Layer 3: hardened pods and digests.** Read-only root filesystems with writable emptyDirs only where needed (`/tmp`, the gunicorn control socket). Images are pinned by digest end to end: CI reads the digest from ACR, scans those exact bytes, writes it to the GitOps repo, and the chart renders `repo@digest`. A tag can be moved after it was scanned; a digest cannot.
+
+**Layer 4: egress policies.** Before this layer, only inbound traffic was controlled, and a baseline test from outside showed a compromised pod could reach the cloud metadata address, the API server and the open internet. After:
+
+| Path | Before | After |
+|---|---|---|
+| api to postgres and redis | open | open (required) |
+| api to `169.254.169.254` (metadata) | open | **blocked** |
+| api to `1.1.1.1:80` | open | **blocked** (only 443 allowed) |
+| web to the internet | open | **blocked** |
+| postgres and redis to the internet | open | **blocked** |
+
+One finding surprised me: the Kubernetes API server stayed reachable. Cilium evaluates policy after translating the service address to its backend, so the rule matched the real (public) API server address and fell under the allow-443 rule. A TCP connection alone is harmless; the real danger is the service account token Kubernetes mounts by default. So layer 4b removes it: `automountServiceAccountToken: false` on all five workloads, because none of them calls the Kubernetes API. Workload identity keeps its own projected token and is unaffected.
+
+**Layer 5: Falco and Trivy Operator.** Falco (eBPF) runs on every node, including the tainted ones, and a throwaway pod reading `/etc/shadow` produced a `Read sensitive file untrusted` event enriched with pod, namespace, image and MITRE tag. Trivy Operator scans what is actually running, and its first reports were about my own images:
+
+| Image | Before (critical / high / medium / low) | After the fix |
+|---|---|---|
+| web (node:22-alpine) | 0 / 10 / 12 / 1 | 0 / 0 / 0 / 0 |
+| api (python:3.11-slim) | 0 / 2 / 7 / 2 | 0 / 0 / 6 / 1 |
+
+The cause was build tooling the runtime never uses: npm, corepack and yarn in the web image, setuptools and wheel in the api image. The fix removes the tooling from the final image instead of chasing versions: `pip uninstall -y setuptools wheel` in the same layer as `pip install`, and deleting npm and corepack in the web runtime stage. Findings you cannot fix, such as the Go standard library inside `gosu` in the postgres image, are recorded as accepted until upstream rebuilds.
+
+> [!WARNING]
+> A check that ends in `|| echo ok` can pass when the command never ran. With Docker Desktop stopped, my "tooling removed" check printed success. Run the command first, save its output, then grep the output.
+
+---
+
+## Phase 6: Monitoring and Alerting
+
+Phase 5 made three tools produce signals: Falco events, Trivy reports, Gatekeeper violations. Phase 6 makes those signals, and the application's own behaviour, visible and actionable.
+
+![How Phase 6 fits together: scrape, evaluate, alert, display](/static/images/paktech-chat/p6-monitoring-flow.png)
+
+**The platform half.** kube-prometheus-stack runs on the monitoring node pool, installed by Argo CD. Grafana is public at `grafana.paktechlimited.chat` behind a login. AlertManager sends to Slack. Argo CD, cert-manager, Gatekeeper, Falco and Trivy Operator all became Prometheus targets, with dashboards stored as ConfigMaps in Git.
+
+**The application half.** The api exposes `/metrics`: request counts and latency by route, active WebSocket connections, messages, and WebSocket connection attempts by result. Two details cost me real time:
+
+- **Several workers need multiprocess mode.** gunicorn runs two uvicorn workers, so each process has its own counters and scrapes alternated between workers. prometheus-client's multiprocess mode needs a writable directory (`PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus` on the emptyDir, which works with a read-only root filesystem) and gunicorn hooks that wipe it on start and mark dead workers.
+- **The route label needs care.** I labelled requests with the route template (`/api/v1/messages/{room_id}`), never the real path, so there is one series per route instead of one per room. With this Starlette version the route path in the request scope is relative to the router, so `/api/v1/health` was recorded as `/health`. The label is rebuilt from the original path and path parameters, and a regression test pins it.
+
+```python
+# gunicorn.conf.py (excerpt)
+def on_starting(server):
+    # start each deployment with an empty multiprocess directory
+    for f in glob.glob(os.path.join(os.environ["PROMETHEUS_MULTIPROC_DIR"], "*.db")):
+        os.remove(f)
+
+def child_exit(server, worker):
+    multiprocess.mark_process_dead(worker.pid)
+```
+
+Scraping is switched on per environment with a chart flag, `metrics.enabled` (default false), which creates a PodMonitor and a NetworkPolicy that lets Prometheus reach the api. Order matters: the flag must follow the image, or Prometheus scrapes an endpoint that does not exist yet and you get a false `ApiScrapeDown`. Because the chart already denies ingress by default, forgetting the policy would make every scrape time out.
+
+![The application dashboard: connections, messages, request rate, latency and errors by route](/static/images/paktech-chat/p6-grafana-application.png)
+
+Five application alert rules watch the result: `ApiScrapeDown`, `ApiHighErrorRate` (more than 5 percent 5xx for 10 minutes), `ApiHighLatencyP95` (AI routes excluded, because calls to the Anthropic API are legitimately slow), `WebSocketRejectionsHigh` and `EdgeHighErrorRate` at the Envoy gateway.
+
+![The five application alert rules, all healthy](/static/images/paktech-chat/p6-alert-rules.png)
+
+### Proving an alert by causing it
+
+A rule that loads is not a rule that works. I applied a temporary `PrometheusRule` with `kubectl` (not Git) that fires when `ws_connections_active` is at least one, opened a chat room in a browser tab, and watched: `TestWebSocketOpen` went active in AlertManager and arrived in Slack at 10:35 PM; closing the tab sent the resolved message at 10:40 PM. That exercised the gauge, the scrape, the rule, AlertManager and the Slack template together. Then I deleted the rule so nothing test-only stayed behind.
+
+![Slack alerts: a real node alert, the resolved message, and the WebSocket test alert](/static/images/paktech-chat/p6-slack-alerts.png)
+
+---
+
+## The Close-Out Session: Paying Down the Loose Ends
+
+The last day closed the items I had been carrying, and each one is a small lesson in why you finish the boring parts.
+
+![The checks a change passes on its way to a running pod](/static/images/paktech-chat/p6-closeout-checks.png)
+
+- **passlib to bcrypt directly.** A Dependabot bump to bcrypt 5 would have crashed logins, because passlib 1.7.4 reads bcrypt internals that no longer exist. I tested it, closed that pull request with an ignore rule, and later replaced passlib with direct bcrypt calls, truncating to 72 bytes explicitly. Existing hashes made by the old stack are verified in tests, and an account created before the change still logs in on dev.
+- **Checkov finding with a reason.** The Dockerfile `HEALTHCHECK` rule is skipped on line one with the reason written next to it: Kubernetes ignores `HEALTHCHECK`, and the chart defines readiness and liveness probes.
+- **A render check on gitops pull requests.** A workflow runs `helm lint` and `helm template` for dev, staging and prod, fails on any image line without `@sha256`, and parses every platform YAML file and dashboard ConfigMap. It takes about 20 seconds and catches the class of mistake that Argo CD would otherwise find in the cluster.
+- **The migrate Job waits for PostgreSQL.** On a cold start the migration used up its retries before the database accepted connections. An init container using the digest-pinned postgres image now runs `pg_isready` for up to 120 seconds. Proof: I deleted the Job, restarted PostgreSQL and synced; the migrate pod sat in `Init:0/1` for about 23 seconds, then completed at 45 seconds with no restarts.
+- **A base-image digest process.** Pinned digests never move, so security updates need a deliberate bump. A script compares each pin with the current tag digest, and the rule is: adopt a new digest only if its Trivy scan is not worse. The first run found a newer postgres digest with an identical scan (26 HIGH, 1 CRITICAL, same packages), so no bump, and no restart of three environments for nothing.
+- **Image digests moved to deny.** The last Gatekeeper constraint on `warn` became `deny` after the audit showed zero violations. I proved both sides with server-side dry-run pods that were compliant in every other way: a tag-only image was rejected with `uses an image without a digest`, and the dev api digest was admitted. A test pod that fails for an unrelated reason proves nothing about the rule you meant to test, which is exactly what happened on my first attempt, when a different admission policy rejected it first.
+
+---
+
+## Key Learnings
+
+1. **A gate you have not seen block anything is unproven.** The Trivy gate stopped a critical CVE on its first complete run; the Gatekeeper `deny` rules were each tested with a pod built to break them.
+2. **Prove policies both ways.** Show the bad object rejected for the reason you expect, and the real deployment admitted. Make test objects compliant in every other respect.
+3. **Make every hardening change reversible and flagged.** A chart flag that renders nothing when off lets you merge into environments that auto-sync, then enable dev, staging and prod one at a time.
+4. **Scan the bytes you deploy.** Digests tie the scan, the commit and the running pod together; a tag does not.
+5. **Remove what the runtime does not need.** Deleting npm and setuptools from final images cleared more findings than any version bump.
+6. **Silent error handling is the most expensive line in a script.** Two of my longest delays were an `2>/dev/null` and a `curl -s` hiding the real error.
+7. **Tests only prove what they run.** SQLite unit tests never touch the asyncpg path; green CI on a pull request does not build the image. Check on the real environment before you trust a merge.
+8. **Prove an alert by causing it.** Fire a temporary rule from a real browser tab and watch it reach Slack.
+9. **Windows shells rewrite your paths.** `MSYS_NO_PATHCONV=1` for anything that starts with a slash, and read the prompt for the repository and the Kubernetes context before every command.
+10. **Finish the loose ends.** The unglamorous items (wait-for-database, an unpinned install script, a stale digest process) are where real incidents come from.
+
+---
+
+## Interview Talking Points
+
+**On the delivery path:** "Code goes through four parallel quality and security jobs, then images are built in ACR Tasks, scanned by digest with Trivy, and the digest is committed to a separate GitOps repository. Argo CD deploys it. Dev and staging sync automatically; prod needs a GitHub environment approval and a manual sync after I read the two-line digest diff. Nothing stores a cloud secret: GitHub authenticates to Azure over OIDC."
+
+**On a security gate that worked:** "The first image the pipeline scanned was blocked because of a critical algorithm-confusion CVE in python-jose, a dependency of mine. The base image was clean. I merged the Dependabot upgrade after its checks, the scan passed, and I verified login still worked. A scanner that has never failed a build is an unproven control."
+
+**On defence in depth:** "Five layers, each catching what the last missed: API server IP allow-list, Gatekeeper admission, hardened pods with images pinned by digest, egress network policies, and runtime detection with Falco and Trivy Operator. My egress test found that Cilium translates service addresses before policy, so the API server stayed reachable. I fixed the real risk by removing the service account token from pods that never call the API."
+
+**On observability:** "Platform and application metrics both go to Prometheus. The api runs two workers, so I used prometheus-client multiprocess mode with a writable directory and gunicorn hooks, and labelled requests by route template to keep cardinality low. I proved the alert path by creating the condition for real: a WebSocket opened in a browser tab fired a temporary rule, reached Slack, and resolved when I closed it."
+
+**On trade-offs I would revisit:** "PostgreSQL and Redis run in the cluster for learning, and I would use managed services in production. I pinned base images by digest, which means security updates need a deliberate, scanned bump. I documented that process and ran it: a newer postgres digest scanned identically, so I did not bump."
+
+---
+
+## Repositories
+
+- Application, Terraform and CI: [PakTechLimited/app-paktech-chat](https://github.com/PakTechLimited/app-paktech-chat)
+- GitOps configuration, Helm chart and platform manifests: [PakTechLimited/gitops-paktech-chat](https://github.com/PakTechLimited/gitops-paktech-chat)
