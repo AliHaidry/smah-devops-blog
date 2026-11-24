@@ -2,7 +2,22 @@
 title: 'DevSecOps on AKS: Building PakTech Chat in Six Phases — Terraform, GitOps, Gated CI/CD, Runtime Security and Observability'
 date: '2026-11-24'
 lastmod: '2026-11-24'
-tags: ['AKS', 'Terraform', 'GitOps', 'ArgoCD', 'GitHub-Actions', 'DevSecOps', 'Gatekeeper', 'Falco', 'Trivy', 'Prometheus', 'Grafana', 'WebSockets', 'DevOps']
+tags:
+  [
+    'AKS',
+    'Terraform',
+    'GitOps',
+    'ArgoCD',
+    'GitHub-Actions',
+    'DevSecOps',
+    'Gatekeeper',
+    'Falco',
+    'Trivy',
+    'Prometheus',
+    'Grafana',
+    'WebSockets',
+    'DevOps',
+  ]
 draft: false
 summary: 'I built a real-time chat app (FastAPI, WebSockets, Redis, PostgreSQL, Next.js) and took it through six phases on Azure: hardened code, Terraform infrastructure, Argo CD GitOps, a CI/CD pipeline with security gates, five layers of runtime security, and Prometheus/Grafana/Slack observability. This post covers what each phase delivered, the decisions behind it, and the problems that actually broke along the way.'
 images: ['/static/images/paktech-chat-devsecops-aks-thumb.png']
@@ -15,7 +30,7 @@ My previous project, the Egg Catcher game, proved I could run stateful services 
 
 That makes it a good vehicle for the question I actually care about: **what does a production-grade, security-conscious delivery path look like, end to end, when one person builds it?** Not a diagram. A cluster where every claim has been tested, including the claims about what gets blocked.
 
-**Live URL:** [https://dev.paktechlimited.chat](https://dev.paktechlimited.chat) for the dev environment, with staging and production on the same domain. The lab cluster is stopped between working sessions to control cost, so the site is up only while I am working on it. Every screenshot below comes from a real run.
+**Live URL:** [https://dev.paktechlimited.chat](https://dev.paktechlimited.chat) for the dev environment, with staging and production on the same domain. The lab cluster was decommissioned in November 2026, so these URLs no longer resolve. Everything is rebuildable from the Terraform code and the GitOps repository, and the DNS zone, container registry and Key Vault were kept for that reason. Every screenshot below comes from a real run.
 
 The stack in one sentence: a FastAPI backend with WebSocket chat, a Next.js 16 frontend, PostgreSQL and Redis in the cluster, three environments on AKS provisioned by Terraform, delivered by Argo CD from a GitOps repo, built and scanned by GitHub Actions with no stored cloud credentials, guarded by Gatekeeper, Falco and Trivy Operator, and watched by Prometheus, Grafana and AlertManager reporting to Slack.
 
@@ -44,14 +59,14 @@ Delivery:
   dev and staging sync automatically; prod waits for approval and a manual sync
 ```
 
-| Phase | What it delivered | Closed |
-|---|---|---|
-| 1 | The app, hardened: auth, CSRF, WebSocket security, migrations, tests, containers, UI | Nov 7 |
-| 2 | Terraform: AKS with three node pools, ACR, Key Vault, workload identity, GitHub OIDC, DNS | Nov 7 |
-| 3 | GitOps: Argo CD app-of-apps, Envoy Gateway, cert-manager, Helm chart, three environments | Nov 8 |
-| 4 | CI/CD: quality and security gates, digest-based deploys, approval gate, rollback | Nov 14 |
-| 5 | Runtime security: five layers from the API server to running processes | Nov 21 |
-| 6 | Monitoring and alerting: platform and application metrics, Slack alerts, dashboards | Nov 24 |
+| Phase | What it delivered                                                                         | Closed |
+| ----- | ----------------------------------------------------------------------------------------- | ------ |
+| 1     | The app, hardened: auth, CSRF, WebSocket security, migrations, tests, containers, UI      | Nov 7  |
+| 2     | Terraform: AKS with three node pools, ACR, Key Vault, workload identity, GitHub OIDC, DNS | Nov 7  |
+| 3     | GitOps: Argo CD app-of-apps, Envoy Gateway, cert-manager, Helm chart, three environments  | Nov 8  |
+| 4     | CI/CD: quality and security gates, digest-based deploys, approval gate, rollback          | Nov 14 |
+| 5     | Runtime security: five layers from the API server to running processes                    | Nov 21 |
+| 6     | Monitoring and alerting: platform and application metrics, Slack alerts, dashboards       | Nov 24 |
 
 ---
 
@@ -88,10 +103,10 @@ The decisions that matter:
 
 The first apply planned and created **29 resources**, and a second plan showed no changes. The honest part is what went wrong:
 
-| Symptom | Cause | Fix |
-|---|---|---|
-| Bootstrap script stopped with `AADSTS50076` | Tenant requires MFA for management operations; the old login token had no MFA claim | Ran the printed `az login` claims command, completed MFA, re-ran |
-| `terraform init`: 403 listing blobs | Git Bash rewrote the `/subscriptions/...` scope into a Windows path, so a role assignment silently failed, and my script hid the error with `2>/dev/null` | `MSYS_NO_PATHCONV=1`, created the assignment by hand, and the script no longer hides errors |
+| Symptom                                     | Cause                                                                                                                                                     | Fix                                                                                         |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Bootstrap script stopped with `AADSTS50076` | Tenant requires MFA for management operations; the old login token had no MFA claim                                                                       | Ran the printed `az login` claims command, completed MFA, re-ran                            |
+| `terraform init`: 403 listing blobs         | Git Bash rewrote the `/subscriptions/...` scope into a Windows path, so a role assignment silently failed, and my script hid the error with `2>/dev/null` | `MSYS_NO_PATHCONV=1`, created the assignment by hand, and the script no longer hides errors |
 
 > [!NOTE]
 > The worst failure of the day, a missing role, was caused by a silent error handler. Hiding errors in a bootstrap script saves a line and costs an hour.
@@ -122,12 +137,12 @@ And the self-heal test: I scaled the web deployment to three replicas with `kube
 
 ### What broke
 
-| Symptom | Cause | Fix |
-|---|---|---|
-| `az acr build` sat on "Packing source" for 10+ minutes | Upload included about 1 GB of `node_modules` and `.next`; the CLI packer ignores trailing-slash folder rules in `.dockerignore` | Removed trailing slashes, added a frontend `.dockerignore`; builds dropped to about two minutes |
-| migrate Job `CrashLoopBackOff` with `redis_port Input should be a valid integer` | Kubernetes injects service-link variables like `REDIS_PORT=tcp://...`, and the app reads `REDIS_PORT` as a number | `enableServiceLinks: false` on every pod |
-| cert-manager permanently `OutOfSync` while `Healthy` | The AKS admissions enforcer adds namespace selectors to every webhook, so Git never matches the live object | Read the exact fields in the Argo CD diff and ignored only those, with `jqPathExpressions` |
-| Certificates `Ready` but browsers rejected them | The Gateway still used the Let's Encrypt staging issuer | Switched to the production issuer, deleted the four TLS secrets, cert-manager reissued |
+| Symptom                                                                          | Cause                                                                                                                           | Fix                                                                                             |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `az acr build` sat on "Packing source" for 10+ minutes                           | Upload included about 1 GB of `node_modules` and `.next`; the CLI packer ignores trailing-slash folder rules in `.dockerignore` | Removed trailing slashes, added a frontend `.dockerignore`; builds dropped to about two minutes |
+| migrate Job `CrashLoopBackOff` with `redis_port Input should be a valid integer` | Kubernetes injects service-link variables like `REDIS_PORT=tcp://...`, and the app reads `REDIS_PORT` as a number               | `enableServiceLinks: false` on every pod                                                        |
+| cert-manager permanently `OutOfSync` while `Healthy`                             | The AKS admissions enforcer adds namespace selectors to every webhook, so Git never matches the live object                     | Read the exact fields in the Argo CD diff and ignored only those, with `jqPathExpressions`      |
+| Certificates `Ready` but browsers rejected them                                  | The Gateway still used the Let's Encrypt staging issuer                                                                         | Switched to the production issuer, deleted the four TLS secrets, cert-manager reissued          |
 
 The lesson I keep repeating: read the error before changing anything (the Python traceback named the variable), and never ignore more than the exact field that drifts.
 
@@ -157,13 +172,13 @@ A security gate that has never blocked anything is unproven. Ours blocked a real
 
 ### What broke
 
-| Symptom | Cause | Fix |
-|---|---|---|
-| backend failed: black would reformat a file | CI installed an unpinned, newer black than pre-commit uses | Pinned `black`, `isort` and `bandit` to the pre-commit versions |
-| Bandit passed locally but failed in CI | Local Python 3.14 breaks Bandit 1.7.8, so it scanned zero files and looked clean; CI runs 3.11 | Reviewed the two real findings, added targeted `nosec` comments with rule numbers |
-| Trivy step exited 1 with no message | Install script wrote to a read-only path and `curl -s` hid the error, then the pinned release asset returned 404 after the 2026 Trivy ecosystem supply-chain compromise | Stopped piping an install script from `main`; download a pinned release by URL and verify a hard-coded SHA-256 before running it |
-| `GITOPS_TOKEN` visible on screen | Created as a repository variable, which is plain text | Deleted it, revoked the token, saved a new one under Secrets |
-| After a rollback commit the cluster ran the old tag for minutes | Argo CD polls Git every 3 minutes | Hard refresh annotation on the Application |
+| Symptom                                                         | Cause                                                                                                                                                                   | Fix                                                                                                                              |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| backend failed: black would reformat a file                     | CI installed an unpinned, newer black than pre-commit uses                                                                                                              | Pinned `black`, `isort` and `bandit` to the pre-commit versions                                                                  |
+| Bandit passed locally but failed in CI                          | Local Python 3.14 breaks Bandit 1.7.8, so it scanned zero files and looked clean; CI runs 3.11                                                                          | Reviewed the two real findings, added targeted `nosec` comments with rule numbers                                                |
+| Trivy step exited 1 with no message                             | Install script wrote to a read-only path and `curl -s` hid the error, then the pinned release asset returned 404 after the 2026 Trivy ecosystem supply-chain compromise | Stopped piping an install script from `main`; download a pinned release by URL and verify a hard-coded SHA-256 before running it |
+| `GITOPS_TOKEN` visible on screen                                | Created as a repository variable, which is plain text                                                                                                                   | Deleted it, revoked the token, saved a new one under Secrets                                                                     |
+| After a rollback commit the cluster ran the old tag for minutes | Argo CD polls Git every 3 minutes                                                                                                                                       | Hard refresh annotation on the Application                                                                                       |
 
 ---
 
@@ -181,22 +196,22 @@ CI keeps bad things out of the build. Phase 5 assumes something gets through any
 
 **Layer 4: egress policies.** Before this layer, only inbound traffic was controlled, and a baseline test from outside showed a compromised pod could reach the cloud metadata address, the API server and the open internet. After:
 
-| Path | Before | After |
-|---|---|---|
-| api to postgres and redis | open | open (required) |
-| api to `169.254.169.254` (metadata) | open | **blocked** |
-| api to `1.1.1.1:80` | open | **blocked** (only 443 allowed) |
-| web to the internet | open | **blocked** |
-| postgres and redis to the internet | open | **blocked** |
+| Path                                | Before | After                          |
+| ----------------------------------- | ------ | ------------------------------ |
+| api to postgres and redis           | open   | open (required)                |
+| api to `169.254.169.254` (metadata) | open   | **blocked**                    |
+| api to `1.1.1.1:80`                 | open   | **blocked** (only 443 allowed) |
+| web to the internet                 | open   | **blocked**                    |
+| postgres and redis to the internet  | open   | **blocked**                    |
 
 One finding surprised me: the Kubernetes API server stayed reachable. Cilium evaluates policy after translating the service address to its backend, so the rule matched the real (public) API server address and fell under the allow-443 rule. A TCP connection alone is harmless; the real danger is the service account token Kubernetes mounts by default. So layer 4b removes it: `automountServiceAccountToken: false` on all five workloads, because none of them calls the Kubernetes API. Workload identity keeps its own projected token and is unaffected.
 
 **Layer 5: Falco and Trivy Operator.** Falco (eBPF) runs on every node, including the tainted ones, and a throwaway pod reading `/etc/shadow` produced a `Read sensitive file untrusted` event enriched with pod, namespace, image and MITRE tag. Trivy Operator scans what is actually running, and its first reports were about my own images:
 
-| Image | Before (critical / high / medium / low) | After the fix |
-|---|---|---|
-| web (node:22-alpine) | 0 / 10 / 12 / 1 | 0 / 0 / 0 / 0 |
-| api (python:3.11-slim) | 0 / 2 / 7 / 2 | 0 / 0 / 6 / 1 |
+| Image                  | Before (critical / high / medium / low) | After the fix |
+| ---------------------- | --------------------------------------- | ------------- |
+| web (node:22-alpine)   | 0 / 10 / 12 / 1                         | 0 / 0 / 0 / 0 |
+| api (python:3.11-slim) | 0 / 2 / 7 / 2                           | 0 / 0 / 6 / 1 |
 
 The cause was build tooling the runtime never uses: npm, corepack and yarn in the web image, setuptools and wheel in the api image. The fix removes the tooling from the final image instead of chasing versions: `pip uninstall -y setuptools wheel` in the same layer as `pip install`, and deleting npm and corepack in the web runtime stage. Findings you cannot fix, such as the Go standard library inside `gosu` in the postgres image, are recorded as accepted until upstream rebuilds.
 

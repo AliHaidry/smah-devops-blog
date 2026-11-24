@@ -14,7 +14,7 @@ export const techSeries: Series[] = [
     title: 'PakTech Chat',
     subtitle: 'DevSecOps on Azure Kubernetes',
     description:
-      'A real-time chat app taken from local development to a hardened Azure platform: infrastructure as code, GitOps delivery, a secured CI/CD pipeline, runtime security and observability. Built and run for real, with the problems left in.',
+      'A real-time chat app taken from local development to a hardened Azure platform: infrastructure as code, GitOps delivery, a secured CI/CD pipeline, runtime security and observability. Built and run for real, with the problems left in. The lab cluster was decommissioned in November 2026 and can be rebuilt from Terraform and GitOps.',
     status: 'Complete · 6 of 6 phases',
     updated: 'Nov 2026',
     cloud: 'Microsoft Azure',
