@@ -974,6 +974,44 @@ const posts = [
       ${footer()}`
   },
 
+  // 15. PakTech Chat — six-phase DevSecOps project
+  {
+    slug: 'paktech-chat-devsecops-aks',
+    svg: () => `
+      ${accentBar(BLUE)}
+      <text x="48" y="100" font-family="Arial,sans-serif" font-size="22" fill="${MUTED}">Six phases, three environments, one real-time chat app</text>
+      <text x="48" y="168" font-family="Arial,sans-serif" font-size="58" font-weight="700" fill="#E6EDF3">DevSecOps on AKS:</text>
+      <text x="48" y="236" font-family="Arial,sans-serif" font-size="58" font-weight="700" fill="${BLUE}">PakTech Chat</text>
+      <line x1="48" y1="270" x2="${W - 48}" y2="270" stroke="${DARK3}" stroke-width="1"/>
+      <rect x="48" y="300" width="170" height="110" rx="8" fill="${FILL_BLUE}" stroke="${BLUE}" stroke-width="1"/>
+      <text x="133" y="334" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="${MUTED}" text-anchor="middle">PHASE 1</text>
+      <text x="133" y="366" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="${BLUE}" text-anchor="middle">App</text>
+      <text x="133" y="392" font-family="monospace" font-size="12" fill="${MUTED}" text-anchor="middle">FastAPI · Next.js</text>
+      <rect x="234" y="300" width="170" height="110" rx="8" fill="${FILL_PURPLE}" stroke="${PURPLE}" stroke-width="1"/>
+      <text x="319" y="334" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="${MUTED}" text-anchor="middle">PHASE 2</text>
+      <text x="319" y="366" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="${PURPLE}" text-anchor="middle">Terraform</text>
+      <text x="319" y="392" font-family="monospace" font-size="12" fill="${MUTED}" text-anchor="middle">AKS · ACR · Key Vault</text>
+      <rect x="420" y="300" width="170" height="110" rx="8" fill="${FILL_GREEN}" stroke="${GREEN}" stroke-width="1"/>
+      <text x="505" y="334" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="${MUTED}" text-anchor="middle">PHASE 3</text>
+      <text x="505" y="366" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="${GREEN}" text-anchor="middle">GitOps</text>
+      <text x="505" y="392" font-family="monospace" font-size="12" fill="${MUTED}" text-anchor="middle">Argo CD · Envoy</text>
+      <rect x="606" y="300" width="170" height="110" rx="8" fill="${FILL_ORANGE}" stroke="${ORANGE}" stroke-width="1"/>
+      <text x="691" y="334" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="${MUTED}" text-anchor="middle">PHASE 4</text>
+      <text x="691" y="366" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="${ORANGE}" text-anchor="middle">CI/CD</text>
+      <text x="691" y="392" font-family="monospace" font-size="12" fill="${MUTED}" text-anchor="middle">Actions · Trivy gate</text>
+      <rect x="792" y="300" width="170" height="110" rx="8" fill="${FILL_RED}" stroke="${RED}" stroke-width="1"/>
+      <text x="877" y="334" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="${MUTED}" text-anchor="middle">PHASE 5</text>
+      <text x="877" y="366" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="${RED}" text-anchor="middle">Runtime security</text>
+      <text x="877" y="392" font-family="monospace" font-size="12" fill="${MUTED}" text-anchor="middle">Gatekeeper · Falco</text>
+      <rect x="978" y="300" width="170" height="110" rx="8" fill="${FILL_BLUE}" stroke="${BLUE}" stroke-width="1"/>
+      <text x="1063" y="334" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="${MUTED}" text-anchor="middle">PHASE 6</text>
+      <text x="1063" y="366" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="${BLUE}" text-anchor="middle">Monitoring</text>
+      <text x="1063" y="392" font-family="monospace" font-size="12" fill="${MUTED}" text-anchor="middle">Prometheus · Slack</text>
+      <text x="48" y="470" font-family="monospace" font-size="16" fill="${GREEN}">122 tests · image digests enforced · 7 Gatekeeper policies · alerts to Slack</text>
+      <text x="48" y="505" font-family="monospace" font-size="16" fill="${MUTED}">Terraform · Argo CD · GitHub Actions · Trivy · Falco · Prometheus · Grafana</text>
+      ${footer()}
+    `,
+  },
 ];
 
 // ─── Renderer ─────────────────────────────────────────────────────────────────

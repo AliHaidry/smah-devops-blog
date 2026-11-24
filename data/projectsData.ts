@@ -17,6 +17,41 @@ export interface Project {
 
 const projectsData: Project[] = [
   {
+    title: 'PakTech Chat — DevSecOps on AKS',
+    description:
+      'Real-time chat app taken through six DevSecOps phases on Azure: hardened FastAPI/Next.js code, Terraform infrastructure, Argo CD GitOps across three environments, a CI/CD pipeline with security gates, five layers of runtime security, and Prometheus/Grafana/Slack observability.',
+    longDescription:
+      'A WebSocket chat application (FastAPI, Redis Pub/Sub, PostgreSQL, Next.js 16) used as the vehicle for a complete, security-first delivery path on AKS. Terraform provisions three node pools, ACR, Key Vault, workload identity and GitHub OIDC. Argo CD deploys dev, staging and prod from a GitOps repo through Envoy Gateway and cert-manager. GitHub Actions builds in ACR Tasks, scans every image by digest with Trivy, and writes the digest to Git; prod needs an approval gate and a manual sync. Five runtime layers (API server allow-list, Gatekeeper admission, hardened pods with digest pinning, egress network policies, Falco and Trivy Operator) are each tested by trying to break them. Prometheus, Grafana and AlertManager cover the platform and the application, with alerts proven end to end into Slack.',
+    category: 'Personal',
+    company: 'PakTechLimited',
+    role: 'Solo — Architecture, IaC, Backend, Frontend, DevSecOps',
+    period: 'November 2026',
+    stack: [
+      'Python', 'FastAPI', 'WebSocket', 'Redis', 'PostgreSQL',
+      'Next.js', 'TypeScript', 'Terraform', 'AKS', 'Argo CD',
+      'Envoy Gateway', 'cert-manager', 'GitHub Actions', 'Helm',
+      'Trivy', 'Checkov', 'Semgrep', 'OPA Gatekeeper', 'Falco',
+      'Prometheus', 'Grafana', 'AlertManager', 'Slack', 'Azure', 'OIDC',
+    ],
+    impact: '6-Phase DevSecOps',
+    impactDetail:
+      'Three environments, image digests enforced at admission, a scan gate that blocked a real critical CVE, and alerts proven end to end into Slack',
+    architecture: [
+      'Terraform (29 resources on first apply): AKS with system, apps and tainted monitoring node pools, ACR Basic with admin disabled, Key Vault with RBAC, Azure DNS, workload identity for pods and OIDC federation for GitHub — no client secrets stored anywhere',
+      'Two-repo GitOps: app-paktech-chat for source, Terraform and CI; gitops-paktech-chat for the Helm chart and Argo CD app-of-apps. Envoy Gateway (Gateway API) forwards only /api and /ws to the api; cert-manager issues trusted TLS',
+      'CI/CD: four parallel jobs (tests with Bandit and pip-audit, Semgrep, frontend lint/build/audit, Terraform validate with Checkov and a Trivy config scan), then ACR Tasks builds and a Trivy scan of repo@digest. The first image scanned was blocked for a critical python-jose CVE; the fix was merged and the gate went green',
+      'Digest-based delivery: CI writes the image digest to the GitOps repo and the chart renders repo@digest. Dev and staging sync automatically; prod waits for a GitHub environment approval and a manual Argo CD sync after reading the two-line digest diff. Rollback was rehearsed (12 seconds, no downtime)',
+      'Runtime security in five layers: API server IP allow-list and Key Vault firewall; seven Gatekeeper constraints rolled out dryrun, warn, deny; read-only root filesystems and digest pinning; egress NetworkPolicies plus removal of the API token from app pods; Falco and Trivy Operator with first findings fixed by removing build tooling from runtime images',
+      'Egress testing found that Cilium translates service addresses before policy, so the API server stayed reachable even after a deny-all rule — fixed at the real risk by disabling service account token automount on all five workloads',
+      'Observability: kube-prometheus-stack on the monitoring pool, public Grafana behind a login, five application alert rules and an application dashboard. The api exposes /metrics in prometheus-client multiprocess mode for two gunicorn workers, with route-template labels to keep cardinality low',
+      'Alert path proven by causing the condition: a temporary PrometheusRule fired when a WebSocket opened in a browser tab, reached Slack, and resolved when the tab closed',
+      'Close-out guardrails: a render check on every gitops pull request, a migrate Job that waits for PostgreSQL, a documented base-image digest process, and the image-digests constraint moved to deny after both sides were proven with dry-run pods',
+    ],
+    href: 'https://alihaidry-devops.website/blog/paktech-chat-devsecops-aks',
+    github: 'https://github.com/PakTechLimited/app-paktech-chat',
+    status: 'Completed',
+  },
+  {
     title: 'Azure FinOps Dashboard',
     description:
       'Production-grade multi-subscription Azure cost monitoring system. Python collector feeds PostgreSQL, visualised via Grafana and a Next.js stakeholder UI, with automated Slack alerting via GitHub Actions.',
