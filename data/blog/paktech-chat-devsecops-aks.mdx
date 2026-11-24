@@ -30,7 +30,7 @@ My previous project, the Egg Catcher game, proved I could run stateful services 
 
 That makes it a good vehicle for the question I actually care about: **what does a production-grade, security-conscious delivery path look like, end to end, when one person builds it?** Not a diagram. A cluster where every claim has been tested, including the claims about what gets blocked.
 
-**Live URL:** [https://dev.paktechlimited.chat](https://dev.paktechlimited.chat) for the dev environment, with staging and production on the same domain. The lab cluster was decommissioned in November 2026, so these URLs no longer resolve. Everything is rebuildable from the Terraform code and the GitOps repository, and the DNS zone, container registry and Key Vault were kept for that reason. Every screenshot below comes from a real run.
+**Live URL:** [https://dev.paktechlimited.chat](https://dev.paktechlimited.chat) for the dev environment, with staging and production on the same domain. The lab cluster was decommissioned in November 2026, so these URLs no longer resolve. Every Azure resource was removed, and everything is rebuildable from the Terraform code and the GitOps repository. Every screenshot below comes from a real run.
 
 The stack in one sentence: a FastAPI backend with WebSocket chat, a Next.js 16 frontend, PostgreSQL and Redis in the cluster, three environments on AKS provisioned by Terraform, delivered by Argo CD from a GitOps repo, built and scanned by GitHub Actions with no stored cloud credentials, guarded by Gatekeeper, Falco and Trivy Operator, and watched by Prometheus, Grafana and AlertManager reporting to Slack.
 
